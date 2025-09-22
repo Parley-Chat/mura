@@ -86,7 +86,7 @@
       <br>
       <img alt="Profile Picture" lang="user.pfpalt">
       <br>
-      <button onclick="let a=document.createElement('a');a.download=window.username+'.keys';a.href=URL.createObjectURL(new Blob([JSON.stringify({publicKey:localStorage.getItem(window.currentServer+'-publicKey'),privateKey:localStorage.getItem(window.currentServer+'-privateKey')})],{type:'text/plain'}));a.click();a.remove()" lang="user.downloadkeys">Download keys</button>
+      <button onclick="downloadKeys()" lang="user.downloadkeys">Download keys</button>
       <button onclick="backendfetch('/api/v1/me',{method:'DELETE'}).then(()=>{logout()})" style="color:var(--invalid)" lang="user.delete">Delete Account</button>
     </dialog>
     <dialog id="blocks">

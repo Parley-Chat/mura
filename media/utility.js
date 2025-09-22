@@ -34,6 +34,17 @@ function logoutall() {
   location.reload();
 }
 
+function downloadKeys() {
+  let a = document.createElement('a');
+  a.download = window.username+'.keys';
+  a.href = URL.createObjectURL(new Blob([JSON.stringify({
+    publicKey: localStorage.getItem(window.currentServer+'-publicKey'),
+    privateKey: localStorage.getItem(window.currentServer+'-privateKey')
+  })], { type: 'text/plain' }));
+  a.click();
+  a.remove();
+}
+
 function hasPerm(bitfield, perm) {
   return (bitfield & (1 << Math.log2(perm))) !== 0;
 }

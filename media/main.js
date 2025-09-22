@@ -293,7 +293,7 @@ async function showMessages(messages) {
       if (window.currentChannelType!==3) {
         messages[i].user = DummyUser;
       } else {
-        mmessages[i].user = {
+        messages[i].user = {
           display: ch.name,
           username: 'b',
           pfp: ch.pfp
