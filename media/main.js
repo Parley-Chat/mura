@@ -1,7 +1,3 @@
-/*TODO
-Download keys
-*/
-
 // Messages
 const messageInput = document.getElementById('input');
 const messageSned = document.getElementById('sned');
@@ -179,6 +175,7 @@ window.replyMessage = (msg, usr)=>{
   reply = msg;
   document.getElementById('replypreview').style.display = '';
   document.querySelector('#replypreview .usr').innerText = usr;
+  messageInput.focus();
 };
 window.closereply = ()=>{
   reply = null;
@@ -292,7 +289,17 @@ async function showMessages(messages) {
   // Pre
   let decrypt = false;
   for (let i=0; i<messages.length; i++) {
-    if (!messages[i].user) messages[i].user = DummyUser;
+    if (!messages[i].user) {
+      if (window.currentChannelType!==3) {
+        messages[i].user = DummyUser;
+      } else {
+        mmessages[i].user = {
+          display: ch.name,
+          username: 'b',
+          pfp: ch.pfp
+        };
+      }
+    }
     messages[i].user.hide = false;
     if (!messages[i].replied_to && messages[i+1] && messages[i+1].user.username===messages[i].user.username) {
       messages[i].user.hide = (messages[i].timestamp-messages[i+1].timestamp)<TimeSeparation; // Only hide is smaller than time separation
@@ -867,9 +874,9 @@ function startStrem() {
   // Members
   window.stream.addEventListener('member_join', (event)=>{
     let data = JSON.parse(event.data);
-    if (window.keys[window.currentChannel]) {
-      let last = Object.keys(window.keys[channel]).reduce((a, b) => window.keys[channel][a]?.expires_at > window.keys[channel][b]?.expires_at ? a : b, '');
-      if (last) window.keys[channel][last].expires_at = Date.now();
+    if (window.keys[data.channel_id]) {
+      let last = Object.keys(window.keys[data.channel_id]).reduce((a, b) => window.keys[data.channel_id][a]?.expires_at > window.keys[data.channel_id][b]?.expires_at ? a : b, '');
+      if (last) window.keys[data.channel_id][last].expires_at = Date.now();
     }
     if (!window.channelMembers[data.channel_id]) return;
     window.channelMembers[data.channel_id].push(data.user);
@@ -890,7 +897,7 @@ function startStrem() {
       window.channels[idx2].permission = perm;
       if (window.currentChannel===data.channel_id) loadChannel(data.channel_id);
     }
-    if (!window.channelMembers[data.channel_id]) return;
+    if (!window.channelMembers[data.channel_id]||window.channelMembers[data.channel_id].length<1) return;
     let idx = window.channelMembers[data.channel_id].findIndex(mem=>mem.username===data.username);
     window.channelMembers[data.channel_id][idx].permissions = data.permissions;
   });
