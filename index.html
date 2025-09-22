@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="color-scheme" content="dark">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title lang="title">Parley Chat</title>
+    <link rel="icon" href="./favicon.ico" type="image/vnd.microsoft.icon">
+    <meta name="description" content="Parley, a secure end to end encrypted messaging web app.">
+    <meta name="theme-color" content="#00ff00">
+
+    <script src="./media/langs/script.js"></script>
+    <link rel="stylesheet" href="./media/style.css">
+    <!-- Packages -->
+    <script src="./external/mdparse.js"></script>
+    <script src="./external/split.js"></script>
+    <script src="./external/popperjs.js"></script>
+    <script src="./external/tippy.js"></script>
+  </head>
+  <body>
+    <dialog id="ask">
+      <button onclick="this.parentElement.close()" class="modal-close">x</button>
+      <h2></h2>
+      <input>
+      <button class="set"></button>
+    </dialog>
+    <dialog id="server-modal" closedby="none">
+      <h2 style="display:flex;gap:5px;"><svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 256 256"><path d="M236 26C247.046 26 256 34.9543 256 46V97.0225C256 108.068 247.046 117.022 236 117.022H20C8.95446 117.022 0.000246531 108.068 0 97.0225V46C0 34.9543 8.95431 26 20 26H236ZM169.529 54.4434C160.104 54.4434 152.462 62.0851 152.462 71.5107C152.462 80.9363 160.104 88.5771 169.529 88.5771C178.955 88.5769 186.596 80.9361 186.596 71.5107C186.596 62.0852 178.955 54.4436 169.529 54.4434ZM217.315 54.4434C207.89 54.4435 200.249 62.0852 200.249 71.5107C200.249 80.9362 207.89 88.577 217.315 88.5771C226.741 88.5771 234.383 80.9363 234.383 71.5107C234.383 62.0851 226.741 54.4434 217.315 54.4434Z"/><path d="M236 138.641C247.046 138.641 256 147.595 256 158.641V209.663C256 220.709 247.046 229.663 236 229.663H20C8.95446 229.663 0.000246531 220.709 0 209.663V158.641C0 147.595 8.95431 138.641 20 138.641H236ZM169.529 167.084C160.104 167.084 152.462 174.726 152.462 184.151C152.462 193.577 160.104 201.218 169.529 201.218C178.955 201.218 186.596 193.577 186.596 184.151C186.596 174.726 178.955 167.084 169.529 167.084ZM217.315 167.084C207.89 167.084 200.249 174.726 200.249 184.151C200.249 193.577 207.89 201.218 217.315 201.218C226.741 201.218 234.383 193.577 234.383 184.151C234.383 174.726 226.741 167.084 217.315 167.084Z"/></svg><span lang="servers.title">Servers</span></h2>
+      <form style="display:flex" onsubmit="event.preventDefault()">
+        <input id="server" type="url" invalid lang="servers.newurl" aria-label="Url for new server">
+        <button id="server-add" lang="servers.newbutton" aria-label="Add server" style="padding-inline:3px"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 256 256"><rect x="103" width="50" height="256" rx="25"/><rect y="103" width="256" height="50" rx="25"/></svg></button>
+      </form>
+      <div id="server-list"></div>
+      <button id="server-select" lang="servers.select" disabled>Select</button>
+    </dialog>
+    <dialog id="login-modal" closedby="none">
+      <h2 lang="login.title">Log in</h2>
+      <form onsubmit="event.preventDefault()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256"><path fill-rule="evenodd" clip-rule="evenodd" d="M128 128C163.346 128 192 99.3462 192 64C192 28.6538 163.346 0 128 0C92.6538 0 64 28.6538 64 64C64 99.3462 92.6538 128 128 128ZM151 146H148H108H105C49.7715 146 5 190.772 5 246V256H108H148H251V246C251 190.772 206.228 146 151 146Z"/></svg>
+        <label for="l-username" lang="login.username">Username:</label>
+        <input id="l-username" type="text" pattern="^[a-z0-9_\-]{3,20}$" minlength="3" maxlength="20" onchange="event.target.value=event.target.value.toLowerCase()" autocomplete="username" required>
+        <br>
+        <span id="s-hide">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256"><path d="M177.5 0C220.854 0 256 35.1456 256 78.5C256 121.854 220.854 157 177.5 157C134.146 157 99 121.854 99 78.5C99 35.1456 134.146 0 177.5 0ZM203.5 30C191.074 30 181 40.0736 181 52.5C181 64.9264 191.074 75 203.5 75C215.926 75 226 64.9264 226 52.5C226 40.0736 215.926 30 203.5 30Z"/><path d="M118.509 86.0404C123.098 81.4436 130.783 82.3726 134.144 87.9304L160.948 132.254C163.328 136.19 162.717 141.241 159.467 144.495L137.402 166.588C135.526 168.467 132.981 169.522 130.327 169.522H96.3242C93.5627 169.522 91.3242 171.761 91.3242 174.522V202.761C91.3242 208.284 86.847 212.761 81.3241 212.761H53.1621C50.4006 212.761 48.1621 215 48.1621 217.761V246C48.1621 251.523 43.6849 256 38.1621 256H9.99999C4.47715 256 0 251.523 0 246V208.898C0 206.249 1.05112 203.708 2.92264 201.833L118.509 86.0404Z"/></svg>
+          <label for="l-passkey" lang="login.passkey">Passkey:</label>
+          <input id="l-passkey" type="password" autocomplete="current-password" required>
+          <br>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256"><path d="M134.165 5C140.792 5.00004 146.165 10.3726 146.165 17V62.8682C146.165 73.5213 154.801 82.158 165.454 82.1582H211.323C217.95 82.1584 223.323 87.5309 223.323 94.1582V232.616C223.323 243.269 214.686 251.905 204.033 251.905H52.2891C41.6361 251.905 33.0002 243.269 33 232.616V24.2891C33.0002 13.6361 41.6361 5.00023 52.2891 5H134.165ZM155.07 99C131.361 99 112.141 118.22 112.141 141.93C112.141 146.406 112.826 150.723 114.098 154.78L60.9229 208.051C59.0514 209.926 58.0001 212.466 58 215.115V229C58 234.523 62.4772 239 68 239H74.3389C79.8616 239 84.3389 234.523 84.3389 229V220.354C84.3389 217.592 86.5775 215.354 89.3389 215.354H97.9434C103.466 215.353 107.943 210.876 107.943 205.354V196.707C107.944 193.946 110.182 191.707 112.943 191.707H127.394C130.048 191.707 132.594 190.652 134.47 188.773L140.806 182.429C145.269 184.001 150.069 184.859 155.07 184.859C178.78 184.859 198 165.639 198 141.93C198 118.22 178.78 99 155.07 99ZM169.289 115.406C176.085 115.406 181.594 120.915 181.594 127.711C181.594 134.507 176.085 140.016 169.289 140.016C162.493 140.016 156.984 134.507 156.984 127.711C156.984 120.915 162.493 115.406 169.289 115.406ZM156.333 15.0469C156.333 11.4833 160.642 9.69791 163.162 12.2178L216.505 65.5615C219.025 68.0813 217.24 72.3895 213.677 72.3896H166.333C160.81 72.3895 156.333 67.9124 156.333 62.3896V15.0469Z"/></svg>
+          <label for="l-keyfile" lang="login.keyfile">Key file:</label>
+          <input id="l-keyfile" type="file" accept=".keys" required>
+        </span>
+      </form>
+      <span id="l-errors" class="invalid-text"></span>
+      <span>
+        <button id="login-btn" lang="login.button">Log in</button>
+        <button id="instead-btn" lang="login.instead">Sign up instead</button>
+      </span>
+    </dialog>
+    <dialog id="signup-modal" closedby="none">
+      <h2 lang="signup.title">Sign up</h2>
+      <p lang="signup.save">Save these to be able to log in</p>
+      <span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256"><path d="M177.5 0C220.854 0 256 35.1456 256 78.5C256 121.854 220.854 157 177.5 157C134.146 157 99 121.854 99 78.5C99 35.1456 134.146 0 177.5 0ZM203.5 30C191.074 30 181 40.0736 181 52.5C181 64.9264 191.074 75 203.5 75C215.926 75 226 64.9264 226 52.5C226 40.0736 215.926 30 203.5 30Z"/><path d="M118.509 86.0404C123.098 81.4436 130.783 82.3726 134.144 87.9304L160.948 132.254C163.328 136.19 162.717 141.241 159.467 144.495L137.402 166.588C135.526 168.467 132.981 169.522 130.327 169.522H96.3242C93.5627 169.522 91.3242 171.761 91.3242 174.522V202.761C91.3242 208.284 86.847 212.761 81.3241 212.761H53.1621C50.4006 212.761 48.1621 215 48.1621 217.761V246C48.1621 251.523 43.6849 256 38.1621 256H9.99999C4.47715 256 0 251.523 0 246V208.898C0 206.249 1.05112 203.708 2.92264 201.833L118.509 86.0404Z"/></svg>
+        <label for="s-passkey" lang="login.passkey">Passkey:</label>
+        <input id="s-passkey" type="text" readonly>
+        <button id="s-passkey-copy" lang="signup.copy">Copy</button>
+      </span>
+      <span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256"><path d="M134.165 5C140.792 5.00004 146.165 10.3726 146.165 17V62.8682C146.165 73.5213 154.801 82.158 165.454 82.1582H211.323C217.95 82.1584 223.323 87.5309 223.323 94.1582V232.616C223.323 243.269 214.686 251.905 204.033 251.905H52.2891C41.6361 251.905 33.0002 243.269 33 232.616V24.2891C33.0002 13.6361 41.6361 5.00023 52.2891 5H134.165ZM155.07 99C131.361 99 112.141 118.22 112.141 141.93C112.141 146.406 112.826 150.723 114.098 154.78L60.9229 208.051C59.0514 209.926 58.0001 212.466 58 215.115V229C58 234.523 62.4772 239 68 239H74.3389C79.8616 239 84.3389 234.523 84.3389 229V220.354C84.3389 217.592 86.5775 215.354 89.3389 215.354H97.9434C103.466 215.353 107.943 210.876 107.943 205.354V196.707C107.944 193.946 110.182 191.707 112.943 191.707H127.394C130.048 191.707 132.594 190.652 134.47 188.773L140.806 182.429C145.269 184.001 150.069 184.859 155.07 184.859C178.78 184.859 198 165.639 198 141.93C198 118.22 178.78 99 155.07 99ZM169.289 115.406C176.085 115.406 181.594 120.915 181.594 127.711C181.594 134.507 176.085 140.016 169.289 140.016C162.493 140.016 156.984 134.507 156.984 127.711C156.984 120.915 162.493 115.406 169.289 115.406ZM156.333 15.0469C156.333 11.4833 160.642 9.69791 163.162 12.2178L216.505 65.5615C219.025 68.0813 217.24 72.3895 213.677 72.3896H166.333C160.81 72.3895 156.333 67.9124 156.333 62.3896V15.0469Z"/></svg>
+        <span lang="login.keyfile">Key file:</span>
+        <a href="#" download id="s-download"><button lang="signup.download">Download</button></a>
+      </span>
+      <button lang="signup.done" onclick="this.parentElement.close();window.postLogin();">Done</button>
+    </dialog>
+    <dialog id="edit-user">
+      <button onclick="this.parentElement.close()" class="modal-close">x</button>
+      <h2 lang="user.editing">Editing your profile</h2>
+      <label for="ue-display" lang="user.edit.display">Display:</label>
+      <input id="ue-display" minlength="1" maxlength="25">
+      <button id="uec-display" lang="user.edit.change">Change</button>
+      <br>
+      <span lang="user.edit.pfp">Profile Picture:</span>
+      <button id="ue-img" lang="user.edit.change">Change</button>
+      <input id="ue-imginp" type="file" accept="image/*" style="display:none">
+      <br>
+      <img alt="Profile Picture" lang="user.pfpalt">
+      <br>
+      <button onclick="backendfetch('/api/v1/me',{method:'DELETE'}).then(()=>{logout()})" style="color:var(--invalid)" lang="user.delete">Delete Account</button>
+    </dialog>
+    <dialog id="blocks">
+      <button onclick="this.parentElement.close()" class="modal-close">x</button>
+      <h2 lang="user.blocks">Blocks</h2>
+      <div></div>
+      <button class="add" lang="user.addblock">Add user</button>
+    </dialog>
+    <dialog id="sessions">
+      <button onclick="this.parentElement.close()" class="modal-close">x</button>
+      <h2 lang="user.sessions">Sessions</h2>
+      <div></div>
+      <button onclick="logoutall()" lang="user.logoutall">Log out all sessions</button>
+    </dialog>
+    <dialog id="edit-channel">
+      <button onclick="this.parentElement.close()" class="modal-close">x</button>
+      <h2><span lang="channel.edit.h">Editing</span> <span class="name"></span></h2>
+      <label for="ce-name" lang="channel.edit.name">Name:</label>
+      <input id="ce-name" minlength="1" maxlength="50">
+      <button id="cec-name" lang="channel.edit.change">Change</button>
+      <br>
+      <span lang="channel.edit.image">Image:</span>
+      <button id="cec-img" lang="channel.edit.change">Change</button>
+      <input id="ce-imginp" type="file" accept="image/*" style="display:none">
+      <br>
+      <img class="img" alt="Channel Image" lang="channel.imagealt">
+      <br>
+      <button id="cec-copyid" lang="settings.copyid">Copy Id</button>
+      <button id="cec-editperms" lang="channel.editperms">Edit permissions</button>
+      <button id="cec-delete" style="color:var(--invalid)" lang="channel.delete">Delete Channel</button>
+    </dialog>
+    <dialog id="bansModal">
+      <button onclick="this.parentElement.close()" class="modal-close">x</button>
+      <h2 lang="channel.bans">Bans</h2>
+      <div></div>
+    </dialog>
+    <dialog id="inviteModal">
+      <button onclick="this.parentElement.close()" class="modal-close">x</button>
+      <p><span lang="invite.current">Current</span>: <span class="cur"></span> <button onclick="navigator.clipboard.writeText(this.parentElement.querySelector('.cur').innerText)" lang="invite.copy">Copy</button></p>
+      <hr>
+      <button class="rand" lang="invite.newrandom">New Random</button>
+      <button class="rem" lang="invite.remove">Remove</button>
+      <br>
+      <input id="invitenew" pattern="^[a-zA-Z0-9_\-]{3,20}$" minlength="3" maxlength="20" placeholder="Invite" lang="invite.invite">
+      <button class="set" lang="invite.set">Set</button>
+    </dialog>
+    <dialog id="pinsModal" closedby="any">
+      <button onclick="this.parentElement.close()" class="modal-close">x</button>
+      <div></div>
+    </dialog>
+    <dialog id="bannedfrom">
+      <button onclick="this.parentElement.close()" class="modal-close">x</button>
+      <h2 lang="channel.banned.h">Can't join channel</h2>
+      <p lang="channel.banned.p">You are banned from joining this channel.</p>
+      <button onclick="this.parentElement.close()" lang="channel.banned.b">Close</button>
+    </dialog>
+    <dialog id="permModal">
+      <button onclick="this.parentElement.close()" class="modal-close">x</button>
+      <div></div>
+      <button class="set" lang="permission.set">Set</button>
+      <button class="sync" lang="permission.sync">Sync to channel</button>
+    </dialog>
+    <div style="flex:1;display:flex;width:0px;">
+      <side>
+        <nav>
+          <button id="user" lang="user" aria-label="User">
+            <img aria-hidden="true">
+          </button>
+          <input id="search" type="text" lang="channel.search" placeholder="Search">
+          <button id="channel-add" lang="channel.add" aria-label="Add channel"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 256 256"><rect x="103" width="50" height="256" rx="25"/><rect y="103" width="256" height="50" rx="25"/></svg></button>
+        </nav>
+        <div id="channels"></div>
+        <footer>
+          <button id="btn-settings" aria-label="Settings" lang="settings"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill-rule="evenodd" clip-rule="evenodd" d="M128.601 218.743C178.384 218.743 218.742 178.385 218.742 128.602C218.742 78.8184 178.384 38.4609 128.601 38.4609C78.8175 38.4609 38.4601 78.8184 38.4601 128.602C38.4601 178.385 78.8175 218.743 128.601 218.743ZM128.601 167.062C149.842 167.062 167.061 149.843 167.061 128.602C167.061 107.361 149.842 90.1415 128.601 90.1415C107.36 90.1415 90.1408 107.361 90.1408 128.602C90.1408 149.843 107.36 167.062 128.601 167.062Z"></path><path d="M101.001 11.0292C101.507 4.79869 106.711 0 112.962 0H143.038C149.289 0 154.493 4.79868 154.999 11.0292L158 48H98L101.001 11.0292Z"></path><path d="M101.001 244.971C101.507 251.201 106.711 256 112.962 256H143.038C149.289 256 154.493 251.201 154.999 244.971L158 208H98L101.001 244.971Z"></path><path d="M244.971 101.001C251.201 101.507 256 106.711 256 112.962L256 143.038C256 149.289 251.201 154.493 244.971 154.999L208 158L208 98L244.971 101.001Z"></path><path d="M11.0292 101.001C4.79869 101.507 -3.80751e-07 106.711 -6.5399e-07 112.962L-1.96869e-06 143.038C-2.24193e-06 149.289 4.79868 154.493 11.0292 154.999L48 158L48 98L11.0292 101.001Z"></path><path d="M192.883 25.8346C197.645 21.7687 204.733 22.0477 209.16 26.4753L229.71 47.025C234.137 51.4526 234.416 58.5404 230.351 63.3023L205.964 91.8642L164.321 50.2213L192.883 25.8346Z"></path><path d="M26.135 192.008C22.0807 196.77 22.3646 203.849 26.7873 208.271L47.7285 229.212C52.1512 233.635 59.2294 233.919 63.9921 229.865L92.2857 205.78L50.2198 163.714L26.135 192.008Z"></path><path d="M229.879 191.979C233.94 196.742 233.658 203.825 229.233 208.25L208.673 228.811C204.247 233.236 197.164 233.517 192.402 229.457L164.137 205.358L205.78 163.715L229.879 191.979Z"></path><path d="M63.9921 26.1356C59.2293 22.0813 52.1512 22.3652 47.7284 26.7879L26.7874 47.7289C22.3647 52.1517 22.0808 59.2298 26.1351 63.9926L50.22 92.2862L92.2857 50.2205L63.9921 26.1356Z"></path></svg></button>
+          <span lang="parley-mura">Parley (Mura)</span>
+          <button id="btn-languages" aria-label="Language settings" lang="lang.settings"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M15 194L64 60" stroke-width="30" stroke-linecap="round"/><path d="M115 194L64 60" stroke-width="30" stroke-linecap="round"/><path d="M208 204L130 104" stroke-width="30" stroke-linecap="round"/><path d="M150 204L230 104" stroke-width="30" stroke-linecap="round"/><path d="M180 68L196 47" stroke-width="30" stroke-linecap="round"/><path d="M38 152H92" stroke-width="30" stroke-linecap="round"/><path d="M118 104H241" stroke-width="30" stroke-linecap="round"/></svg></button>
+        </footer>
+      </side>
+      <main>
+        <div class="top">
+          <button class="mobile" onclick="document.querySelector('side').style.display='';document.querySelector('main').style.display='none';"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><rect x="12" y="21" width="88" height="216"></rect><rect width="232" height="232" rx="20" stroke-width="24" fill="none" x="12" y="12"></rect></svg></button>
+          <span class="type"></span>
+          <span class="name"></span>
+          <span style="flex:1"></span>
+          <button onclick="window.bansPanel()" id="bansButton" aria-label="Bans" lang="channel.bans" style="display:none"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M98.5196 2.3442C100.758 0.105786 104.106 -0.601995 107.059 0.538536L129.458 9.1899C131.019 9.7928 132.436 10.7158 133.619 11.8989L174.719 52.9985L186.757 40.9614C194.567 33.1509 207.232 33.1509 215.042 40.9614C222.852 48.7719 222.852 61.4352 215.042 69.2456L203.003 81.2827L244.102 122.381C245.285 123.564 246.208 124.983 246.811 126.543L255.463 148.942C256.603 151.895 255.896 155.243 253.657 157.481L206.481 204.657C204.242 206.895 200.895 207.603 197.941 206.462L175.543 197.811C173.982 197.208 172.564 196.285 171.381 195.102L130.282 154.003L34.1427 250.143C26.3321 257.953 13.668 257.953 5.85751 250.143C-1.95292 242.333 -1.95274 229.669 5.85751 221.859L101.998 125.719L60.8985 84.6196C59.7155 83.4366 58.7924 82.0191 58.1895 80.4585L49.5372 58.06C48.3965 55.107 49.1044 51.7585 51.3429 49.52L98.5196 2.3442Z"/></svg></button>
+          <button onclick="window.invitePanel()" id="inviteButton" aria-label="Channel invite" lang="channel.invite" style="display:none"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M163.964 45.2633C184.843 24.3845 218.694 24.3846 239.573 45.2633C260.452 66.1422 260.451 99.9932 239.573 120.872L180.935 179.51C160.056 200.389 126.205 200.389 105.326 179.511C84.4472 158.632 84.4471 124.78 105.326 103.901L107.73 101.497C112.417 96.8107 120.015 96.8107 124.701 101.497V101.497C129.387 106.183 129.387 113.781 124.701 118.468L122.296 120.872C110.79 132.378 110.79 151.034 122.296 162.54C133.803 174.046 152.458 174.046 163.964 162.539L222.602 103.901C234.108 92.3952 234.109 73.7401 222.603 62.2339C211.096 50.7278 192.441 50.7277 180.935 62.2339L175.179 67.9895C170.493 72.6758 162.895 72.6758 158.208 67.9895V67.9895C153.522 63.3032 153.522 55.7052 158.208 51.0189L163.964 45.2633Z"/><path d="M74.331 76.2582C95.2098 55.3794 129.062 55.3794 149.94 76.2582C170.819 97.137 170.818 130.988 149.94 151.867L147.535 154.271C142.849 158.958 135.251 158.958 130.565 154.271V154.271C125.878 149.585 125.878 141.987 130.565 137.301L132.969 134.896C144.475 123.39 144.476 104.735 132.97 93.2288C121.464 81.7226 102.808 81.7225 91.3016 93.2288L32.6635 151.867C21.1574 163.373 21.1574 182.029 32.6635 193.535C44.1697 205.041 62.8248 205.04 74.331 193.534L80.0866 187.779C84.7729 183.092 92.3709 183.092 97.0572 187.779V187.779C101.743 192.465 101.743 200.063 97.0572 204.749L91.3016 210.505C70.4228 231.384 36.5717 231.384 15.6929 210.506C-5.18579 189.627 -5.18573 155.775 15.6929 134.896L74.331 76.2582Z"/></svg></button>
+          <button onclick="window.pinsPanel()" id="pinsButton" aria-label="Pinned messages" lang="channel.pins"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M117.4 6.28699C118.758 0.114336 126.401 -2.11969 130.87 2.34949L253.649 125.126C258.118 129.595 255.883 137.239 249.71 138.597L206.755 148.044C204.89 148.454 203.182 149.39 201.832 150.74L181.588 170.983C180.637 171.934 179.889 173.067 179.386 174.313L154.115 236.957C151.434 243.603 142.838 245.354 137.771 240.287L95.5138 198.03L10.2823 254.884C7.65962 256.633 4.16588 256.288 1.93663 254.058C-0.292345 251.829 -0.63778 248.336 1.11143 245.714L57.964 160.48L15.7091 118.225C10.642 113.158 12.3932 104.562 19.0392 101.881L81.6827 76.6112C82.9295 76.1083 84.0621 75.3587 85.0128 74.4081L105.257 54.1649C106.607 52.8149 107.542 51.1066 107.952 49.2421L117.4 6.28699Z"/></svg></button>
+        </div>
+        <div id="messages"></div>
+        <div id="replypreview" style="display:none">
+          <span lang="message.replying">Replying to</span>
+          <span class="usr">Inventionpro</span>
+          <button onclick="window.closereply()">x</button>
+        </div>
+        <div id="filepreview"></div>
+        <div class="bar">
+          <button id="addfilebutton" lang="message.addfile"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 256 256" style="color:var(--text-2)"><rect x="103" width="50" height="256" rx="25"/><rect y="103" width="256" height="50" rx="25"/></svg></button>
+          <input id="addfile" type="file" multiple style="display:none">
+          <textarea id="input" lang="message" placeholder="Message" rows="1"></textarea>
+          <button id="sned" lang="message.sned"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M240.772 120.273C246.865 123.165 246.865 131.835 240.772 134.727L19.2293 239.874C12.5566 243.041 5.52289 236.245 8.45783 229.467L43.5297 148.472C44.8279 145.474 47.5088 143.299 50.7102 142.647L110.635 130.44C113.837 129.787 113.837 125.213 110.635 124.56L50.7102 112.352C47.5088 111.7 44.8279 109.525 43.5297 106.527L8.45792 25.5326C5.52295 18.7546 12.5566 11.9595 19.2294 15.1264L240.772 120.273Z"/></svg></button>
+        </div>
+        <div class="bar fake" lang="message.cant" style="display:none">You can't send messages here</div>
+      </main>
+    </div>
+    <div class="lateral" style="display:none"></div>
+    <!-- Scripts -->
+    <script>
+      window.version = '0.1.0';
+      window.defaultpfp = '';
+      window.currentServer = '';
+      window.currentChannel = '';
+      window.currentChannelType = 0;
+      window.serverData = {};
+    </script>
+    <script src="./media/utility.js"></script>
+    <script src="./media/main.js" type="module"></script>
+    <script src="./media/login.js" type="module"></script>
+    <script src="./media/server.js" type="module"></script>
+  </body>
+</html>

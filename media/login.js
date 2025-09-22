@@ -1,0 +1,163 @@
+document.getElementById('login-modal').addEventListener('cancel', (evt) => {
+  evt.preventDefault();
+  setTimeout(()=>{document.getElementById('login-modal').showModal()}, 0);
+});
+document.getElementById('instead-btn').onclick = function() {
+  let errors = document.getElementById('l-errors');
+  let logining = document.querySelector('[lang="login.title"]');
+  document.querySelector(`[lang="${logining?'login':'signup'}.title"]`).setAttribute('lang', `${logining?'signup':'login'}.title`);
+  document.querySelector(`[lang="${logining?'login':'signup'}.button"]`).setAttribute('lang', `${logining?'signup':'login'}.button`);
+  this.setAttribute('lang', `${logining?'signup':'login'}.instead`);
+  document.getElementById('s-hide').style.display = logining?'none':'';
+  errors.setAttribute('lang', 'empty');
+  document.getElementById('l-username').removeAttribute('invalid');
+}
+
+let TypingTimer = null;
+document.getElementById('l-username').oninput = function(evt) {
+  clearTimeout(TypingTimer);
+  evt.target.value = evt.target.value.toLowerCase();
+  TypingTimer = setTimeout(()=>{
+    if (document.querySelector('[lang="login.title"]')) {
+      evt.target.removeAttribute('invalid');
+      return;
+    }
+    let errors = document.getElementById('l-errors');
+    if (evt.target.value.length<3||evt.target.value.length>20) {
+      errors.setAttribute('lang', 'error.username');
+      evt.target.setAttribute('invalid', true);
+      return;
+    }
+    fetch(window.currentServer+'/api/v1/username_check?username='+evt.target.value)
+      .then(res=>{
+        if (res.status===200) {
+          if (errors.getAttribute('lang') === 'error.usernameuse') errors.setAttribute('lang', 'empty');
+          evt.target.removeAttribute('invalid');
+        } else {
+          errors.setAttribute('lang', 'error.usernameuse');
+          evt.target.setAttribute('invalid', true);
+        }
+      });
+  }, 1000)
+}
+
+let LoginFileContents = {};
+document.getElementById('l-keyfile').onchange = function(evt) {
+  const file = evt.target.files[0];
+  if (!file) {
+    LoginFileContents = {};
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(res){
+    try {
+      LoginFileContents = JSON.parse(res.target.result);
+    } catch(err) {
+      LoginFileContents = {};
+    }
+  };
+  reader.onerror = function(err){
+    LoginFileContents = {};
+  };
+  reader.readAsText(file);
+};
+
+document.getElementById('login-btn').onclick = async function(){
+  const errors = document.getElementById('l-errors');
+  if (!document.getElementById('l-username').checkValidity() || document.getElementById('l-username').getAttribute('invalid')) {
+    errors.setAttribute('lang','error.username');
+    return;
+  }
+  let logining = document.querySelector('[lang="login.title"]');
+  if (logining) {
+    if (!document.getElementById('l-passkey').checkValidity()) {
+      errors.setAttribute('lang','error.passkey');
+      return;
+    }
+    if (!document.getElementById('l-keyfile').checkValidity()) {
+      errors.setAttribute('lang','error.keyfile');
+      return;
+    }
+    if (!LoginFileContents.publicKey||!LoginFileContents.privateKey) {
+      errors.setAttribute('lang','error.keyfile');
+      return;
+    }
+    if (!(/^[a-zA-Z0-9\+\/=]+$/m).test(LoginFileContents.publicKey)) {
+      errors.setAttribute('lang','error.keyfile');
+      return;
+    }
+    if (!(/^[a-zA-Z0-9\+\/=]+$/m).test(LoginFileContents.privateKey)) {
+      errors.setAttribute('lang','error.keyfile');
+      return;
+    }
+    localStorage.setItem(window.currentServer+'-publicKey', LoginFileContents.publicKey);
+    localStorage.setItem(window.currentServer+'-privateKey', LoginFileContents.privateKey);
+  }
+  errors.innerText = '';
+
+  let publickey = '';
+  if (logining) {
+    publickey = LoginFileContents.publicKey;
+  } else {
+    await newRSAKeys();
+    await getRSAKeyPair();
+    publickey = localStorage.getItem(window.currentServer+'-publicKey');
+  }
+
+  let formData = new FormData();
+  formData.append('username', document.getElementById('l-username').value);
+  if (logining) formData.append('passkey', document.getElementById('l-passkey').value);
+  formData.append('public', publickey);
+
+  fetch(window.currentServer+`/api/v1/${logining?'login':'signup'}`, {
+    method: 'POST',
+    body: formData
+  })
+    .then(async(res) => {
+      if (res.status===400) {
+        errors.setAttribute('lang','error.'+(logining?'publicmismatch':'usernameuse'));
+        return;
+      }
+      if (res.status===401) {
+        errors.setAttribute('lang','error.'+(logining?'invalidcredentials':'usernameuse'));
+        return;
+      }
+      if (res.status!==200 || !res.ok) {
+        errors.setAttribute('lang','error.generic');
+        return;
+      }
+
+      let body = await res.json();
+      solveChallenge(body.challenge, body.id, (data)=>{
+        document.getElementById('login-modal').close();
+
+        if (data.passkey) {
+          document.getElementById('s-passkey').value = data.passkey;
+          document.getElementById('s-passkey-copy').onclick = ()=>{
+            document.getElementById('s-passkey').select();
+            navigator.clipboard.writeText(data.passkey);
+          };
+          const blob = new Blob([`{
+  "publicKey": "${localStorage.getItem(window.currentServer+'-publicKey')}",
+  "privateKey": "${localStorage.getItem(window.currentServer+'-privateKey')}"
+}`], { type: "text/plain" });
+          document.getElementById('s-download').href = URL.createObjectURL(blob);
+          document.getElementById('s-download').download = document.getElementById('l-username').value+'.keys';
+          document.getElementById('signup-modal').showModal();
+        } else {
+          window.postLogin();
+        }
+      })
+    });
+};
+
+function postServerSelect() {
+  if (loggedIn()) {
+    getRSAKeyPair();
+    window.postLogin();
+  } else {
+    document.getElementById('login-modal').showModal();
+  }
+}
+window.postServerSelect = postServerSelect;

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>404 - Parley</title>
+    <link rel="stylesheet" href="/media/style.css">
+    <script>
+      function func(res) {
+        let s = document.createElement('script');
+        s.src = URL.createObjectURL(new Blob([res], { type: 'application/javascript' }));
+        s.onload = ()=>{window.translate()};
+        document.body.appendChild(s);
+      }
+      fetch('/media/langs/script.js')
+        .then(async res=>{
+          if (res.status === 200) {
+            res = await res.text();
+            func(res.replace('`./media','`/media'));
+          } else {
+            let prefix = '/'+location.pathname.split('/')[1];
+            fetch(prefix+'/media/langs/script.js')
+              .then(res=>res.text())
+              .then(res=>func(res.replace('`./media','`'+prefix+'/media')));
+            document.querySelector('link').href = prefix+'/media/style.css';
+          }
+        });
+    </script>
+  </head>
+  <body class="error">
+    <h1 lang="404.title">404 Page not found</h1>
+  </body>
+</html>
