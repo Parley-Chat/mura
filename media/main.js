@@ -360,9 +360,12 @@ async function showMessages(messages) {
           .then(res=>{
             if (res.length<1) return;
             window.messages[window.currentChannel] = window.messages[window.currentChannel].concat(res);
-            showMessages(window.messages[window.currentChannel]);
-            setList();
-            more = false;
+            let missingKeys = Array.from(new Set(window.messages[window.currentChannel].map(msg=>msg.key).filter(key=>!window.keys[window.currentChannel][key])));
+            getKeysBatch(window.currentChannel, missingKeys, ()=>{
+              showMessages(window.messages[window.currentChannel]);
+              setList();
+              more = false;
+            });
           });
       }
     };
@@ -610,7 +613,11 @@ function loadChannel(id) {
     backendfetch('/api/v1/channel/'+id+'/messages')
       .then(res=>{
         window.messages[id] = res;
-        showMessages(res);
+        if (!window.keys[id]) window.keys[id]={};
+        let missingKeys = Array.from(new Set(window.messages[id].map(msg=>msg.key).filter(key=>!window.keys[id][key])));
+        getKeysBatch(id, missingKeys, ()=>{
+          showMessages(res);
+        });
       });
   }
 }
@@ -1122,7 +1129,8 @@ async function loadMain() {
 const vts = {
   lexend: 'Lexend, Arial, sans-serif',
   arial: 'Arial, sans-serif',
-  dyslexic: 'OpenDyslexic, sans-serif'
+  dyslexic: 'OpenDyslexic, Arial, sans-serif',
+  system: 'system-ui, Arial, sans-serif'
 };
 document.querySelector('body').style.setProperty('--accent', localStorage.getItem('ptheme')??'#221111');
 document.querySelector('body').style.setProperty('--font', vts[localStorage.getItem('pfont')??'lexend']??vts.lexend);
@@ -1162,6 +1170,7 @@ function postLogin() {
     <option value="lexend">Lexend</option>
     <option value="arial">Arial</option>
     <option value="dyslexic">Open Dyslexic</option>
+    <option value="system">System</option>
   </select>
 </span>`,
     interactive: true,

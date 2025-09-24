@@ -296,7 +296,28 @@ function getKeyContents(id, key, callback=()=>{}) {
         callback();
         return;
       }
+      if (data.expires_at.toString().length===10) data.expires_at*=1000;
       window.keys[id][key] = data;
+      callback();
+    });
+}
+function getKeysBatch(id, keys, callback=()=>{}) {
+  if (!keys || keys.length<1) {
+    callback();
+    return;
+  }
+  if (!window.keys[id]) window.keys[id] = {};
+  backendfetch('/api/v1/keys', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify(keys)
+  })
+    .then(data=>{
+      data.forEach(key=>{
+        window.keys[id][key.key_id] = key;
+      });
       callback();
     });
 }

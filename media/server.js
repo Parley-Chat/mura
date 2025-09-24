@@ -5,7 +5,7 @@ document.getElementById('server').onchange = function(){
     .then(res=>res.json())
     .then(res=>{
       window.serverData[_this.value] = res;
-      if (res.running==='Parley'&&res.version===version){
+      if (res.running==='Parley'&&backendVersions.includes(res.version)){
         _this.removeAttribute('invalid')
       } else {
         throw new Error('Missmatch');
@@ -42,8 +42,8 @@ let checkOnlineInter = setInterval(()=>{
         .then(res=>res.json())
         .then(res=>{
           window.serverData[srv] = res;
-          onlineServers[srv] = (res.running==='Parley'&&res.version===version);
-          extraServers[srv] = { dev: res.dev??false, vermiss: res.version!==version };
+          onlineServers[srv] = (res.running==='Parley'&&backendVersions.includes(res.version));
+          extraServers[srv] = { dev: res.dev??false, vermiss: !backendVersions.includes(res.version) };
           showServerList();
         });
       return;
@@ -79,7 +79,7 @@ window.currentServer = '';
       let path = (window.location.pathname.split('/').filter(p=>p.length).length===1)?window.location.pathname:'';
       let testFetchSelf = await fetch(location.protocol+'//'+window.location.host+path+'/api/v1');
       testFetchSelf = await testFetchSelf.json();
-      if (testFetchSelf.running!=='Parley'||testFetchSelf.version!==window.version) throw new Error('Result is false');
+      if (testFetchSelf.running!=='Parley'||!backendVersions.includes(testFetchSelf.version)) throw new Error('Result is false');
       localStorage.setItem('servers', JSON.stringify([location.protocol+'//'+window.location.host+path]));
     } catch(err) {
       localStorage.setItem('servers', '[]');
