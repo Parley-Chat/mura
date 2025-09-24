@@ -559,6 +559,10 @@ main {
   flex-direction: column;
   align-items: flex-start;
 }
+.fileList > * {
+  max-width: 45vw;
+  max-height: 35dvh;
+}
 
 #pinsModal {
   width: 25vw;

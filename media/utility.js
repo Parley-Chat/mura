@@ -302,7 +302,7 @@ function getKeyContents(id, key, callback=()=>{}) {
     });
 }
 function getKeysBatch(id, keys, callback=()=>{}) {
-  if (!keys || keys.length<1) {
+  if (!keys || keys.filter(k=>typeof k!=='undefined').length<1) {
     callback();
     return;
   }

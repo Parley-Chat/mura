@@ -814,7 +814,7 @@ window.pinsPanel = ()=>{
       document.querySelector('#pinsModal div').innerHTML = messages
         .map(msg=>{
           return `<div class="message">
-  <img src="${msg.user.pfp?pfpById(msg.user.pfp):userToDefaultPfp(msg.user)}" width="42" height="42" aria-hidden="true">
+  <div class="avatar"><img src="${msg.user.pfp?pfpById(msg.user.pfp):userToDefaultPfp(msg.user)}" width="42" height="42" aria-hidden="true"></div>
   <div class="inner">
     ${ch.type===1||hasPerm(ch.permission,Permissions.MANAGE_MESSAGES)?`<div class="actions">
       <button onclick="window.unpinMessage('${sanitizeMinimChars(msg.id)}');window.pinsPanel()" aria-label="Unpin" lang="message.unpin" style="color:var(--invalid)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M117.925 15.287C119.283 9.11438 126.925 6.88031 131.394 11.3495L244.087 124.041C248.556 128.51 246.321 136.153 240.148 137.511L201.418 146.029C199.553 146.439 197.845 147.375 196.495 148.724L177.921 167.299C176.97 168.249 176.222 169.382 175.719 170.629L152.677 227.748C149.996 234.394 141.4 236.146 136.332 231.078L97.7987 192.545L18.5585 245.401C16.1203 247.027 12.8731 246.706 10.8007 244.634C8.72831 242.561 8.40702 239.314 10.0331 236.876L62.8886 157.636L24.3564 119.103C19.2888 114.036 21.0402 105.44 27.6864 102.759L84.8066 79.7167C86.0533 79.2137 87.186 78.465 88.1366 77.5145L106.71 58.9403C108.06 57.5903 108.996 55.882 109.406 54.0174L117.925 15.287Z"/><path d="M20 20L236 236" stroke-width="40" stroke-linecap="round"/></svg></button>
