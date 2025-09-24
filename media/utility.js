@@ -105,7 +105,8 @@ function smallScreen() {
 
 function getLanguageName(iso) {
   const displayNames = new Intl.DisplayNames([iso], { type: 'language' });
-  return displayNames.of(iso);
+  let display = displayNames.of(iso);
+  return display==='tok'?'Toki Pona':display; // Tok not supported fully
 }
 function formatTime(date) {
   let now = new Date();

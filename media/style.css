@@ -284,6 +284,7 @@ nav button img {
 #edit-channel h2 .name {
   display: inline-block;
   max-width: 20vw;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }

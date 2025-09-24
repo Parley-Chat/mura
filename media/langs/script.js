@@ -7,7 +7,8 @@ const languages = {
   'es-ES': 'es-ES',
   'es-419': 'es-ES',
   'es': 'es-ES',
-  'fa': 'fa'
+  'fa': 'fa',
+  'tok': 'tok'
 };
 
 // Try to get the user langs
