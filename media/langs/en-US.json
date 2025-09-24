@@ -122,6 +122,7 @@
 
   "settings": "Settings",
   "settings.theme": "Theme:",
+  "settings.font": "Font:",
   "settings.copyid": "Copy Id",
 
   "lang.settings": "Language settings",

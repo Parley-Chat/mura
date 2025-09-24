@@ -454,14 +454,15 @@ window.channelMembers = {};
 function showMembers(id) {
   if (!channelMembers[id]) channelMembers[id] = [];
   let ch = window.channels.find(ch=>ch.id===id);
-  document.querySelector('.lateral').innerHTML = channelMembers[id]
+  document.querySelector('.lateral').innerHTML = `<button class="mobile" onclick="document.querySelector('main').style.display='';document.querySelector('side').style.display='none';document.querySelector('.lateral').style.display='none';" aria-label="Close member list"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><rect x="12" y="21" width="88" height="216"></rect><rect width="232" height="232" rx="20" stroke-width="24" fill="none" x="12" y="12"></rect></svg></button>`+
+  channelMembers[id]
     .toSorted((a,b)=>{
       if ((a.display??a.username)!==(b.display??b.username)) return (a.display??a.username).localeCompare(b.display??b.username);
       return b.joined_at - a.joined_at;
     })
     .map(mem=>`<button username="${sanitizeMinimChars(mem.username)}"><img src="${mem.pfp?pfpById(mem.pfp):userToDefaultPfp(mem)}" width="30" height="30" aria-hidden="true" loading="lazy"><span>${sanitizeHTML(mem.display??mem.username)}</span></button>`)
     .join('');
-  document.querySelectorAll('.lateral button').forEach(btn=>{
+  document.querySelectorAll('.lateral button:not(.mobile)').forEach(btn=>{
     if (window.username === btn.getAttribute('username')) return;
     tippy(btn, {
       allowHTML: true,
@@ -576,6 +577,7 @@ function loadChannel(id) {
   let ch = window.channels.find(ch=>ch.id===id);
   window.currentChannel = id;
   window.currentChannelType = ch.type;
+  document.querySelector('.lateraltoggle').style.display = 'none';
   if (smallScreen()) {
     document.querySelector('side').style.display = 'none';
     document.querySelector('main').style.display = '';
@@ -587,7 +589,11 @@ function loadChannel(id) {
   document.getElementById('bansButton').style.display = 'none';
   document.querySelector('.lateral').style.display = 'none';
   if (ch.type===2||(ch.type===3&&(hasPerm(ch.permission,Permissions.MANAGE_CHANNEL)||hasPerm(ch.permission,Permissions.MANAGE_MEMBERS)))) {
-    document.querySelector('.lateral').style.display = '';
+    if (smallScreen()) {
+      document.querySelector('.lateraltoggle').style.display = '';
+    } else {
+      document.querySelector('.lateral').style.display = '';
+    }
     showMembers(id);
     getMembers(id);
     if (hasPerm(ch.permission,Permissions.MANAGE_CHANNEL)) document.getElementById('inviteButton').style.display = '';
@@ -1079,14 +1085,18 @@ function layout() {
       splitinst.destroy();
       splitinst = null;
     }
+    document.querySelectorAll('side,main').forEach(elem=>elem.style.flex = '');
+    if (document.querySelector('side').style.display==='none'&&document.querySelector('main').style.display==='none') return;
     document.querySelector('side').style.display = window.currentChannel?'none':'';
     document.querySelector('main').style.display = window.currentChannel?'':'none';
-    document.querySelectorAll('side,main').forEach(elem=>elem.style.flex = '');
+    document.querySelector('.lateral').style.display = 'none';
   } else {
     document.querySelector('side').style.display = '';
     document.querySelector('main').style.display = '';
     document.querySelectorAll('side,main').forEach(elem=>elem.style.flex = 'unset');
     if (!splitinst) {
+      document.querySelector('.lateral').style.display = window.currentChannelType===2?'':'none';
+      if (window.currentChannel.length) loadChannel(window.currentChannel);
       splitinst = Split(['side', 'main'], {
         sizes: [20, 80]
       });
@@ -1109,7 +1119,13 @@ async function loadMain() {
   startStrem();
 }
 
-document.querySelector('body').style.setProperty('--accent', localStorage.getItem('ptheme')??'#221111');
+let vts = {
+  lexend: 'Lexend, Arial, sans-serif',
+  arial: 'Arial, sans-serif',
+  dyslexic: 'OpenDyslexic, sans-serif'
+};
+document.querySelector('body').style.setProperty('--accent', localStorage.getItem('ptheme')??'#221111');  
+document.querySelector('body').style.setProperty('--font', localStorage.getItem('pfont')??'lexend');
 function postLogin() {
   // Tippy
   tippy(document.getElementById('user'), {
@@ -1139,11 +1155,31 @@ function postLogin() {
     content: `<span>
   <label for="s-theme" lang="settings.theme">Theme:</label>
   <input type="color" id="s-theme" oninput="document.querySelector('body').style.setProperty('--accent',this.value);localStorage.setItem('ptheme',this.value)" value="${localStorage.getItem('ptheme')??'#221111'}">
+</span>
+<span>
+  <label for="s-font" lang="settings.font">Font:</label>
+  <select id="s-font">
+    <option value="lexend">Lexend</option>
+    <option value="arial">Arial</option>
+    <option value="dyslexic">Open Dyslexic</option>
+  </select>
 </span>`,
     interactive: true,
     trigger: 'click',
     placement: 'top-start',
-    sticky: true
+    sticky: true,
+    onMount: ()=>{
+      let vts = {
+        lexend: 'Lexend, Arial, sans-serif',
+        arial: 'Arial, sans-serif',
+        dyslexic: 'OpenDyslexic, sans-serif'
+      };
+      document.getElementById('s-font').value = localStorage.getItem('pfont')??'lexend';
+      document.getElementById('s-font').onchange = (evt)=>{
+        document.querySelector('body').style.setProperty('--font',vts[evt.target.value]);
+        localStorage.setItem('pfont', evt.target.value);
+      };
+    }
   });
   tippy(document.getElementById('btn-languages'), {
     allowHTML: true,
