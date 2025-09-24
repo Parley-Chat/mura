@@ -36,6 +36,7 @@ body {
   width: 100dvw;
   height: 100dvh;
   font-family: var(--font);
+  font-size-adjust: 0.525;
   color: var(--text-1);
   margin: 0px;
   padding: 10px;

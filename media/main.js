@@ -1119,13 +1119,13 @@ async function loadMain() {
   startStrem();
 }
 
-let vts = {
+const vts = {
   lexend: 'Lexend, Arial, sans-serif',
   arial: 'Arial, sans-serif',
   dyslexic: 'OpenDyslexic, sans-serif'
 };
-document.querySelector('body').style.setProperty('--accent', localStorage.getItem('ptheme')??'#221111');  
-document.querySelector('body').style.setProperty('--font', localStorage.getItem('pfont')??'lexend');
+document.querySelector('body').style.setProperty('--accent', localStorage.getItem('ptheme')??'#221111');
+document.querySelector('body').style.setProperty('--font', vts[localStorage.getItem('pfont')??'lexend']??vts.lexend);
 function postLogin() {
   // Tippy
   tippy(document.getElementById('user'), {
@@ -1169,14 +1169,9 @@ function postLogin() {
     placement: 'top-start',
     sticky: true,
     onMount: ()=>{
-      let vts = {
-        lexend: 'Lexend, Arial, sans-serif',
-        arial: 'Arial, sans-serif',
-        dyslexic: 'OpenDyslexic, sans-serif'
-      };
       document.getElementById('s-font').value = localStorage.getItem('pfont')??'lexend';
       document.getElementById('s-font').onchange = (evt)=>{
-        document.querySelector('body').style.setProperty('--font',vts[evt.target.value]);
+        document.querySelector('body').style.setProperty('--font',vts[evt.target.value]??vts.lexend);
         localStorage.setItem('pfont', evt.target.value);
       };
     }
