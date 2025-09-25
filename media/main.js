@@ -1135,6 +1135,7 @@ const vts = {
 };
 document.querySelector('body').style.setProperty('--accent', localStorage.getItem('ptheme')??'#221111');
 document.querySelector('body').style.setProperty('--font', vts[localStorage.getItem('pfont')??'lexend']??vts.lexend);
+document.querySelector('body').style.setProperty('direction', localStorage.getItem('prtl')==='true'?'rtl':'');
 function postLogin() {
   // Tippy
   tippy(document.getElementById('user'), {
@@ -1173,6 +1174,10 @@ function postLogin() {
     <option value="dyslexic">Open Dyslexic</option>
     <option value="system">System</option>
   </select>
+</span>
+<span>
+  <label for="s-rtl" lang="settings.rtl">RTL:</label>
+  <input id="s-rtl" type="checkbox" onchange="document.querySelector('body').style.setProperty('direction',this.checked?'rtl':'');localStorage.setItem('rtl',this.checked)"${localStorage.getItem('prtl')==='true'?' checked':''}>
 </span>`,
     interactive: true,
     trigger: 'click',

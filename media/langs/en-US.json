@@ -123,6 +123,7 @@
   "settings": "Settings",
   "settings.theme": "Theme:",
   "settings.font": "Font:",
+  "settings.rtl": "RTL:",
   "settings.copyid": "Copy Id",
 
   "lang.settings": "Language settings",
