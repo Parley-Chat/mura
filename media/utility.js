@@ -20,7 +20,7 @@ function loggedIn() {
   return options.filter(o=>!o).length<1;
 }
 function logout() {
-  backendfetch('/api/v1/me', {
+  backendfetch('/api/v1/me/logout', {
     method: 'DELETE'
   });
   localStorage.removeItem(window.currentServer+'-sessionToken');
