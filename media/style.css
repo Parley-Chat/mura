@@ -4,7 +4,7 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url(../external/Lexend.ttf) format('ttf');
+  src: url(../external/Lexend.ttf) format('truetype');
 }
 @font-face {
   font-family: 'OpenDyslexic';
@@ -60,10 +60,14 @@ button, input, textarea {
   border: 2px var(--bg-2) solid;
   border-radius: var(--roundness-1);
   background-color: var(--bg-2);
-  outline-color: var(--text-2);
-  outline-offset: 2px;
   transition: border var(--time);
   resize: none;
+}
+button:focus-within, input:focus-within, textarea:focus-within, select:focus-within {
+	outline-color: var(--text-1);
+	outline-width: 2px;
+	outline-style: solid;
+	outline-offset: 1px;
 }
 button {
   cursor: pointer;

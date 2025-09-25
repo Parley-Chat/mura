@@ -1079,6 +1079,7 @@ window.showuserdata = (me)=>{
     document.querySelector('#user img').src = me.pfp?pfpById(me.pfp):userToDefaultPfp(me);
     document.querySelector('#user img').setAttribute('title', me.username);
     document.getElementById('ue-display').value = me.display??'';
+    document.getElementById('ue-display').placeholder = me.username??'';
     document.querySelector('#edit-user img').src = me.pfp?pfpById(me.pfp):userToDefaultPfp(me);
   }
   getChannels();
