@@ -8,6 +8,7 @@ const languages = {
   'es-419': 'es-ES',
   'es': 'es-ES',
   'fa': 'fa',
+  'nl': 'nl',
   'tok': 'tok'
 };
 
