@@ -119,8 +119,8 @@
   "message.nopins": "Er zijn geen vastgezette berichten",
   "message.cant": "Je kunt hier geen berichten versturen",
   "message.download": "Downloaden",
-  "message.attachment.toobig": "{} is too big",
-  "message.attachment.toomany": "Cannot have more then {} attachments",
+  "message.attachment.toobig": "{} is te groot",
+  "message.attachment.toomany": "Kan niet meer dan {} bijlagen verzenden",
 
   "settings": "Instellingen",
   "settings.theme": "Thema:",

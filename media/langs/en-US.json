@@ -120,7 +120,7 @@
   "message.cant": "You can't send messages here",
   "message.download": "Download",
   "message.attachment.toobig": "{} is too big",
-  "message.attachment.toomany": "Cannot have more then {} attachments",
+  "message.attachment.toomany": "Cannot have more than {} attachments",
 
   "settings": "Settings",
   "settings.theme": "Theme:",

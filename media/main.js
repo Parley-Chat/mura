@@ -1014,6 +1014,7 @@ window.viewsessions = ()=>{
   ${ses.current?'<span lang="user.currentsession">(current)</span>':`<button onclick="window.deletesession('${sanitizeMinimChars(ses.id)}')">x</button>`}
 </div>`)
         .join('');
+      window.translate();
     });
 };
 window.viewblocks = ()=>{
