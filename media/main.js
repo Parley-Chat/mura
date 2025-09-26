@@ -1076,6 +1076,7 @@ window.showuserdata = (me)=>{
     // Uh issue isn't the session or server but still failed, try to work without user data
   } else {
     window.username = sanitizeMinimChars(me.username);
+    localStorage.setItem(window.currentServer+'-username', sanitizeMinimChars(me.username));
     document.querySelector('#user img').src = me.pfp?pfpById(me.pfp):userToDefaultPfp(me);
     document.querySelector('#user img').setAttribute('title', me.username);
     document.getElementById('ue-display').value = me.display??'';
