@@ -119,6 +119,8 @@
   "message.nopins": "Toki suli ala",
   "message.cant": "Sina ken ala toki",
   "message.download": "O awen jo",
+  "message.attachment.toobig": "{} li suli ike",
+  "message.attachment.toomany": "Toki li ken ala jo e lipu pi {} mute",
 
   "settings": "Ante nasin",
   "settings.theme": "Kule:",

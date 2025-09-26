@@ -17,7 +17,7 @@
     <meta property="og:image" content="https://parley-chat.site/favicon.ico">
     <meta property="og:image:alt" content="Parley Chat Logo">
     <meta name="twitter:image" content="https://parley-chat.site/favicon.ico">
-    <meta name="theme-color" content="#00ff00">
+    <meta name="theme-color" content="#004400">
     <link rel="canonical" href="https://parley-chat.site/">
     <meta property="og:url" content="https://parley-chat.site/">
     <meta property="og:type" content="website">
@@ -38,6 +38,10 @@
       <h2></h2>
       <input>
       <button class="set"></button>
+    </dialog>
+    <dialog id="notice">
+      <button onclick="this.parentElement.close()" class="modal-close">x</button>
+      <h3></h3>
     </dialog>
     <dialog id="server-modal" closedby="none">
       <h2 style="display:flex;gap:5px;"><svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 256 256"><path d="M236 26C247.046 26 256 34.9543 256 46V97.0225C256 108.068 247.046 117.022 236 117.022H20C8.95446 117.022 0.000246531 108.068 0 97.0225V46C0 34.9543 8.95431 26 20 26H236ZM169.529 54.4434C160.104 54.4434 152.462 62.0851 152.462 71.5107C152.462 80.9363 160.104 88.5771 169.529 88.5771C178.955 88.5769 186.596 80.9361 186.596 71.5107C186.596 62.0852 178.955 54.4436 169.529 54.4434ZM217.315 54.4434C207.89 54.4435 200.249 62.0852 200.249 71.5107C200.249 80.9362 207.89 88.577 217.315 88.5771C226.741 88.5771 234.383 80.9363 234.383 71.5107C234.383 62.0851 226.741 54.4434 217.315 54.4434Z"/><path d="M236 138.641C247.046 138.641 256 147.595 256 158.641V209.663C256 220.709 247.046 229.663 236 229.663H20C8.95446 229.663 0.000246531 220.709 0 209.663V158.641C0 147.595 8.95431 138.641 20 138.641H236ZM169.529 167.084C160.104 167.084 152.462 174.726 152.462 184.151C152.462 193.577 160.104 201.218 169.529 201.218C178.955 201.218 186.596 193.577 186.596 184.151C186.596 174.726 178.955 167.084 169.529 167.084ZM217.315 167.084C207.89 167.084 200.249 174.726 200.249 184.151C200.249 193.577 207.89 201.218 217.315 201.218C226.741 201.218 234.383 193.577 234.383 184.151C234.383 174.726 226.741 167.084 217.315 167.084Z"/></svg><span lang="servers.title">Servers</span></h2>

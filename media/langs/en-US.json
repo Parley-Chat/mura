@@ -119,6 +119,8 @@
   "message.nopins": "There are no pinned messages",
   "message.cant": "You can't send messages here",
   "message.download": "Download",
+  "message.attachment.toobig": "{} is too big",
+  "message.attachment.toomany": "Cannot have more then {} attachments",
 
   "settings": "Settings",
   "settings.theme": "Theme:",

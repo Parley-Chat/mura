@@ -119,6 +119,8 @@
   "message.nopins": "No hay mensajes fijados",
   "message.cant": "No puedes enviar mensajes aquí",
   "message.download": "Descargar",
+  "message.attachment.toobig": "{} es demasiado grande",
+  "message.attachment.toomany": "No se pueden tener mase de {} archivos",
 
   "settings": "Ajustes",
   "settings.theme": "Tema:",

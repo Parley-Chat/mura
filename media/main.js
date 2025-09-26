@@ -131,22 +131,22 @@ function filePreview() {
 </div>`)
     .join('');
 }
-fileButton.onclick = function() {
+fileButton.onclick = ()=>{
   fileInput.click();
 };
-fileInput.onchange = function(event) {
+fileInput.onchange = async(event)=>{
   files = files.concat(Array.from(event.target.files));
   fileInput.value = '';
   files = files.filter(file=>{
     if (file.size>window.serverData[window.currentServer].max_file_size.attachments) {
-      alert(file.name+' is too big');
+      notice('message.attachment.toobig', file.name);
       return false;
     }
     return true;
   });
   if (files.length>window.serverData[window.currentServer].messages.max_attachments) {
     files = files.slice(0, window.serverData[window.currentServer].messages.max_attachments);
-    alert('Cannot have more then '+window.serverData[window.currentServer].messages.max_attachments+' attachments')
+    notice('message.attachment.toomany', window.serverData[window.currentServer].messages.max_attachments);
   }
   filePreview()
 };

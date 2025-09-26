@@ -5,7 +5,7 @@
   "start_url": "/",
   "display": "standalone",
   "display_override": ["minimal-ui"],
-  "theme_color": "#00ff00",
+  "theme_color": "#004400",
   "background_color": "#221111",
   "description": "Parley, a secure end to end encrypted messaging web app.",
   "icons": [

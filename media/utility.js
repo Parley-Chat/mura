@@ -24,6 +24,7 @@ function logout() {
     method: 'DELETE'
   });
   localStorage.removeItem(window.currentServer+'-sessionToken');
+  localStorage.removeItem(window.currentServer+'-username');
   location.reload();
 }
 function logoutall() {
@@ -31,6 +32,7 @@ function logoutall() {
     method: 'DELETE'
   });
   localStorage.removeItem(window.currentServer+'-sessionToken');
+  localStorage.removeItem(window.currentServer+'-username');
   location.reload();
 }
 
@@ -80,7 +82,7 @@ function ask(title, min=0, max=20, def='') {
   let input = AskModal.querySelector('input');
   let button = AskModal.querySelector('button.set');
   AskModal.showModal();
-  document.querySelector('#ask h2').setAttribute('lang', title);
+  AskModal.querySelector('h2').setAttribute('lang', title);
   input.value = def;
   input.setAttribute('minlength', min);
   input.setAttribute('maxlength', max);
@@ -97,6 +99,28 @@ function ask(title, min=0, max=20, def='') {
       button.onclick();
     };
   });
+}
+
+const NoticeModal = document.getElementById('notice');
+let NoticeBacklog = [];
+function notice(title, rep='', bypass=false) {
+  if (!bypass) {
+    NoticeBacklog.push([title, rep]);
+    if (NoticeBacklog.length>1) return;
+  }
+  NoticeModal.showModal();
+  let h = NoticeModal.querySelector('h3');
+  h.setAttribute('lang', title);
+  window.translate();
+  setTimeout(()=>{
+    h.innerText = h.innerText.replace('{}',rep);
+  },0);
+  NoticeModal.onclose = ()=>{
+    NoticeBacklog.shift();
+    if (NoticeBacklog.length>0) {
+      notice(NoticeBacklog[0][0], NoticeBacklog[0][1], true);
+    }
+  };
 }
 
 function smallScreen() {

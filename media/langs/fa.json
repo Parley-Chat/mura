@@ -119,6 +119,8 @@
   "message.nopins": "پیام‌های سنجاق شده‌ای وجود ندارد",
   "message.cant": "شما نمی‌توانید پیام‌ها را در اینجا ارسال کنید",
   "message.download": "دانلود",
+  "message.attachment.toobig": "{} خیلی بزرگ است",
+  "message.attachment.toomany": "نمی‌توان بیش از {} پیوست داشت",
 
   "settings": "تنظیمات",
   "settings.theme": "زمینه:",
