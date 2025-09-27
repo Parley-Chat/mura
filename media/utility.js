@@ -340,7 +340,7 @@ function getKeysBatch(id, keys, callback=()=>{}) {
     body: JSON.stringify(keys)
   })
     .then(data=>{
-      if (!data.success) {
+      if (!Array.isArray(data)) {
         callback();
         return;
       }

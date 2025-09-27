@@ -142,39 +142,48 @@ dialog {
   color: var(--tippy);
 }
 
-#server-list button {
-  --status: var(--invalid);
+#server-list {
+  position: relative;
+}
+#server-list > span {
   position: relative;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 5px;
-  border-color: var(--text-2);
-  background-color: var(--bg-2);
-  outline: none;
-}
-#server-list button:not([selected]) {
-  border-color: var(--bg-1);
-}
-#server-list button[online] {
-  --status: var(--valid);
-}
-#server-list button > span {
-  display: flex;
-  gap: 2px;
   align-items: center;
+  --status: var(--invalid);
 }
-
-#server-list button::before {
+#server-list > span::before {
   content: "";
   position: absolute;
-  inset-inline-end: calc(100% + 6px);
+  inset-inline-start: -8px;
   top: 25%;
   display: block;
   width: 6px;
   height: 50%;
   border-radius: var(--roundness-2);
   background-color: var(--status);
+}
+#server-list > span[online] {
+  --status: var(--valid);
+}
+#server-list > span[selected] > button:not(.del) {
+  border-color: var(--text-2);
+}
+#server-list button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 5px;
+  border-color: var(--bg-1);
+  background-color: var(--bg-2);
+  outline: none;
+}
+#server-list button:not(.del) {
+  flex: 1;
+}
+#server-list button span {
+  display: flex;
+  gap: 2px;
+  align-items: center;
 }
 
 #login-modal[open], #server-modal[open], #signup-modal[open] {
