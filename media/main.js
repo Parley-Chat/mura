@@ -422,7 +422,7 @@ function showChannels(channels) {
     <img src="${ch.pfp?pfpById(ch.pfp):userToDefaultPfp(ch)}" width="30" height="30" aria-hidden="true" loading="lazy">
     <span class="div">
       <span class="name"${ch.name.length>7?` title="${sanitizeHTML(ch.name)}"`:''}>${sanitizeHTML(ch.name)}</span>
-      ${ch.last_message?`<span class="msg">${ch.last_message.author}: ${lstmsgcnt}</span>`:''}
+      ${ch.last_message?`<span class="msg">${ch.last_message.author.length?ch.last_message.author+': ':''}${lstmsgcnt}</span>`:''}
     </span>
     ${(ch.unread_count??0)>0?`<span class="unread">${ch.unread_count}</span>`:''}
   </button>
@@ -454,7 +454,7 @@ async function getChannels() {
       last_message: ch.last_message?{
         id: sanitizeMinimChars(ch.last_message?.id||''),
         content: sanitizeHTML(ch.last_message?.content||'')||imageicon,
-        author: sanitizeHTML(ch.last_message?.user?.display??sanitizeMinimChars(ch.last_message?.user?.username||'Unknown')),
+        author: sanitizeHTML(ch.last_message?.user?.display??sanitizeMinimChars(ch.last_message?.user?.username||'')),
         key: ch.last_message.key?sanitizeMinimChars(ch.last_message.key):null,
         iv: ch.last_message.iv?sanitizeMinimChars(ch.last_message.iv):null
       }:null
@@ -968,7 +968,7 @@ function startStrem() {
     window.channels[0].last_message = {
       id: sanitizeMinimChars(data.message.id),
       content: sanitizeHTML(data.message.content||'')||imageicon,
-      author: sanitizeHTML(data.message.user.display??sanitizeMinimChars(data.message.user.username||'Unknown')),
+      author: sanitizeHTML(data.message.user.display??sanitizeMinimChars(data.message.user.username||'')),
       key: data.message.key?sanitizeMinimChars(data.message.key):null,
       iv: data.message.iv?sanitizeMinimChars(data.message.iv):null
     };
