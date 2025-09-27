@@ -97,7 +97,7 @@ form input:valid {
 form input:invalid, form input[invalid] {
   border-color: var(--invalid);
 }
-.invalid-text {
+.invalid-text, .danger {
   color: var(--invalid);
 }
 svg {
@@ -316,7 +316,7 @@ footer > button {
   background: none;
 }
 
-.block {
+.block, .session {
   display: flex;
   gap: 5px;
   align-items: center;
@@ -324,8 +324,14 @@ footer > button {
 .block img {
   border-radius: var(--roundness-2);
 }
-.block span {
+.block > span, .session > span:nth-child(1) {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.block span.small, .session span.small {
+  color: var(--text-2);
+  font-size: 80%;
 }
 
 .ban {
@@ -379,6 +385,9 @@ main {
   height: 20px;
   margin: 0px;
   border: none;
+}
+.top svg {
+  flex-shrink: 0;
 }
 
 #messages {

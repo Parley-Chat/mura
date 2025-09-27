@@ -134,7 +134,7 @@ function filePreview() {
 fileButton.onclick = ()=>{
   fileInput.click();
 };
-fileInput.onchange = async(event)=>{
+fileInput.onchange = (event)=>{
   files = files.concat(Array.from(event.target.files));
   fileInput.value = '';
   files = files.filter(file=>{
@@ -342,7 +342,7 @@ async function showMessages(messages) {
   Array.from(document.querySelectorAll('.message .more')).forEach(btn=>{
     tippy(btn, {
       allowHTML: true,
-      content: (window.username!==btn.getAttribute('username')?`<button onclick="window.blockmember('${btn.getAttribute('username')}')" onclick lang="member.block">Block</button>`:'')+
+      content: (window.username!==btn.getAttribute('username')?`<button onclick="window.blockmember('${btn.getAttribute('username')}')" class="danger" lang="member.block">Block</button>`:'')+
 `<button onclick="navigator.clipboard.writeText('${btn.getAttribute('id')}')" lang="settings.copyid">Copy id</button>`,
       interactive: true,
       trigger: 'click',
@@ -470,7 +470,7 @@ function showMembers(id) {
     tippy(btn, {
       allowHTML: true,
       content: (window.serverData[window.currentServer]?.disable_channel_creation?'':`<button onclick="window.createChannel(1, '${btn.getAttribute('username')}')" lang="member.message">Message</button>`)+
-`<button onclick="window.blockmember('${btn.getAttribute('username')}')" onclick lang="member.block">Block</button>`+
+`<button onclick="window.blockmember('${btn.getAttribute('username')}')" class="danger" lang="member.block">Block</button>`+
 (hasPerm(ch.permission,Permissions.MANAGE_PERMISSION)||hasPerm(ch.permission,Permissions.MANAGE_MEMBERS)?`<hr style="width:90%">`:'')+
 (hasPerm(ch.permission,Permissions.MANAGE_PERMISSION)?`<button onclick="window.permmember('${btn.getAttribute('username')}')" lang="member.changeperms">Change permissions</button>`:'')+
 (hasPerm(ch.permission,Permissions.MANAGE_MEMBERS)?`<button onclick="window.kickmember('${btn.getAttribute('username')}')" lang="member.kick">Kick</button>
@@ -1010,7 +1010,10 @@ window.viewsessions = ()=>{
       }
       modal.querySelector('div').innerHTML = res
         .map(ses=>`<div class="session">
-  <span>${ses.browser} · ${ses.device}</span>
+  <span>
+    <span>${ses.browser} · ${ses.device}</span>
+    <span class="small">${formatTime(Math.floor(ses.logged_in_at*1000))}</span>
+  </span>
   ${ses.current?'<span lang="user.currentsession">(current)</span>':`<button onclick="window.deletesession('${sanitizeMinimChars(ses.id)}')">x</button>`}
 </div>`)
         .join('');
@@ -1025,7 +1028,10 @@ window.viewblocks = ()=>{
       modal.querySelector('div').innerHTML = res
         .map(usr=>`<div class="block">
   <img src="${usr.pfp?pfpById(usr.pfp):userToDefaultPfp(usr)}" width="30" height="30" aria-hidden="true" loading="lazy">
-  <span>${sanitizeHTML(usr.display??sanitizeMinimChars(usr.username))}</span>
+  <span>
+    <span>${sanitizeHTML(usr.display??sanitizeMinimChars(usr.username))}</span>
+    <span class="small">${formatTime(Math.floor(usr.blocked_at*1000))}</span>
+  </span>
   <button onclick="window.unblockmember('${sanitizeMinimChars(usr.username)}')">x</button>
 </div>`)
         .join('')||'<span lang="user.noblocks">No blocked users</span>';

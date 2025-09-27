@@ -327,7 +327,7 @@ function getKeyContents(id, key, callback=()=>{}) {
     });
 }
 function getKeysBatch(id, keys, callback=()=>{}) {
-  if (!keys || keys.filter(k=>typeof k!=='undefined').length<1) {
+  if (!keys || keys.filter(k=>k!==null).length<1) {
     callback();
     return;
   }
@@ -340,6 +340,10 @@ function getKeysBatch(id, keys, callback=()=>{}) {
     body: JSON.stringify(keys)
   })
     .then(data=>{
+      if (!data.success) {
+        callback();
+        return;
+      }
       data.forEach(key=>{
         window.keys[id][key.key_id] = key;
       });

@@ -105,7 +105,7 @@
       <img alt="Profile Picture" lang="user.pfpalt">
       <br>
       <button onclick="downloadKeys()" lang="user.downloadkeys">Download keys</button>
-      <button onclick="backendfetch('/api/v1/me',{method:'DELETE'}).then(()=>{logout()})" style="color:var(--invalid)" lang="user.delete">Delete Account</button>
+      <button onclick="backendfetch('/api/v1/me',{method:'DELETE'}).then(()=>{logout()})" class="danger" lang="user.delete">Delete Account</button>
     </dialog>
     <dialog id="blocks">
       <button onclick="this.parentElement.close()" class="modal-close">x</button>
@@ -117,7 +117,7 @@
       <button onclick="this.parentElement.close()" class="modal-close">x</button>
       <h2 lang="user.sessions">Sessions</h2>
       <div></div>
-      <button onclick="logoutall()" style="color:var(--invalid)" lang="user.logoutall">Log out all sessions</button>
+      <button onclick="logoutall()" class="danger" lang="user.logoutall">Log out all sessions</button>
     </dialog>
     <dialog id="edit-channel">
       <button onclick="this.parentElement.close()" class="modal-close">x</button>
@@ -134,7 +134,7 @@
       <br>
       <button id="cec-copyid" lang="settings.copyid">Copy Id</button>
       <button id="cec-editperms" lang="channel.editperms">Edit permissions</button>
-      <button id="cec-delete" style="color:var(--invalid)" lang="channel.delete">Delete Channel</button>
+      <button id="cec-delete" class="danger" lang="channel.delete">Delete Channel</button>
     </dialog>
     <dialog id="bansModal">
       <button onclick="this.parentElement.close()" class="modal-close">x</button>
