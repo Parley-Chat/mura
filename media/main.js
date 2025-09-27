@@ -134,9 +134,8 @@ function filePreview() {
 fileButton.onclick = ()=>{
   fileInput.click();
 };
-fileInput.onchange = (event)=>{
-  files = files.concat(Array.from(event.target.files));
-  fileInput.value = '';
+function addFiles(fils) {
+  files = files.concat(fils);
   files = files.filter(file=>{
     if (file.size>window.serverData[window.currentServer].max_file_size.attachments) {
       notice('message.attachment.toobig', file.name);
@@ -148,9 +147,19 @@ fileInput.onchange = (event)=>{
     files = files.slice(0, window.serverData[window.currentServer].messages.max_attachments);
     notice('message.attachment.toomany', window.serverData[window.currentServer].messages.max_attachments);
   }
-  filePreview()
+  filePreview();
+}
+fileInput.onchange = (event)=>{
+  addFiles(Array.from(event.target.files));
+  fileInput.value = '';
 };
-
+messageInput.onpaste = function(event) {
+  if (sending) event.preventDefault();
+  let items = (event.clipboardData??event.originalEvent.clipboardData).items;
+  items = Array.from(items).filter(item=>item.kind==='file').map(item=>item.getAsFile());
+  if (items.length<1) return;
+  addFiles(items);
+};
 
 function EditMessage(channel, msg, content, iv=null) {
   let formData = new FormData();

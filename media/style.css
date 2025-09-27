@@ -557,7 +557,8 @@ main {
   display: none;
 }
 #filepreview img, #filepreview video {
-  max-height: 15vh;
+  max-width: 40dvw;
+  max-height: 15dvh;
   height: fit-content;
 }
 #filepreview .file {
