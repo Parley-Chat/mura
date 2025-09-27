@@ -22,11 +22,11 @@ window.MDParse = function(text, custom=(t)=>{return t}) {
     })
     .replaceAll(/\[(.+?)\]\((~lt;https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)>|https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*))\)/g, function(match,g1,g2){
       if (match.match(/^~lt;.+?>$/m)) match=match.slice(4,-1);
-      return reservemd(`<a href="${g2}">${g1}</a>`);
+      return reservemd(`<a href="${g2}" target="_blank">${g1}</a>`);
     })
     .replaceAll(/(~lt;https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)>|https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*))/g, function(match){
       if (match.match(/^~lt;.+?>$/m)) match=match.slice(4,-1);
-      return reservemd(`<a href="${match}">${match}</a>`);
+      return reservemd(`<a href="${match}" target="_blank">${match}</a>`);
     });
 // More escaping
   text = text

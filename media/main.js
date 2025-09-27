@@ -301,7 +301,7 @@ async function showMessages(messages) {
       }
     }
     messages[i].user.hide = false;
-    if (!messages[i].replied_to && messages[i+1] && messages[i+1].user.username===messages[i].user.username) {
+    if (!messages[i].replied_to && messages[i+1] && messages[i+1]?.user?.username===messages[i].user.username) {
       messages[i].user.hide = (messages[i].timestamp-messages[i+1].timestamp)<TimeSeparation; // Only hide is smaller than time separation
     }
     if (messages[i].key&&messages[i].iv) {
@@ -380,8 +380,12 @@ async function showMessages(messages) {
   }
 }
 
+// Random unknown keys go br
+// Yes function keys go up to 24 and yes there a bunch of weird keys that exist
+const NonFocusKeys = 'Alt,AltGraph,AudioVolumeDown,AudioVolumeMute,AudioVolumeUp,BrowserBack,BrowserFavorites,BrowserForward,BrowserHome,BrowserRefresh,BrowserSearch,BrowserStop,CapsLock,Clear,ContextMenu,Control,End,Escape,F1,F10,F11,F12,F13,F14,F15,F16,F17,F18,F19,F2,F20,F21,F22,F23,F24,F3,F4,F5,F6,F7,F8,F9,Help,Home,Insert,LaunchApplication1,LaunchApplication2,LaunchCalculator,LaunchMail,LaunchMediaPlayer,MediaPlayPause,MediaTrackNext,MediaTrackPrevious,Meta,NumLock,OS,PageDown,PageUp,PrintScreen,ScrollLock,Shift,Tab,Unidentified'.split(',');
 window.onkeydown = (evt)=>{
   if (['body'].includes(document.activeElement.tagName.toLowerCase())) {
+    if (NonFocusKeys.includes(evt.key)) return;
     messageInput.focus();
   }
 };
@@ -923,8 +927,8 @@ function startStrem() {
       return;
     }
     if (window.keys[window.currentChannel]) {
-      let last = Object.keys(window.keys[channel]).reduce((a, b) => window.keys[channel][a]?.expires_at > window.keys[channel][b]?.expires_at ? a : b, '');
-      if (last) window.keys[channel][last].expires_at = Date.now();
+      let last = Object.keys(window.keys[data.channel_id]).reduce((a, b) => window.keys[channel][a]?.expires_at > window.keys[channel][b]?.expires_at ? a : b, '');
+      if (last) window.keys[data.channel_id][last].expires_at = Date.now();
     }
     if (!window.channelMembers[data.channel_id]) return;
     window.channelMembers[data.channel_id] = window.channelMembers[data.channel_id].filter(mem=>mem.username!==data.user.username);
@@ -946,7 +950,7 @@ function startStrem() {
       } else {
         window.channels[0].unread_count += 1;
       }
-      if (data.message.key&&data.message.iv) {
+      if (window.messages[data.channel_id]&&data.message.key&&data.message.iv) {
         let idx2 = window.messages[data.channel_id].findIndex(msg=>msg.id===data.message.id);
         window.messages[data.channel_id][idx2].content = await decodeMessage(data.message, data.channel_id);
         window.messages[data.channel_id][idx2].iv = null;
