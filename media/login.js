@@ -134,6 +134,7 @@ document.getElementById('login-btn').onclick = async function(){
 
         if (data.passkey) {
           document.getElementById('s-passkey').value = data.passkey;
+          document.getElementById('l-passkey').value = data.passkey;
           document.getElementById('s-passkey-copy').onclick = ()=>{
             document.getElementById('s-passkey').select();
             navigator.clipboard.writeText(data.passkey);
