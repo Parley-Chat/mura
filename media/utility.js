@@ -133,6 +133,15 @@ function saveData() {
   return (connection.type==='cellular'||['2g','3g'].includes(connection.effectiveType));
 }
 
+function formatBytes(bytes) {
+  bytes = Number(sanitizeMinimChars(bytes.toString()))||0;
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB', 'RiB', 'QiB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
 function getLanguageName(iso) {
   const displayNames = new Intl.DisplayNames([iso], { type: 'language' });
   let display = displayNames.of(iso);
