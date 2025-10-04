@@ -125,6 +125,7 @@
   "settings": "Instellingen",
   "settings.theme": "Thema:",
   "settings.font": "Lettertype:",
+  "settings.medialways": "Media laden via mobiele data:",
   "settings.rtl": "RTL:",
   "settings.copyid": "ID kopiëren",
 

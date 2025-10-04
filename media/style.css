@@ -253,6 +253,7 @@ nav button img {
   display: flex;
   border-radius: var(--roundness-1);
   background-color: var(--bg-2);
+  content-visibility: auto;
 }
 #channels button {
   display: flex;
@@ -260,6 +261,7 @@ nav button img {
   align-items: center;
   margin: 0px;
   padding: 5px;
+  outline: none;
   font-size: 100%;
   overflow: hidden;
 }
@@ -649,6 +651,7 @@ main {
   display: flex;
   gap: 5px;
   align-items: center;
+  content-visibility: auto;
 }
 .lateral img {
   width: 30px;

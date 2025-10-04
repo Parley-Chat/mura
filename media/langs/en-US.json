@@ -125,6 +125,7 @@
   "settings": "Settings",
   "settings.theme": "Theme:",
   "settings.font": "Font:",
+  "settings.medialways": "Load media on mobile data:",
   "settings.rtl": "RTL:",
   "settings.copyid": "Copy Id",
 

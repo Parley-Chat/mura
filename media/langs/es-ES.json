@@ -125,6 +125,7 @@
   "settings": "Ajustes",
   "settings.theme": "Tema:",
   "settings.font": "Fuente:",
+  "settings.medialways": "Cargar archivos en datos móviles:",
   "settings.rtl": "RTL:",
   "settings.copyid": "Copiar Id",
 

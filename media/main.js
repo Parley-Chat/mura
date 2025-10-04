@@ -108,13 +108,12 @@ messageSned.onclick = function() {
 };
 function elemfilepreview(file) {
   let url = URL.createObjectURL(file);
-  switch(file.type.split('/')[0]) {
+  let type = file.type.split('/')[0];
+  switch(type) {
     case 'image':
-      return `<img src="${url}" loading="lazy">`;
     case 'video':
-      return `<video src="${url}" controls loading="lazy"></video>`;
     case 'audio':
-      return `<audio src="${url}" controls loading="lazy"></audio>`;
+      return `<${type.replace('age','g')} src="${url}" controls loading="lazy"></${type.replace('age','g')}>`;
     default:
       return `<div class="file">${file.name} · ${file.size}B</div>`;
   }
@@ -232,6 +231,26 @@ window.deleteMessage = (msg)=>{
   });
 };
 
+
+class MediaCom extends HTMLElement {
+  constructor() {
+    super();
+  }
+  static observedAttributes = ['load'];
+  connectedCallback() {
+    if (saveData()) {
+      this.innerHTML = `<div class="file">
+  <span>${desanitizeAttr(this.getAttribute('data-name'))} · ${this.getAttribute('data-size')}B</span>
+  <button onclick="this.parentElement.parentElement.setAttribute('load',true)" lang="message.download" style="margin-top:10px;padding:5px;background-color:var(--bg-2);">Download</button>
+</div>`;
+    } else {
+      this.setAttribute('load',true);
+    }
+  }
+  attributeChangedCallback() {
+    this.outerHTML = `<${this.getAttribute('type')} src="${this.getAttribute('data-src')}" controls loading="lazy"></${this.getAttribute('type')}>`.replace('</img>','');
+  }
+}
 class TxtLoader extends HTMLElement {
   constructor() {
     super();
@@ -246,6 +265,7 @@ class TxtLoader extends HTMLElement {
       .catch(err=>this.remove());
   }
 }
+customElements.define('media-com', MediaCom);
 customElements.define('txt-loader', TxtLoader);
 
 window.downloadfile = (id, name)=>{
@@ -270,13 +290,12 @@ function attachToElem(att) {
   <txt-loader data-id="${sanitizeMinimChars(att.id)}">...</txt-loader>
 </div>`;
   }
-  switch(att.mimetype.split('/')[0]) {
+  let type = att.mimetype.split('/')[0];
+  switch(type) {
     case 'image':
-      return `<img src="${window.currentServer}/attachment/${sanitizeMinimChars(att.id)}" loading="lazy">`;
     case 'video':
-      return `<video src="${window.currentServer}/attachment/${sanitizeMinimChars(att.id)}" controls loading="lazy"></video>`;
     case 'audio':
-      return `<audio src="${window.currentServer}/attachment/${sanitizeMinimChars(att.id)}" controls loading="lazy"></audio>`;
+      return `<media-com type="${type.replace('age','g')}" data-src="${window.currentServer}/attachment/${sanitizeMinimChars(att.id)}" data-name="${sanitizeAttr(att.filename)}" data-size="${sanitizeMinimChars(att.size.toString())}"></media-com>`;
     default:
       return `<div class="file"><span>${sanitizeHTML(att.filename)} · ${sanitizeMinimChars(att.size.toString())}B <button onclick="window.downloadfile('${sanitizeMinimChars(att.id)}', '${sanitizeAttr(att.filename)}')" aria-label="Download" lang="message.download"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M128 190V20" stroke-width="40" stroke-linecap="round" fill="none"/><path d="M127.861 212.999C131.746 213.035 135.642 211.571 138.606 208.607L209.317 137.896C212.291 134.922 213.753 131.011 213.708 127.114C213.708 127.076 213.71 127.038 213.71 127C213.71 118.716 206.994 112 198.71 112H57C48.7157 112 42 118.716 42 127C42 127.045 42.0006 127.089 42.001 127.134C41.961 131.024 43.4252 134.927 46.3936 137.896L117.104 208.607L117.381 208.876C120.312 211.662 124.092 213.037 127.861 212.999Z"/><rect y="226" width="256" height="30" rx="15"/></svg></button></span></div>`;
   }
@@ -1206,6 +1225,10 @@ function postLogin() {
     <option value="dyslexic">Open Dyslexic</option>
     <option value="system">System</option>
   </select>
+</span>
+<span>
+  <label for="s-ma" lang="settings.medialways">Load media on mobile data:</label>
+  <input id="s-ma" type="checkbox" onchange="localStorage.setItem('pmedialways',this.checked)"${localStorage.getItem('pmedialways')==='true'?' checked':''}>
 </span>
 <span>
   <label for="s-rtl" lang="settings.rtl">RTL:</label>

@@ -126,6 +126,12 @@ function notice(title, rep='', bypass=false) {
 function smallScreen() {
   return window.matchMedia(`(max-width: 700px)`).matches;
 }
+function saveData() {
+  if (!('connection' in navigator)) return false;
+  if (localStorage.getItem('pmedialways')==='true') return false;
+  let connection = navigator.connection;
+  return (connection.type==='cellular'||['2g','3g'].includes(connection.effectiveType));
+}
 
 function getLanguageName(iso) {
   const displayNames = new Intl.DisplayNames([iso], { type: 'language' });
