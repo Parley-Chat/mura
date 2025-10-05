@@ -4,12 +4,12 @@ document.getElementById('login-modal').addEventListener('cancel', (evt) => {
 });
 document.getElementById('instead-btn').onclick = function() {
   let errors = document.getElementById('l-errors');
-  let logining = document.querySelector('[lang="login.title"]');
-  document.querySelector(`[lang="${logining?'login':'signup'}.title"]`).setAttribute('lang', `${logining?'signup':'login'}.title`);
-  document.querySelector(`[lang="${logining?'login':'signup'}.button"]`).setAttribute('lang', `${logining?'signup':'login'}.button`);
-  this.setAttribute('lang', `${logining?'signup':'login'}.instead`);
+  let logining = document.querySelector('[tlang="login.title"]');
+  document.querySelector(`[tlang="${logining?'login':'signup'}.title"]`).setAttribute('tlang', `${logining?'signup':'login'}.title`);
+  document.querySelector(`[tlang="${logining?'login':'signup'}.button"]`).setAttribute('tlang', `${logining?'signup':'login'}.button`);
+  this.setAttribute('tlang', `${logining?'signup':'login'}.instead`);
   document.getElementById('s-hide').style.display = logining?'none':'';
-  errors.setAttribute('lang', 'empty');
+  errors.setAttribute('tlang', 'empty');
   document.getElementById('l-username').removeAttribute('invalid');
 }
 
@@ -18,23 +18,23 @@ document.getElementById('l-username').oninput = function(evt) {
   clearTimeout(TypingTimer);
   evt.target.value = evt.target.value.toLowerCase();
   TypingTimer = setTimeout(()=>{
-    if (document.querySelector('[lang="login.title"]')) {
+    if (document.querySelector('[tlang="login.title"]')) {
       evt.target.removeAttribute('invalid');
       return;
     }
     let errors = document.getElementById('l-errors');
     if (evt.target.value.length<3||evt.target.value.length>20) {
-      errors.setAttribute('lang', 'error.username');
+      errors.setAttribute('tlang', 'error.username');
       evt.target.setAttribute('invalid', true);
       return;
     }
     fetch(window.currentServer+'/api/v1/username_check?username='+evt.target.value)
       .then(res=>{
         if (res.status===200) {
-          if (errors.getAttribute('lang') === 'error.usernameuse') errors.setAttribute('lang', 'empty');
+          if (errors.getAttribute('tlang') === 'error.usernameuse') errors.setAttribute('tlang', 'empty');
           evt.target.removeAttribute('invalid');
         } else {
-          errors.setAttribute('lang', 'error.usernameuse');
+          errors.setAttribute('tlang', 'error.usernameuse');
           evt.target.setAttribute('invalid', true);
         }
       });
@@ -66,29 +66,29 @@ document.getElementById('l-keyfile').onchange = function(evt) {
 document.getElementById('login-btn').onclick = async function(){
   const errors = document.getElementById('l-errors');
   if (!document.getElementById('l-username').checkValidity() || document.getElementById('l-username').getAttribute('invalid')) {
-    errors.setAttribute('lang','error.username');
+    errors.setAttribute('tlang','error.username');
     return;
   }
-  let logining = document.querySelector('[lang="login.title"]');
+  let logining = document.querySelector('[tlang="login.title"]');
   if (logining) {
     if (!document.getElementById('l-passkey').checkValidity()) {
-      errors.setAttribute('lang','error.passkey');
+      errors.setAttribute('tlang','error.passkey');
       return;
     }
     if (!document.getElementById('l-keyfile').checkValidity()) {
-      errors.setAttribute('lang','error.keyfile');
+      errors.setAttribute('tlang','error.keyfile');
       return;
     }
     if (!LoginFileContents.publicKey||!LoginFileContents.privateKey) {
-      errors.setAttribute('lang','error.keyfile');
+      errors.setAttribute('tlang','error.keyfile');
       return;
     }
     if (!(/^[a-zA-Z0-9\+\/=]+$/m).test(LoginFileContents.publicKey)) {
-      errors.setAttribute('lang','error.keyfile');
+      errors.setAttribute('tlang','error.keyfile');
       return;
     }
     if (!(/^[a-zA-Z0-9\+\/=]+$/m).test(LoginFileContents.privateKey)) {
-      errors.setAttribute('lang','error.keyfile');
+      errors.setAttribute('tlang','error.keyfile');
       return;
     }
     localStorage.setItem(window.currentServer+'-publicKey', LoginFileContents.publicKey);
@@ -116,15 +116,15 @@ document.getElementById('login-btn').onclick = async function(){
   })
     .then(async(res) => {
       if (res.status===400) {
-        errors.setAttribute('lang','error.'+(logining?'publicmismatch':'usernameuse'));
+        errors.setAttribute('tlang','error.'+(logining?'publicmismatch':'usernameuse'));
         return;
       }
       if (res.status===401) {
-        errors.setAttribute('lang','error.'+(logining?'invalidcredentials':'usernameuse'));
+        errors.setAttribute('tlang','error.'+(logining?'invalidcredentials':'usernameuse'));
         return;
       }
       if (res.status!==200 || !res.ok) {
-        errors.setAttribute('lang','error.generic');
+        errors.setAttribute('tlang','error.generic');
         return;
       }
 

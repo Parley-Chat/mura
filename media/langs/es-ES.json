@@ -116,6 +116,7 @@
   "message.pin": "Fijar",
   "message.unpin": "Desfijar",
   "message.delete": "Borrar",
+  "message.more": "Más",
   "message.nopins": "No hay mensajes fijados",
   "message.cant": "No puedes enviar mensajes aquí",
   "message.download": "Descargar",

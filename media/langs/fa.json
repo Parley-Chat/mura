@@ -116,6 +116,7 @@
   "message.pin": "سنجاق",
   "message.unpin": "برداشتن سنجاق",
   "message.delete": "حذف",
+  "message.more": "بیشتر",
   "message.nopins": "پیام‌های سنجاق شده‌ای وجود ندارد",
   "message.cant": "شما نمی‌توانید پیام‌ها را در اینجا ارسال کنید",
   "message.download": "دانلود",

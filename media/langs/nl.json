@@ -116,6 +116,7 @@
   "message.pin": "Vastzetten",
   "message.unpin": "Losmaken",
   "message.delete": "Verwijderen",
+  "message.more": "Meer",
   "message.nopins": "Er zijn geen vastgezette berichten",
   "message.cant": "Je kunt hier geen berichten versturen",
   "message.download": "Downloaden",

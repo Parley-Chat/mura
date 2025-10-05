@@ -71,13 +71,13 @@ async function getTranslationFile(lang) {
 
 // Find all elements with lang attribute and translate
 function translate(attempt=0) {
-  document.querySelector('html').lang = getUserLang();
+  document.querySelector('html').lang = getUserLang().replace('tok','art-x-tokipona'); // Lang attribute doesn't support 3 letter variant so use longhand
   getTranslationFile(getUserLang())
     .then(file=>{
-      document.querySelectorAll('*:not(html)[lang]').forEach(elem=>{
-        let trans = file[elem.getAttribute('lang')];
+      document.querySelectorAll('*:not(html)[tlang]').forEach(elem=>{
+        let trans = file[elem.getAttribute('tlang')];
         if (trans===undefined) {
-          console.log('Missing translation for '+elem.getAttribute('lang'), elem);
+          console.log('Missing translation for '+elem.getAttribute('tlang'), elem);
           if (attempt<5) translate(attempt+1);
           window.caches.delete('lang-cache-'+getUserLang());
           delete mcache[getUserLang()];

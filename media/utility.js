@@ -82,12 +82,12 @@ function ask(title, min=0, max=20, def='') {
   let input = AskModal.querySelector('input');
   let button = AskModal.querySelector('button.set');
   AskModal.showModal();
-  AskModal.querySelector('h2').setAttribute('lang', title);
+  AskModal.querySelector('h2').setAttribute('tlang', title);
   input.value = def;
   input.setAttribute('minlength', min);
   input.setAttribute('maxlength', max);
   input.focus();
-  button.setAttribute('lang', title+'.next');
+  button.setAttribute('tlang', title+'.next');
   return new Promise((resolve, reject)=>{
     AskModal.onclose = reject;
     button.onclick = ()=>{
@@ -110,7 +110,7 @@ function notice(title, rep='', bypass=false) {
   }
   NoticeModal.showModal();
   let h = NoticeModal.querySelector('h3');
-  h.setAttribute('lang', title);
+  h.setAttribute('tlang', title);
   window.translate();
   setTimeout(()=>{
     h.innerText = h.innerText.replace('{}',rep);

@@ -113,9 +113,9 @@ function elemfilepreview(file) {
     case 'image':
     case 'video':
     case 'audio':
-      return `<${type.replace('age','g')} src="${url}" controls loading="lazy"></${type.replace('age','g')}>`;
+      return `<${type.replace('age','g')} src="${url}" alt="File preview: ${sanitizeAttr(file.name)}" controls loading="lazy"></${type.replace('age','g')}>`;
     default:
-      return `<div class="file">${file.name} · ${formatBytes(file.size)}</div>`;
+      return `<div class="file">${sanitizeHTML(file.name)} · ${formatBytes(file.size)}</div>`;
   }
 }
 window.removefile = (i)=>{
@@ -202,8 +202,8 @@ window.unpinMessage = (msg)=>{
 window.editMessage = (msg, key, elem, cont)=>{
   elem.querySelector('.content').outerHTML = `<textarea name="message" class="content" maxlength="${window.serverData[window.currentServer]?.messages?.max_message_length??2000}"></textarea>
 <div>
-  <button class="save" lang="message.edit.save">Save</button>
-  <button class="cancel" lang="message.edit.cancel">Cancel</button>
+  <button class="save" tlang="message.edit.save">Save</button>
+  <button class="cancel" tlang="message.edit.cancel">Cancel</button>
 </div>`;
   elem.querySelector('.actions').style.display = 'none';
   let textarea = elem.querySelector('textarea');
@@ -240,15 +240,15 @@ class MediaCom extends HTMLElement {
   connectedCallback() {
     if (saveData()) {
       this.innerHTML = `<div class="file">
-  <span>${desanitizeAttr(this.getAttribute('data-name'))} · ${formatBytes(this.getAttribute('data-size'))}</span>
-  <button onclick="this.parentElement.parentElement.setAttribute('load',true)" lang="message.download" style="margin-top:10px;padding:5px;background-color:var(--bg-2);">Download</button>
+  <span>${sanitizeHTML(desanitizeAttr(this.getAttribute('data-name')))} · ${formatBytes(this.getAttribute('data-size'))}</span>
+  <button onclick="this.parentElement.parentElement.setAttribute('load',true)" tlang="message.download" style="margin-top:10px;padding:5px;background-color:var(--bg-2);">Download</button>
 </div>`;
     } else {
       this.setAttribute('load',true);
     }
   }
   attributeChangedCallback() {
-    this.outerHTML = `<${this.getAttribute('type')} src="${this.getAttribute('data-src')}" controls loading="lazy"></${this.getAttribute('type')}>`.replace('</img>','');
+    this.outerHTML = `<${this.getAttribute('type')} src="${this.getAttribute('data-src')}" alt="Message attachment: ${this.getAttribute('data-name')}" controls loading="lazy"></${this.getAttribute('type')}>`.replace('</img>','');
   }
 }
 class TxtLoader extends HTMLElement {
@@ -286,7 +286,7 @@ const textdisplay = ['text/plain','text/html','text/css','text/csv','text/tab-se
 function attachToElem(att) {
   if (textdisplay.includes(att.mimetype)) {
     return `<div class="file">
-  <span>${sanitizeHTML(att.filename)} · ${formatBytes(att.size)} <button onclick="window.downloadfile('${sanitizeMinimChars(att.id)}', '${sanitizeAttr(att.filename)}')" aria-label="Download" lang="message.download"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M128 190V20" stroke-width="40" stroke-linecap="round" fill="none"/><path d="M127.861 212.999C131.746 213.035 135.642 211.571 138.606 208.607L209.317 137.896C212.291 134.922 213.753 131.011 213.708 127.114C213.708 127.076 213.71 127.038 213.71 127C213.71 118.716 206.994 112 198.71 112H57C48.7157 112 42 118.716 42 127C42 127.045 42.0006 127.089 42.001 127.134C41.961 131.024 43.4252 134.927 46.3936 137.896L117.104 208.607L117.381 208.876C120.312 211.662 124.092 213.037 127.861 212.999Z"/><rect y="226" width="256" height="30" rx="15"/></svg></button></span>
+  <span>${sanitizeHTML(att.filename)} · ${formatBytes(att.size)} <button onclick="window.downloadfile('${sanitizeMinimChars(att.id)}', '${sanitizeAttr(att.filename)}')" aria-label="Download" tlang="message.download"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M128 190V20" stroke-width="40" stroke-linecap="round" fill="none"/><path d="M127.861 212.999C131.746 213.035 135.642 211.571 138.606 208.607L209.317 137.896C212.291 134.922 213.753 131.011 213.708 127.114C213.708 127.076 213.71 127.038 213.71 127C213.71 118.716 206.994 112 198.71 112H57C48.7157 112 42 118.716 42 127C42 127.045 42.0006 127.089 42.001 127.134C41.961 131.024 43.4252 134.927 46.3936 137.896L117.104 208.607L117.381 208.876C120.312 211.662 124.092 213.037 127.861 212.999Z"/><rect y="226" width="256" height="30" rx="15"/></svg></button></span>
   <txt-loader data-id="${sanitizeMinimChars(att.id)}">...</txt-loader>
 </div>`;
   }
@@ -297,7 +297,7 @@ function attachToElem(att) {
     case 'audio':
       return `<media-com type="${type.replace('age','g')}" data-src="${window.currentServer}/attachment/${sanitizeMinimChars(att.id)}" data-name="${sanitizeAttr(att.filename)}" data-size="${sanitizeMinimChars(att.size.toString())}"></media-com>`;
     default:
-      return `<div class="file"><span>${sanitizeHTML(att.filename)} · ${formatBytes(att.size)} <button onclick="window.downloadfile('${sanitizeMinimChars(att.id)}', '${sanitizeAttr(att.filename)}')" aria-label="Download" lang="message.download"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M128 190V20" stroke-width="40" stroke-linecap="round" fill="none"/><path d="M127.861 212.999C131.746 213.035 135.642 211.571 138.606 208.607L209.317 137.896C212.291 134.922 213.753 131.011 213.708 127.114C213.708 127.076 213.71 127.038 213.71 127C213.71 118.716 206.994 112 198.71 112H57C48.7157 112 42 118.716 42 127C42 127.045 42.0006 127.089 42.001 127.134C41.961 131.024 43.4252 134.927 46.3936 137.896L117.104 208.607L117.381 208.876C120.312 211.662 124.092 213.037 127.861 212.999Z"/><rect y="226" width="256" height="30" rx="15"/></svg></button></span></div>`;
+      return `<div class="file"><span>${sanitizeHTML(att.filename)} · ${formatBytes(att.size)} <button onclick="window.downloadfile('${sanitizeMinimChars(att.id)}', '${sanitizeAttr(att.filename)}')" aria-label="Download" tlang="message.download"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M128 190V20" stroke-width="40" stroke-linecap="round" fill="none"/><path d="M127.861 212.999C131.746 213.035 135.642 211.571 138.606 208.607L209.317 137.896C212.291 134.922 213.753 131.011 213.708 127.114C213.708 127.076 213.71 127.038 213.71 127C213.71 118.716 206.994 112 198.71 112H57C48.7157 112 42 118.716 42 127C42 127.045 42.0006 127.089 42.001 127.134C41.961 131.024 43.4252 134.927 46.3936 137.896L117.104 208.607L117.381 208.876C120.312 211.662 124.092 213.037 127.861 212.999Z"/><rect y="226" width="256" height="30" rx="15"/></svg></button></span></div>`;
   }
 }
 function decodeMessage(msg, ch=window.currentChannel) {
@@ -351,15 +351,15 @@ async function showMessages(messages) {
   ${msg.user.hide?`<span class="time">${formatHour(msg.timestamp)}</span>`:`<div class="avatar"><img src="${msg.user.pfp?pfpById(msg.user.pfp):userToDefaultPfp(msg.user)}" width="42" height="42" aria-hidden="true"></div>`}
   <div class="inner">
     <div class="actions">
-      ${sendm?`<button onclick="window.replyMessage('${sanitizeMinimChars(msg.id)}', '${sanitizeHTML(msg.user.display??sanitizeMinimChars(msg.user.username))}')" aria-label="Reply" lang="message.reply"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M42 108H196V108C229.137 108 256 134.863 256 168V168V199.85C256 210.896 247.046 219.85 236 219.85V219.85C224.954 219.85 216 210.896 216 199.85V168V168C216 156.954 207.046 148 196 148V148H42V108Z"/><path d="M79.746 41.1778C83.0613 37.8625 87.5578 36 92.2464 36V36C107.996 36 115.883 55.0415 104.747 66.1782L47.2462 123.681C44.9032 126.024 44.9032 129.823 47.2462 132.166L104.747 189.67C115.883 200.806 107.996 219.848 92.2464 219.848V219.848C87.5579 219.848 83.0614 217.985 79.7461 214.67L5.72793 140.652C-1.30151 133.622 -1.30151 122.225 5.72793 115.196L79.746 41.1778Z"/></svg></button>`:''}
-      ${msg.user.username===window.username?`<button onclick="window.editMessage('${sanitizeMinimChars(msg.id)}', '${sanitizeMinimChars(msg.key??'')}', this.parentElement.parentElement, '${sanitizeAttr(msg.content)}')" aria-label="Edit" lang="message.edit"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M36 198L87 239L213.98 78.9249L162.073 38.0226L36 198ZM170.11 27.8251L222.067 68.7297L239.674 46.5333C241.391 44.3698 241.028 41.2246 238.864 39.5086L194.819 4.5744C192.651 2.85464 189.498 3.22334 187.785 5.397L170.11 27.8251Z M35.1323 255.15C33.0948 255.784 31.0651 254.148 31.252 252.023L36 198L87.0001 239L35.1323 255.15Z"/></svg></button>`:''}
-      ${ch.type===1||mangm?`<button onclick="window.pinMessage('${sanitizeMinimChars(msg.id)}')" aria-label="Pin" lang="message.pin"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M117.4 6.28699C118.758 0.114336 126.401 -2.11969 130.87 2.34949L253.649 125.126C258.118 129.595 255.883 137.239 249.71 138.597L206.755 148.044C204.89 148.454 203.182 149.39 201.832 150.74L181.588 170.983C180.637 171.934 179.889 173.067 179.386 174.313L154.115 236.957C151.434 243.603 142.838 245.354 137.771 240.287L95.5138 198.03L10.2823 254.884C7.65962 256.633 4.16588 256.288 1.93663 254.058C-0.292345 251.829 -0.63778 248.336 1.11143 245.714L57.964 160.48L15.7091 118.225C10.642 113.158 12.3932 104.562 19.0392 101.881L81.6827 76.6112C82.9295 76.1083 84.0621 75.3587 85.0128 74.4081L105.257 54.1649C106.607 52.8149 107.542 51.1066 107.952 49.2421L117.4 6.28699Z"/></svg></button>`:''}
-      ${msg.user.username===window.username||mangm?`<button onclick="window.deleteMessage('${sanitizeMinimChars(msg.id)}')" aria-label="Delete" lang="message.delete" style="color:var(--invalid)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M77.0892 18.9306C79.4013 18.9306 81.5077 17.6021 82.5038 15.5156L88.281 3.41493C89.2771 1.32846 91.3835 0 93.6956 0H162.304C164.617 0 166.723 1.32847 167.719 3.41494L173.496 15.5156C174.492 17.6021 176.599 18.9306 178.911 18.9306H222C226.418 18.9306 230 22.5123 230 26.9306V39C230 43.4183 226.418 47 222 47H34C29.5817 47 26 43.4183 26 39V26.9306C26 22.5123 29.5817 18.9306 34 18.9306H77.0892Z"/><path fill-rule="evenodd" clip-rule="evenodd" d="M42.4949 62.0605C39.7335 62.0605 37.4949 64.2991 37.4949 67.0605V241C37.4949 249.284 44.2106 256 52.4949 256H203.505C211.789 256 218.505 249.284 218.505 241V67.0605C218.505 64.2991 216.266 62.0605 213.505 62.0605H42.4949ZM78.8686 87.9194C71.728 87.9194 65.9393 93.708 65.9393 100.849V215.919C65.9393 223.06 71.728 228.849 78.8686 228.849C86.0093 228.849 91.7979 223.06 91.7979 215.919V100.849C91.7979 93.708 86.0093 87.9194 78.8686 87.9194ZM128 87.9194C120.859 87.9194 115.071 93.708 115.071 100.849V215.919C115.071 223.06 120.859 228.849 128 228.849C135.141 228.849 140.929 223.06 140.929 215.919V100.849C140.929 93.708 135.141 87.9194 128 87.9194ZM164.202 100.849C164.202 93.708 169.991 87.9194 177.131 87.9194C184.272 87.9194 190.061 93.708 190.061 100.849V215.919C190.061 223.06 184.272 228.849 177.131 228.849C169.991 228.849 164.202 223.06 164.202 215.919V100.849Z"/></svg></button>`:''}
-      <button class="more" username="${sanitizeMinimChars(msg.user.username)}" id="${sanitizeMinimChars(msg.id)}"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill-rule="evenodd" clip-rule="evenodd" d="M128 158C111.431 158 98 144.569 98 128C98 111.431 111.431 98 128 98C144.569 98 158 111.431 158 128C158 144.569 144.569 158 128 158ZM128 60C111.432 60 98.0001 46.5685 98.0001 30C98.0001 13.4315 111.432 -5.87112e-07 128 -1.31135e-06C144.569 -2.03558e-06 158 13.4315 158 30C158 46.5685 144.569 60 128 60ZM98 226C98 242.569 111.431 256 128 256C144.569 256 158 242.569 158 226C158 209.431 144.569 196 128 196C111.431 196 98 209.431 98 226Z"/></svg></button>
+      ${sendm?`<button onclick="window.replyMessage('${sanitizeMinimChars(msg.id)}', '${sanitizeHTML(msg.user.display??sanitizeMinimChars(msg.user.username))}')" aria-label="Reply" tlang="message.reply"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M42 108H196V108C229.137 108 256 134.863 256 168V168V199.85C256 210.896 247.046 219.85 236 219.85V219.85C224.954 219.85 216 210.896 216 199.85V168V168C216 156.954 207.046 148 196 148V148H42V108Z"/><path d="M79.746 41.1778C83.0613 37.8625 87.5578 36 92.2464 36V36C107.996 36 115.883 55.0415 104.747 66.1782L47.2462 123.681C44.9032 126.024 44.9032 129.823 47.2462 132.166L104.747 189.67C115.883 200.806 107.996 219.848 92.2464 219.848V219.848C87.5579 219.848 83.0614 217.985 79.7461 214.67L5.72793 140.652C-1.30151 133.622 -1.30151 122.225 5.72793 115.196L79.746 41.1778Z"/></svg></button>`:''}
+      ${msg.user.username===window.username?`<button onclick="window.editMessage('${sanitizeMinimChars(msg.id)}', '${sanitizeMinimChars(msg.key??'')}', this.parentElement.parentElement, '${sanitizeAttr(msg.content)}')" aria-label="Edit" tlang="message.edit"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M36 198L87 239L213.98 78.9249L162.073 38.0226L36 198ZM170.11 27.8251L222.067 68.7297L239.674 46.5333C241.391 44.3698 241.028 41.2246 238.864 39.5086L194.819 4.5744C192.651 2.85464 189.498 3.22334 187.785 5.397L170.11 27.8251Z M35.1323 255.15C33.0948 255.784 31.0651 254.148 31.252 252.023L36 198L87.0001 239L35.1323 255.15Z"/></svg></button>`:''}
+      ${ch.type===1||mangm?`<button onclick="window.pinMessage('${sanitizeMinimChars(msg.id)}')" aria-label="Pin" tlang="message.pin"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M117.4 6.28699C118.758 0.114336 126.401 -2.11969 130.87 2.34949L253.649 125.126C258.118 129.595 255.883 137.239 249.71 138.597L206.755 148.044C204.89 148.454 203.182 149.39 201.832 150.74L181.588 170.983C180.637 171.934 179.889 173.067 179.386 174.313L154.115 236.957C151.434 243.603 142.838 245.354 137.771 240.287L95.5138 198.03L10.2823 254.884C7.65962 256.633 4.16588 256.288 1.93663 254.058C-0.292345 251.829 -0.63778 248.336 1.11143 245.714L57.964 160.48L15.7091 118.225C10.642 113.158 12.3932 104.562 19.0392 101.881L81.6827 76.6112C82.9295 76.1083 84.0621 75.3587 85.0128 74.4081L105.257 54.1649C106.607 52.8149 107.542 51.1066 107.952 49.2421L117.4 6.28699Z"/></svg></button>`:''}
+      ${msg.user.username===window.username||mangm?`<button onclick="window.deleteMessage('${sanitizeMinimChars(msg.id)}')" aria-label="Delete" tlang="message.delete" style="color:var(--invalid)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M77.0892 18.9306C79.4013 18.9306 81.5077 17.6021 82.5038 15.5156L88.281 3.41493C89.2771 1.32846 91.3835 0 93.6956 0H162.304C164.617 0 166.723 1.32847 167.719 3.41494L173.496 15.5156C174.492 17.6021 176.599 18.9306 178.911 18.9306H222C226.418 18.9306 230 22.5123 230 26.9306V39C230 43.4183 226.418 47 222 47H34C29.5817 47 26 43.4183 26 39V26.9306C26 22.5123 29.5817 18.9306 34 18.9306H77.0892Z"/><path fill-rule="evenodd" clip-rule="evenodd" d="M42.4949 62.0605C39.7335 62.0605 37.4949 64.2991 37.4949 67.0605V241C37.4949 249.284 44.2106 256 52.4949 256H203.505C211.789 256 218.505 249.284 218.505 241V67.0605C218.505 64.2991 216.266 62.0605 213.505 62.0605H42.4949ZM78.8686 87.9194C71.728 87.9194 65.9393 93.708 65.9393 100.849V215.919C65.9393 223.06 71.728 228.849 78.8686 228.849C86.0093 228.849 91.7979 223.06 91.7979 215.919V100.849C91.7979 93.708 86.0093 87.9194 78.8686 87.9194ZM128 87.9194C120.859 87.9194 115.071 93.708 115.071 100.849V215.919C115.071 223.06 120.859 228.849 128 228.849C135.141 228.849 140.929 223.06 140.929 215.919V100.849C140.929 93.708 135.141 87.9194 128 87.9194ZM164.202 100.849C164.202 93.708 169.991 87.9194 177.131 87.9194C184.272 87.9194 190.061 93.708 190.061 100.849V215.919C190.061 223.06 184.272 228.849 177.131 228.849C169.991 228.849 164.202 223.06 164.202 215.919V100.849Z"/></svg></button>`:''}
+      <button class="more" username="${sanitizeMinimChars(msg.user.username)}" data-id="${sanitizeMinimChars(msg.id)}" aria-label="More" tlang="message.more"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill-rule="evenodd" clip-rule="evenodd" d="M128 158C111.431 158 98 144.569 98 128C98 111.431 111.431 98 128 98C144.569 98 158 111.431 158 128C158 144.569 144.569 158 128 158ZM128 60C111.432 60 98.0001 46.5685 98.0001 30C98.0001 13.4315 111.432 -5.87112e-07 128 -1.31135e-06C144.569 -2.03558e-06 158 13.4315 158 30C158 46.5685 144.569 60 128 60ZM98 226C98 242.569 111.431 256 128 256C144.569 256 158 242.569 158 226C158 209.431 144.569 196 128 196C111.431 196 98 209.431 98 226Z"/></svg></button>
     </div>
     ${msg.replied_to?`<span class="reply" onclick="document.getElementById('m-${sanitizeMinimChars(msg.reply?.id??'')}').scrollIntoView({behavior:'smooth'})"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 256 256"><path d="M256 132C256 120.954 247.046 112 236 112H60V112C26.8629 112 0 138.863 0 172V172V236C0 247.046 8.95431 256 20 256V256C31.0457 256 40 247.046 40 236V172V172C40 160.954 48.9543 152 60 152V152H236C247.046 152 256 143.046 256 132V132Z"/></svg>${msg.reply?`${sanitizeHTML(msg.reply.user.display??sanitizeMinimChars(msg.reply.user.username))}: ${sanitizeHTML(msg.reply.content)||imageicon}`:'Cannot load message'}</span>`:''}
     ${msg.user.hide?'':`<span class="author">${sanitizeHTML(msg.user.display??sanitizeMinimChars(msg.user.username))}</span><span class="time">${formatTime(msg.timestamp)}</span>`}
-    <span class="content">${window.MDParse(msg.content)}${msg.edited_at?`<span class="edited" title="${formatTime(msg.edited_at)}" lang="message.edited">(Edited)</span>`:''}</span>
+    <span class="content">${window.MDParse(msg.content)}${msg.edited_at?`<span class="edited" title="${formatTime(msg.edited_at)}" tlang="message.edited">(Edited)</span>`:''}</span>
     <div class="fileList">
       ${msg.attachments.map(att=>attachToElem(att)).join('')}
     </div>
@@ -370,8 +370,8 @@ async function showMessages(messages) {
   Array.from(document.querySelectorAll('.message .more')).forEach(btn=>{
     tippy(btn, {
       allowHTML: true,
-      content: (window.username!==btn.getAttribute('username')?`<button onclick="window.blockmember('${btn.getAttribute('username')}')" class="danger" lang="member.block">Block</button>`:'')+
-`<button onclick="navigator.clipboard.writeText('${btn.getAttribute('id')}')" lang="settings.copyid">Copy id</button>`,
+      content: (window.username!==btn.getAttribute('username')?`<button onclick="window.blockmember('${btn.getAttribute('username')}')" class="danger" tlang="member.block">Block</button>`:'')+
+`<button onclick="navigator.clipboard.writeText('${btn.getAttribute('data-id')}')" tlang="settings.copyid">Copy id</button>`,
       interactive: true,
       trigger: 'click',
       placement: 'bottom-end',
@@ -422,7 +422,7 @@ window.onkeydown = (evt)=>{
 window.channels = [];
 function showChannels(channels) {
   if (channels.length<1) {
-    document.getElementById('channels').innerHTML = '<p lang="channel.listempty"></p>';
+    document.getElementById('channels').innerHTML = '<p tlang="channel.listempty"></p>';
     window.translate();
     return;
   }
@@ -445,8 +445,8 @@ function showChannels(channels) {
     </span>
     ${(ch.unread_count??0)>0?`<span class="unread">${ch.unread_count}</span>`:''}
   </button>
-  ${ch.type!==1&&hasPerm(ch.permission,Permissions.MANAGE_CHANNEL)?`<button class="other" onclick="window.changeChannel('${ch.id}')" aria-label="Edit" lang="channel.edit"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill-rule="evenodd" clip-rule="evenodd" d="M128.601 218.743C178.384 218.743 218.742 178.385 218.742 128.602C218.742 78.8184 178.384 38.4609 128.601 38.4609C78.8175 38.4609 38.4601 78.8184 38.4601 128.602C38.4601 178.385 78.8175 218.743 128.601 218.743ZM128.601 167.062C149.842 167.062 167.061 149.843 167.061 128.602C167.061 107.361 149.842 90.1415 128.601 90.1415C107.36 90.1415 90.1408 107.361 90.1408 128.602C90.1408 149.843 107.36 167.062 128.601 167.062Z"></path><path d="M101.001 11.0292C101.507 4.79869 106.711 0 112.962 0H143.038C149.289 0 154.493 4.79868 154.999 11.0292L158 48H98L101.001 11.0292Z"></path><path d="M101.001 244.971C101.507 251.201 106.711 256 112.962 256H143.038C149.289 256 154.493 251.201 154.999 244.971L158 208H98L101.001 244.971Z"></path><path d="M244.971 101.001C251.201 101.507 256 106.711 256 112.962L256 143.038C256 149.289 251.201 154.493 244.971 154.999L208 158L208 98L244.971 101.001Z"></path><path d="M11.0292 101.001C4.79869 101.507 -3.80751e-07 106.711 -6.5399e-07 112.962L-1.96869e-06 143.038C-2.24193e-06 149.289 4.79868 154.493 11.0292 154.999L48 158L48 98L11.0292 101.001Z"></path><path d="M192.883 25.8346C197.645 21.7687 204.733 22.0477 209.16 26.4753L229.71 47.025C234.137 51.4526 234.416 58.5404 230.351 63.3023L205.964 91.8642L164.321 50.2213L192.883 25.8346Z"></path><path d="M26.135 192.008C22.0807 196.77 22.3646 203.849 26.7873 208.271L47.7285 229.212C52.1512 233.635 59.2294 233.919 63.9921 229.865L92.2857 205.78L50.2198 163.714L26.135 192.008Z"></path><path d="M229.879 191.979C233.94 196.742 233.658 203.825 229.233 208.25L208.673 228.811C204.247 233.236 197.164 233.517 192.402 229.457L164.137 205.358L205.78 163.715L229.879 191.979Z"></path><path d="M63.9921 26.1356C59.2293 22.0813 52.1512 22.3652 47.7284 26.7879L26.7874 47.7289C22.3647 52.1517 22.0808 59.2298 26.1351 63.9926L50.22 92.2862L92.2857 50.2205L63.9921 26.1356Z"></path></svg></button>`:''}
-  ${window.serverData[window.currentServer]?.disable_channel_deletion?'':`<button class="other" onclick="window.leaveChannel('${ch.id}')" aria-label="Leave" lang="channel.leave"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 256 256"><path d="M219.856 5.85765C227.666 -1.95251 240.33 -1.95258 248.14 5.85765L250.141 7.85961C257.951 15.6701 257.951 28.3334 250.141 36.1438L158.285 127.999L250.141 219.857C257.952 227.667 257.952 240.33 250.141 248.141L248.14 250.142C240.33 257.952 227.666 257.952 219.856 250.142L127.999 158.285L36.143 250.142C28.3326 257.952 15.6693 257.952 7.85884 250.142L5.85786 248.141C-1.95262 240.33 -1.95262 227.667 5.85786 219.857L97.7133 127.999L5.85786 36.1438C-1.95262 28.3333 -1.95261 15.6701 5.85786 7.85961L7.85884 5.85765C15.6693 -1.95245 28.3327 -1.95266 36.143 5.85765L127.999 97.7141L219.856 5.85765Z"/></svg></button>`}
+  ${ch.type!==1&&hasPerm(ch.permission,Permissions.MANAGE_CHANNEL)?`<button class="other" onclick="window.changeChannel('${ch.id}')" aria-label="Edit" tlang="channel.edit"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill-rule="evenodd" clip-rule="evenodd" d="M128.601 218.743C178.384 218.743 218.742 178.385 218.742 128.602C218.742 78.8184 178.384 38.4609 128.601 38.4609C78.8175 38.4609 38.4601 78.8184 38.4601 128.602C38.4601 178.385 78.8175 218.743 128.601 218.743ZM128.601 167.062C149.842 167.062 167.061 149.843 167.061 128.602C167.061 107.361 149.842 90.1415 128.601 90.1415C107.36 90.1415 90.1408 107.361 90.1408 128.602C90.1408 149.843 107.36 167.062 128.601 167.062Z"></path><path d="M101.001 11.0292C101.507 4.79869 106.711 0 112.962 0H143.038C149.289 0 154.493 4.79868 154.999 11.0292L158 48H98L101.001 11.0292Z"></path><path d="M101.001 244.971C101.507 251.201 106.711 256 112.962 256H143.038C149.289 256 154.493 251.201 154.999 244.971L158 208H98L101.001 244.971Z"></path><path d="M244.971 101.001C251.201 101.507 256 106.711 256 112.962L256 143.038C256 149.289 251.201 154.493 244.971 154.999L208 158L208 98L244.971 101.001Z"></path><path d="M11.0292 101.001C4.79869 101.507 -3.80751e-07 106.711 -6.5399e-07 112.962L-1.96869e-06 143.038C-2.24193e-06 149.289 4.79868 154.493 11.0292 154.999L48 158L48 98L11.0292 101.001Z"></path><path d="M192.883 25.8346C197.645 21.7687 204.733 22.0477 209.16 26.4753L229.71 47.025C234.137 51.4526 234.416 58.5404 230.351 63.3023L205.964 91.8642L164.321 50.2213L192.883 25.8346Z"></path><path d="M26.135 192.008C22.0807 196.77 22.3646 203.849 26.7873 208.271L47.7285 229.212C52.1512 233.635 59.2294 233.919 63.9921 229.865L92.2857 205.78L50.2198 163.714L26.135 192.008Z"></path><path d="M229.879 191.979C233.94 196.742 233.658 203.825 229.233 208.25L208.673 228.811C204.247 233.236 197.164 233.517 192.402 229.457L164.137 205.358L205.78 163.715L229.879 191.979Z"></path><path d="M63.9921 26.1356C59.2293 22.0813 52.1512 22.3652 47.7284 26.7879L26.7874 47.7289C22.3647 52.1517 22.0808 59.2298 26.1351 63.9926L50.22 92.2862L92.2857 50.2205L63.9921 26.1356Z"></path></svg></button>`:''}
+  ${window.serverData[window.currentServer]?.disable_channel_deletion?'':`<button class="other" onclick="window.leaveChannel('${ch.id}')" aria-label="Leave" tlang="channel.leave"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 256 256"><path d="M219.856 5.85765C227.666 -1.95251 240.33 -1.95258 248.14 5.85765L250.141 7.85961C257.951 15.6701 257.951 28.3334 250.141 36.1438L158.285 127.999L250.141 219.857C257.952 227.667 257.952 240.33 250.141 248.141L248.14 250.142C240.33 257.952 227.666 257.952 219.856 250.142L127.999 158.285L36.143 250.142C28.3326 257.952 15.6693 257.952 7.85884 250.142L5.85786 248.141C-1.95262 240.33 -1.95262 227.667 5.85786 219.857L97.7133 127.999L5.85786 36.1438C-1.95262 28.3333 -1.95261 15.6701 5.85786 7.85961L7.85884 5.85765C15.6693 -1.95245 28.3327 -1.95266 36.143 5.85765L127.999 97.7141L219.856 5.85765Z"/></svg></button>`}
 </span>`;
     })
     .join('');
@@ -501,12 +501,12 @@ function showMembers(id) {
     if (window.username === btn.getAttribute('username')) return;
     tippy(btn, {
       allowHTML: true,
-      content: (window.serverData[window.currentServer]?.disable_channel_creation?'':`<button onclick="window.createChannel(1, '${btn.getAttribute('username')}')" lang="member.message">Message</button>`)+
-`<button onclick="window.blockmember('${btn.getAttribute('username')}')" class="danger" lang="member.block">Block</button>`+
+      content: (window.serverData[window.currentServer]?.disable_channel_creation?'':`<button onclick="window.createChannel(1, '${btn.getAttribute('username')}')" tlang="member.message">Message</button>`)+
+`<button onclick="window.blockmember('${btn.getAttribute('username')}')" class="danger" tlang="member.block">Block</button>`+
 (hasPerm(ch.permission,Permissions.MANAGE_PERMISSION)||hasPerm(ch.permission,Permissions.MANAGE_MEMBERS)?`<hr style="width:90%">`:'')+
-(hasPerm(ch.permission,Permissions.MANAGE_PERMISSION)?`<button onclick="window.permmember('${btn.getAttribute('username')}')" lang="member.changeperms">Change permissions</button>`:'')+
-(hasPerm(ch.permission,Permissions.MANAGE_MEMBERS)?`<button onclick="window.kickmember('${btn.getAttribute('username')}')" lang="member.kick">Kick</button>
-<button onclick="window.banmember('${btn.getAttribute('username')}')" lang="member.ban">Ban</button>`:''),
+(hasPerm(ch.permission,Permissions.MANAGE_PERMISSION)?`<button onclick="window.permmember('${btn.getAttribute('username')}')" tlang="member.changeperms">Change permissions</button>`:'')+
+(hasPerm(ch.permission,Permissions.MANAGE_MEMBERS)?`<button onclick="window.kickmember('${btn.getAttribute('username')}')" tlang="member.kick">Kick</button>
+<button onclick="window.banmember('${btn.getAttribute('username')}')" tlang="member.ban">Ban</button>`:''),
       interactive: true,
       trigger: 'click',
       placement: 'left-start',
@@ -533,7 +533,7 @@ window.permmember = (id)=>{
   let modal = document.getElementById('permModal');
   modal.showModal();
   modal.querySelector('div').innerHTML = Object.entries(Permissions)
-    .map(k=>`<label for="pu-${k[0]}" lang="permission.${k[0].toLowerCase()}">${k[0].toLowerCase()}</label><input id="pu-${k[0]}" data-weight="${k[1]}" type="checkbox"${hasPerm(ch.permission,k[1])?'':' disabled'}${hasPerm(perm,k[1])?' checked':''}><br>`)
+    .map(k=>`<label for="pu-${k[0]}" tlang="permission.${k[0].toLowerCase()}">${k[0].toLowerCase()}</label><input id="pu-${k[0]}" data-weight="${k[1]}" type="checkbox"${hasPerm(ch.permission,k[1])?'':' disabled'}${hasPerm(perm,k[1])?' checked':''}><br>`)
     .join('');
   modal.querySelector('button.set').onclick = ()=>{
     backendfetch( '/api/v1/channel/'+window.currentChannel+'/member/'+id, {
@@ -662,7 +662,7 @@ function permchannel(id) {
   let modal = document.getElementById('permModal');
   modal.showModal();
   modal.querySelector('div').innerHTML = Object.entries(Permissions)
-    .map(k=>`<label for="pu-${k[0]}" lang="permission.${k[0].toLowerCase()}">${k[0].toLowerCase()}</label><input id="pu-${k[0]}" data-weight="${k[1]}" type="checkbox"${hasPerm(ch.permission,k[1])?'':' disabled'}${hasPerm(perm,k[1])?' checked':''}><br>`)
+    .map(k=>`<label for="pu-${k[0]}" tlang="permission.${k[0].toLowerCase()}">${k[0].toLowerCase()}</label><input id="pu-${k[0]}" data-weight="${k[1]}" type="checkbox"${hasPerm(ch.permission,k[1])?'':' disabled'}${hasPerm(perm,k[1])?' checked':''}><br>`)
     .join('');
   modal.querySelector('button.set').onclick = ()=>{
     let formData = new FormData();
@@ -833,10 +833,10 @@ window.pinsPanel = ()=>{
     .then(async(messages)=>{
       if (messages.length<1) {
         document.querySelector('#pinsModal div').innerText = '';
-        document.querySelector('#pinsModal div').setAttribute('lang','message.nopins');
+        document.querySelector('#pinsModal div').setAttribute('tlang','message.nopins');
         return;
       }
-      document.querySelector('#pinsModal div').removeAttribute('lang');
+      document.querySelector('#pinsModal div').removeAttribute('tlang');
       let ch = window.channels.find(ch=>ch.id===window.currentChannel);
       // Pre
       for (let i=0; i<messages.length; i++) {
@@ -849,10 +849,10 @@ window.pinsPanel = ()=>{
   <div class="avatar"><img src="${msg.user.pfp?pfpById(msg.user.pfp):userToDefaultPfp(msg.user)}" width="42" height="42" aria-hidden="true"></div>
   <div class="inner">
     ${ch.type===1||hasPerm(ch.permission,Permissions.MANAGE_MESSAGES)?`<div class="actions">
-      <button onclick="window.unpinMessage('${sanitizeMinimChars(msg.id)}');window.pinsPanel()" aria-label="Unpin" lang="message.unpin" style="color:var(--invalid)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M117.925 15.287C119.283 9.11438 126.925 6.88031 131.394 11.3495L244.087 124.041C248.556 128.51 246.321 136.153 240.148 137.511L201.418 146.029C199.553 146.439 197.845 147.375 196.495 148.724L177.921 167.299C176.97 168.249 176.222 169.382 175.719 170.629L152.677 227.748C149.996 234.394 141.4 236.146 136.332 231.078L97.7987 192.545L18.5585 245.401C16.1203 247.027 12.8731 246.706 10.8007 244.634C8.72831 242.561 8.40702 239.314 10.0331 236.876L62.8886 157.636L24.3564 119.103C19.2888 114.036 21.0402 105.44 27.6864 102.759L84.8066 79.7167C86.0533 79.2137 87.186 78.465 88.1366 77.5145L106.71 58.9403C108.06 57.5903 108.996 55.882 109.406 54.0174L117.925 15.287Z"/><path d="M20 20L236 236" stroke-width="40" stroke-linecap="round"/></svg></button>
+      <button onclick="window.unpinMessage('${sanitizeMinimChars(msg.id)}');window.pinsPanel()" aria-label="Unpin" tlang="message.unpin" style="color:var(--invalid)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M117.925 15.287C119.283 9.11438 126.925 6.88031 131.394 11.3495L244.087 124.041C248.556 128.51 246.321 136.153 240.148 137.511L201.418 146.029C199.553 146.439 197.845 147.375 196.495 148.724L177.921 167.299C176.97 168.249 176.222 169.382 175.719 170.629L152.677 227.748C149.996 234.394 141.4 236.146 136.332 231.078L97.7987 192.545L18.5585 245.401C16.1203 247.027 12.8731 246.706 10.8007 244.634C8.72831 242.561 8.40702 239.314 10.0331 236.876L62.8886 157.636L24.3564 119.103C19.2888 114.036 21.0402 105.44 27.6864 102.759L84.8066 79.7167C86.0533 79.2137 87.186 78.465 88.1366 77.5145L106.71 58.9403C108.06 57.5903 108.996 55.882 109.406 54.0174L117.925 15.287Z"/><path d="M20 20L236 236" stroke-width="40" stroke-linecap="round"/></svg></button>
     </div>`:''}
     <span class="author">${sanitizeHTML(msg.user.display??sanitizeMinimChars(msg.user.username))}</span><span class="time">${formatTime(msg.timestamp)}</span>
-    <span class="content">${window.MDParse(msg.content)}${msg.edited_at?`<span class="edited" title="${formatTime(msg.edited_at)}" lang="message.edited">(Edited)</span>`:''}</span>
+    <span class="content">${window.MDParse(msg.content)}${msg.edited_at?`<span class="edited" title="${formatTime(msg.edited_at)}" tlang="message.edited">(Edited)</span>`:''}</span>
     <div class="fileList">
       ${msg.attachments.map(att=>attachToElem(att)).join('')}
     </div>
@@ -1046,7 +1046,7 @@ window.viewsessions = ()=>{
     <span>${ses.browser} · ${ses.device}</span>
     <span class="small">${formatTime(Math.floor(ses.logged_in_at*1000))}</span>
   </span>
-  ${ses.current?'<span lang="user.currentsession">(current)</span>':`<button onclick="window.deletesession('${sanitizeMinimChars(ses.id)}')">x</button>`}
+  ${ses.current?'<span tlang="user.currentsession">(current)</span>':`<button onclick="window.deletesession('${sanitizeMinimChars(ses.id)}')">x</button>`}
 </div>`)
         .join('');
       window.translate();
@@ -1066,7 +1066,7 @@ window.viewblocks = ()=>{
   </span>
   <button onclick="window.unblockmember('${sanitizeMinimChars(usr.username)}')">x</button>
 </div>`)
-        .join('')||'<span lang="user.noblocks">No blocked users</span>';
+        .join('')||'<span tlang="user.noblocks">No blocked users</span>';
       window.translate();
     });
   modal.querySelector('button.add').onclick = async()=>{
@@ -1178,9 +1178,9 @@ document.querySelector('body').style.setProperty('--font', vts[localStorage.getI
 document.querySelector('body').style.setProperty('direction', localStorage.getItem('prtl')==='true'?'rtl':'');
 tippy([document.getElementById('btn-languages'),document.getElementById('srv-btn-languages')], {
   allowHTML: true,
-  content: '<span lang="lang.change">Change language</span>'+Array.from(new Set(Object.values(languages)))
+  content: '<span tlang="lang.change">Change language</span>'+Array.from(new Set(Object.values(languages)))
     .map(lang=>`<button onclick="localStorage.setItem('language','${lang}');window.translate()">${getLanguageName(lang)}</button>`)
-    .join('')+'<span><label lang="lang.timeuilang" for="timeuilang">Time uses ui locale</label><input id="timeuilang" type="checkbox" onchange="localStorage.setItem(`timeUILang`,this.checked)"></span>',
+    .join('')+'<span><label tlang="lang.timeuilang" for="timeuilang">Time uses ui locale</label><input id="timeuilang" type="checkbox" onchange="localStorage.setItem(`timeUILang`,this.checked)"></span>',
   interactive: true,
   trigger: 'click',
   placement: 'top-end',
@@ -1191,10 +1191,10 @@ function postLogin() {
   // Tippy
   tippy(document.getElementById('user'), {
     allowHTML: true,
-    content: `<button onclick="window.useredit()" lang="user.edit">Edit</button>
-<button onclick="window.viewblocks()" lang="user.blocks">Blocks</button>
-<button onclick="window.viewsessions()" lang="user.sessions">Sessions</button>
-<button onclick="logout()" lang="user.logout">Log out</button>`,
+    content: `<button onclick="window.useredit()" tlang="user.edit">Edit</button>
+<button onclick="window.viewblocks()" tlang="user.blocks">Blocks</button>
+<button onclick="window.viewsessions()" tlang="user.sessions">Sessions</button>
+<button onclick="logout()" tlang="user.logout">Log out</button>`,
     interactive: true,
     trigger: 'click',
     placement: 'bottom-start',
@@ -1202,10 +1202,10 @@ function postLogin() {
   });
   tippy(document.getElementById('channel-add'), {
     allowHTML: true,
-    content: (window.serverData[window.currentServer]?.disable_channel_creation?'':`<button onclick="window.createChannel(1)" lang="channel.newdm">Message User</button>
-<button onclick="window.createChannel(2)" lang="channel.newgroup">Create Group</button>
-<button onclick="window.createChannel(3)" lang="channel.newbroadcast">Create Broadcast</button>`)+
-`<button onclick="window.joinChannel()" lang="channel.joingroup">Join Group</button>`,
+    content: (window.serverData[window.currentServer]?.disable_channel_creation?'':`<button onclick="window.createChannel(1)" tlang="channel.newdm">Message User</button>
+<button onclick="window.createChannel(2)" tlang="channel.newgroup">Create Group</button>
+<button onclick="window.createChannel(3)" tlang="channel.newbroadcast">Create Broadcast</button>`)+
+`<button onclick="window.joinChannel()" tlang="channel.joingroup">Join Group</button>`,
     interactive: true,
     trigger: 'click',
     placement: 'bottom-end',
@@ -1214,11 +1214,11 @@ function postLogin() {
   tippy(document.getElementById('btn-settings'), {
     allowHTML: true,
     content: `<span>
-  <label for="s-theme" lang="settings.theme">Theme:</label>
+  <label for="s-theme" tlang="settings.theme">Theme:</label>
   <input type="color" id="s-theme" oninput="document.querySelector('body').style.setProperty('--accent',this.value);localStorage.setItem('ptheme',this.value)" value="${localStorage.getItem('ptheme')??'#221111'}">
 </span>
 <span>
-  <label for="s-font" lang="settings.font">Font:</label>
+  <label for="s-font" tlang="settings.font">Font:</label>
   <select id="s-font">
     <option value="lexend">Lexend</option>
     <option value="arial">Arial</option>
@@ -1227,11 +1227,11 @@ function postLogin() {
   </select>
 </span>
 <span>
-  <label for="s-ma" lang="settings.medialways">Load media on mobile data:</label>
+  <label for="s-ma" tlang="settings.medialways">Load media on mobile data:</label>
   <input id="s-ma" type="checkbox" onchange="localStorage.setItem('pmedialways',this.checked)"${localStorage.getItem('pmedialways')==='true'?' checked':''}>
 </span>
 <span>
-  <label for="s-rtl" lang="settings.rtl">RTL:</label>
+  <label for="s-rtl" tlang="settings.rtl">RTL:</label>
   <input id="s-rtl" type="checkbox" onchange="document.querySelector('body').style.setProperty('direction',this.checked?'rtl':'');localStorage.setItem('rtl',this.checked)"${localStorage.getItem('prtl')==='true'?' checked':''}>
 </span>`,
     interactive: true,

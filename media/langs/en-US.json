@@ -116,6 +116,7 @@
   "message.pin": "Pin",
   "message.unpin": "Unpin",
   "message.delete": "Delete",
+  "message.more": "More",
   "message.nopins": "There are no pinned messages",
   "message.cant": "You can't send messages here",
   "message.download": "Download",
