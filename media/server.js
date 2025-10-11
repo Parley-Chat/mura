@@ -67,20 +67,6 @@ function showServerList() {
     };
   });
 }
-let checkOnlineInter = setInterval(()=>{
-  let con = false;
-  window.servers.forEach(srv=>{
-    if (con) return;
-    if (onlineServers[srv.url]===undefined) {
-      con = true;
-      checkServer(srv.url)
-        .then(()=>{
-          showServerList();
-        });
-      return;
-    }
-  });
-}, 200);
 document.getElementById('server-add').onclick = function(){
   if (typeof ServerInput.getAttribute('invalid')==='string') return;
   window.servers.push({
@@ -92,6 +78,7 @@ document.getElementById('server-add').onclick = function(){
   localStorage.setItem('servers', JSON.stringify(window.servers));
   showServerList();
 };
+let checkOnlineInter;
 document.getElementById('server-select').onclick = function(){
   if (typeof document.getElementById('server-select').getAttribute('disabled')==='string') return;
   window.currentServer = document.querySelector('#server-list > span[selected]').getAttribute('data-id');
@@ -140,3 +127,18 @@ window.currentServer = '';
   showServerList();
   document.getElementById('server-modal').showModal();
 })();
+
+checkOnlineInter = setInterval(()=>{
+  let con = false;
+  window.servers.forEach(srv=>{
+    if (con) return;
+    if (onlineServers[srv.url]===undefined) {
+      con = true;
+      checkServer(srv.url)
+        .then(()=>{
+          showServerList();
+        });
+      return;
+    }
+  });
+}, 200);
