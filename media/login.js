@@ -28,7 +28,7 @@ document.getElementById('l-username').oninput = function(evt) {
       evt.target.setAttribute('invalid', true);
       return;
     }
-    fetch(window.currentServer+'/api/v1/username_check?username='+evt.target.value)
+    fetch(getCurrentServerUrl()+'/api/v1/username_check?username='+evt.target.value)
       .then(res=>{
         if (res.status===200) {
           if (errors.getAttribute('tlang') === 'error.usernameuse') errors.setAttribute('tlang', 'empty');
@@ -110,7 +110,7 @@ document.getElementById('login-btn').onclick = async function(){
   if (logining) formData.append('passkey', document.getElementById('l-passkey').value);
   formData.append('public', publickey);
 
-  fetch(window.currentServer+`/api/v1/${logining?'login':'signup'}`, {
+  fetch(getCurrentServerUrl()+`/api/v1/${logining?'login':'signup'}`, {
     method: 'POST',
     body: formData
   })

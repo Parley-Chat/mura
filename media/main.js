@@ -136,15 +136,15 @@ fileButton.onclick = ()=>{
 function addFiles(fils) {
   files = files.concat(fils);
   files = files.filter(file=>{
-    if (file.size>window.serverData[window.currentServer].max_file_size.attachments) {
+    if (file.size>window.serverData[getCurrentServerUrl()].max_file_size.attachments) {
       notice('message.attachment.toobig', file.name);
       return false;
     }
     return true;
   });
-  if (files.length>window.serverData[window.currentServer].messages.max_attachments) {
-    files = files.slice(0, window.serverData[window.currentServer].messages.max_attachments);
-    notice('message.attachment.toomany', window.serverData[window.currentServer].messages.max_attachments);
+  if (files.length>window.serverData[getCurrentServerUrl()].messages.max_attachments) {
+    files = files.slice(0, window.serverData[getCurrentServerUrl()].messages.max_attachments);
+    notice('message.attachment.toomany', window.serverData[getCurrentServerUrl()].messages.max_attachments);
   }
   filePreview();
 }
@@ -200,7 +200,7 @@ window.unpinMessage = (msg)=>{
   });
 };
 window.editMessage = (msg, key, elem, cont)=>{
-  elem.querySelector('.content').outerHTML = `<textarea name="message" class="content" maxlength="${window.serverData[window.currentServer]?.messages?.max_message_length??2000}"></textarea>
+  elem.querySelector('.content').outerHTML = `<textarea name="message" class="content" maxlength="${window.serverData[getCurrentServerUrl()]?.messages?.max_message_length??2000}"></textarea>
 <div>
   <button class="save" tlang="message.edit.save">Save</button>
   <button class="cancel" tlang="message.edit.cancel">Cancel</button>
@@ -256,7 +256,7 @@ class TxtLoader extends HTMLElement {
     super();
   }
   connectedCallback() {
-    fetch(`${window.currentServer}/attachment/${this.getAttribute('data-id')}`)
+    fetch(`${getCurrentServerUrl()}/attachment/${this.getAttribute('data-id')}`)
       .then(res=>{
         if (!res.ok) throw new Error('non ok');
         return res.text();
@@ -269,7 +269,7 @@ customElements.define('media-com', MediaCom);
 customElements.define('txt-loader', TxtLoader);
 
 window.downloadfile = (id, name)=>{
-  fetch(`${window.currentServer}/attachment/${id}`)
+  fetch(`${getCurrentServerUrl()}/attachment/${id}`)
     .then(res=>res.blob())
     .then(res=>{
       let url = URL.createObjectURL(res);
@@ -295,7 +295,7 @@ function attachToElem(att) {
     case 'image':
     case 'video':
     case 'audio':
-      return `<media-com type="${type.replace('age','g')}" data-src="${window.currentServer}/attachment/${sanitizeMinimChars(att.id)}" data-name="${sanitizeAttr(att.filename)}" data-size="${sanitizeMinimChars(att.size.toString())}"></media-com>`;
+      return `<media-com type="${type.replace('age','g')}" data-src="${getCurrentServerUrl()}/attachment/${sanitizeMinimChars(att.id)}" data-name="${sanitizeAttr(att.filename)}" data-size="${sanitizeMinimChars(att.size.toString())}"></media-com>`;
     default:
       return `<div class="file"><span>${sanitizeHTML(att.filename)} · ${formatBytes(att.size)} <button onclick="window.downloadfile('${sanitizeMinimChars(att.id)}', '${sanitizeAttr(att.filename)}')" aria-label="Download" tlang="message.download"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M128 190V20" stroke-width="40" stroke-linecap="round" fill="none"/><path d="M127.861 212.999C131.746 213.035 135.642 211.571 138.606 208.607L209.317 137.896C212.291 134.922 213.753 131.011 213.708 127.114C213.708 127.076 213.71 127.038 213.71 127C213.71 118.716 206.994 112 198.71 112H57C48.7157 112 42 118.716 42 127C42 127.045 42.0006 127.089 42.001 127.134C41.961 131.024 43.4252 134.927 46.3936 137.896L117.104 208.607L117.381 208.876C120.312 211.662 124.092 213.037 127.861 212.999Z"/><rect y="226" width="256" height="30" rx="15"/></svg></button></span></div>`;
   }
@@ -446,7 +446,7 @@ function showChannels(channels) {
     ${(ch.unread_count??0)>0?`<span class="unread">${ch.unread_count}</span>`:''}
   </button>
   ${ch.type!==1&&hasPerm(ch.permission,Permissions.MANAGE_CHANNEL)?`<button class="other" onclick="window.changeChannel('${ch.id}')" aria-label="Edit" tlang="channel.edit"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill-rule="evenodd" clip-rule="evenodd" d="M128.601 218.743C178.384 218.743 218.742 178.385 218.742 128.602C218.742 78.8184 178.384 38.4609 128.601 38.4609C78.8175 38.4609 38.4601 78.8184 38.4601 128.602C38.4601 178.385 78.8175 218.743 128.601 218.743ZM128.601 167.062C149.842 167.062 167.061 149.843 167.061 128.602C167.061 107.361 149.842 90.1415 128.601 90.1415C107.36 90.1415 90.1408 107.361 90.1408 128.602C90.1408 149.843 107.36 167.062 128.601 167.062Z"></path><path d="M101.001 11.0292C101.507 4.79869 106.711 0 112.962 0H143.038C149.289 0 154.493 4.79868 154.999 11.0292L158 48H98L101.001 11.0292Z"></path><path d="M101.001 244.971C101.507 251.201 106.711 256 112.962 256H143.038C149.289 256 154.493 251.201 154.999 244.971L158 208H98L101.001 244.971Z"></path><path d="M244.971 101.001C251.201 101.507 256 106.711 256 112.962L256 143.038C256 149.289 251.201 154.493 244.971 154.999L208 158L208 98L244.971 101.001Z"></path><path d="M11.0292 101.001C4.79869 101.507 -3.80751e-07 106.711 -6.5399e-07 112.962L-1.96869e-06 143.038C-2.24193e-06 149.289 4.79868 154.493 11.0292 154.999L48 158L48 98L11.0292 101.001Z"></path><path d="M192.883 25.8346C197.645 21.7687 204.733 22.0477 209.16 26.4753L229.71 47.025C234.137 51.4526 234.416 58.5404 230.351 63.3023L205.964 91.8642L164.321 50.2213L192.883 25.8346Z"></path><path d="M26.135 192.008C22.0807 196.77 22.3646 203.849 26.7873 208.271L47.7285 229.212C52.1512 233.635 59.2294 233.919 63.9921 229.865L92.2857 205.78L50.2198 163.714L26.135 192.008Z"></path><path d="M229.879 191.979C233.94 196.742 233.658 203.825 229.233 208.25L208.673 228.811C204.247 233.236 197.164 233.517 192.402 229.457L164.137 205.358L205.78 163.715L229.879 191.979Z"></path><path d="M63.9921 26.1356C59.2293 22.0813 52.1512 22.3652 47.7284 26.7879L26.7874 47.7289C22.3647 52.1517 22.0808 59.2298 26.1351 63.9926L50.22 92.2862L92.2857 50.2205L63.9921 26.1356Z"></path></svg></button>`:''}
-  ${window.serverData[window.currentServer]?.disable_channel_deletion?'':`<button class="other" onclick="window.leaveChannel('${ch.id}')" aria-label="Leave" tlang="channel.leave"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 256 256"><path d="M219.856 5.85765C227.666 -1.95251 240.33 -1.95258 248.14 5.85765L250.141 7.85961C257.951 15.6701 257.951 28.3334 250.141 36.1438L158.285 127.999L250.141 219.857C257.952 227.667 257.952 240.33 250.141 248.141L248.14 250.142C240.33 257.952 227.666 257.952 219.856 250.142L127.999 158.285L36.143 250.142C28.3326 257.952 15.6693 257.952 7.85884 250.142L5.85786 248.141C-1.95262 240.33 -1.95262 227.667 5.85786 219.857L97.7133 127.999L5.85786 36.1438C-1.95262 28.3333 -1.95261 15.6701 5.85786 7.85961L7.85884 5.85765C15.6693 -1.95245 28.3327 -1.95266 36.143 5.85765L127.999 97.7141L219.856 5.85765Z"/></svg></button>`}
+  ${window.serverData[getCurrentServerUrl()]?.disable_channel_deletion?'':`<button class="other" onclick="window.leaveChannel('${ch.id}')" aria-label="Leave" tlang="channel.leave"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 256 256"><path d="M219.856 5.85765C227.666 -1.95251 240.33 -1.95258 248.14 5.85765L250.141 7.85961C257.951 15.6701 257.951 28.3334 250.141 36.1438L158.285 127.999L250.141 219.857C257.952 227.667 257.952 240.33 250.141 248.141L248.14 250.142C240.33 257.952 227.666 257.952 219.856 250.142L127.999 158.285L36.143 250.142C28.3326 257.952 15.6693 257.952 7.85884 250.142L5.85786 248.141C-1.95262 240.33 -1.95262 227.667 5.85786 219.857L97.7133 127.999L5.85786 36.1438C-1.95262 28.3333 -1.95261 15.6701 5.85786 7.85961L7.85884 5.85765C15.6693 -1.95245 28.3327 -1.95266 36.143 5.85765L127.999 97.7141L219.856 5.85765Z"/></svg></button>`}
 </span>`;
     })
     .join('');
@@ -501,7 +501,7 @@ function showMembers(id) {
     if (window.username === btn.getAttribute('username')) return;
     tippy(btn, {
       allowHTML: true,
-      content: (window.serverData[window.currentServer]?.disable_channel_creation?'':`<button onclick="window.createChannel(1, '${btn.getAttribute('username')}')" tlang="member.message">Message</button>`)+
+      content: (window.serverData[getCurrentServerUrl()]?.disable_channel_creation?'':`<button onclick="window.createChannel(1, '${btn.getAttribute('username')}')" tlang="member.message">Message</button>`)+
 `<button onclick="window.blockmember('${btn.getAttribute('username')}')" class="danger" tlang="member.block">Block</button>`+
 (hasPerm(ch.permission,Permissions.MANAGE_PERMISSION)||hasPerm(ch.permission,Permissions.MANAGE_MEMBERS)?`<hr style="width:90%">`:'')+
 (hasPerm(ch.permission,Permissions.MANAGE_PERMISSION)?`<button onclick="window.permmember('${btn.getAttribute('username')}')" tlang="member.changeperms">Change permissions</button>`:'')+
@@ -867,7 +867,7 @@ window.pinsPanel = ()=>{
 window.stream = null;
 function startStrem() {
   if (window.stream) return;
-  window.stream = new EventSource(`${window.currentServer}/api/v1/stream?authorization=Bearer ${localStorage.getItem(window.currentServer+'-sessionToken')}`);
+  window.stream = new EventSource(`${getCurrentServerUrl()}/api/v1/stream?authorization=Bearer ${localStorage.getItem(window.currentServer+'-sessionToken')}`);
   window.stream.addEventListener('error', (event)=>{
     if (!event.data) return;
     let data = JSON.parse(event.data);
@@ -1115,7 +1115,8 @@ window.showuserdata = (me)=>{
     // Uh issue isn't the session or server but still failed, try to work without user data
   } else {
     window.username = sanitizeMinimChars(me.username);
-    localStorage.setItem(window.currentServer+'-username', sanitizeMinimChars(me.username));
+    window.servers[window.servers.findIndex(srv=>srv.id===window.currentServer)].name = me.username;
+    localStorage.setItem('servers', JSON.stringify(window.servers));
     document.querySelector('#user img').src = me.pfp?pfpById(me.pfp):userToDefaultPfp(me);
     document.querySelector('#user img').setAttribute('title', me.username);
     document.getElementById('ue-display').value = me.display??'';
@@ -1202,7 +1203,7 @@ function postLogin() {
   });
   tippy(document.getElementById('channel-add'), {
     allowHTML: true,
-    content: (window.serverData[window.currentServer]?.disable_channel_creation?'':`<button onclick="window.createChannel(1)" tlang="channel.newdm">Message User</button>
+    content: (window.serverData[getCurrentServerUrl()]?.disable_channel_creation?'':`<button onclick="window.createChannel(1)" tlang="channel.newdm">Message User</button>
 <button onclick="window.createChannel(2)" tlang="channel.newgroup">Create Group</button>
 <button onclick="window.createChannel(3)" tlang="channel.newbroadcast">Create Broadcast</button>`)+
 `<button onclick="window.joinChannel()" tlang="channel.joingroup">Join Group</button>`,
@@ -1252,12 +1253,12 @@ function postLogin() {
     .then(img=>img.text())
     .then(async(img)=>{
       window.defaultpfp = img;
-      if (!window.serverData[window.currentServer]) {
-        let dat = await fetch(window.currentServer+'/api/v1');
+      if (!window.serverData[getCurrentServerUrl()]) {
+        let dat = await fetch(getCurrentServerUrl()+'/api/v1');
         dat = await dat.json();
-        window.serverData[window.currentServer] = dat;
+        window.serverData[getCurrentServerUrl()] = dat;
       }
-      messageInput.setAttribute('maxlength', window.serverData[window.currentServer]?.messages?.max_message_length??2000);
+      messageInput.setAttribute('maxlength', window.serverData[getCurrentServerUrl()]?.messages?.max_message_length??2000);
       loadMain();
     });
 }

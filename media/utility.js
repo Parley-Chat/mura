@@ -15,6 +15,10 @@ const DummyUser = {
   pfp: null
 };
 
+function getCurrentServerUrl() {
+  return window.servers.find(srv=>srv.id===window.currentServer).url;
+}
+
 function loggedIn() {
   let options = [!!localStorage.getItem(window.currentServer+'-sessionToken'), !!localStorage.getItem(window.currentServer+'-publicKey'), !!localStorage.getItem(window.currentServer+'-privateKey')];
   return options.filter(o=>!o).length<1;
@@ -24,6 +28,8 @@ function logout() {
     method: 'DELETE'
   });
   localStorage.removeItem(window.currentServer+'-sessionToken');
+  window.servers[window.servers.findIndex(srv=>srv.id===window.currentServer)].name = null;
+  localStorage.setItem('servers', JSON.stringify(window.servers));
   localStorage.removeItem(window.currentServer+'-username');
   location.reload();
 }
@@ -32,7 +38,8 @@ function logoutall() {
     method: 'DELETE'
   });
   localStorage.removeItem(window.currentServer+'-sessionToken');
-  localStorage.removeItem(window.currentServer+'-username');
+  window.servers[window.servers.findIndex(srv=>srv.id===window.currentServer)].name = null;
+  localStorage.setItem('servers', JSON.stringify(window.servers));
   location.reload();
 }
 
@@ -195,7 +202,7 @@ function userToDefaultPfp(user) {
     .replace('074104',(parseInt(user, 36)%(DefaultPFPRadix**6)).toString(DefaultPFPRadix).padStart(6, '0')));
 }
 function pfpById(id) {
-  return window.currentServer+'/pfp/'+sanitizeMinimChars(id);
+  return getCurrentServerUrl()+'/pfp/'+sanitizeMinimChars(id);
 }
 
 async function newRSAKeys() {
@@ -288,7 +295,7 @@ async function decryptAESString(string, key, iv) {
 async function backendfetch(url, opts={}) {
   if (!opts.headers) opts.headers = {};
   opts.headers.authorization = 'Bearer '+localStorage.getItem(window.currentServer+'-sessionToken');
-  let req = await fetch(window.currentServer+url, opts);
+  let req = await fetch(getCurrentServerUrl()+url, opts);
   let res = await req.json();
   if (req.status===419) {
     await solveChallenge(res.challenge, res.id, ()=>{});
@@ -307,7 +314,7 @@ async function solveChallenge(challenge, id, callback) {
   if (!keys) throw new Error('Missing keys');
   formData.append('solve', await decryptRSAString(challenge, keys.privateKey));
 
-  let req = await fetch(window.currentServer+`/api/v1/solve`, {
+  let req = await fetch(getCurrentServerUrl()+`/api/v1/solve`, {
     method: 'POST',
     body: formData
   });

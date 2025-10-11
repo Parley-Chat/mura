@@ -149,6 +149,8 @@ dialog {
 
 #server-list {
   position: relative;
+  padding-left: 8px;
+  overflow: visible auto;
 }
 #server-list > span {
   position: relative;
