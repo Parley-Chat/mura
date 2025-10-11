@@ -105,7 +105,7 @@ window.currentServer = '';
       window.servers = [];
     }
   } else {
-    if (window.servers.length>1&&(typeof window.servers[0]==='string')) {
+    if (window.servers.length>0&&(typeof window.servers[0]==='string')) {
       window.servers = window.servers.map(srv=>{
         let n = {
           id: Math.floor(Math.random()*(16**8)).toString(16),
