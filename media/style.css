@@ -426,13 +426,17 @@ main {
   margin: 0px;
   margin-right: 3px;
   border-radius: var(--roundness-1);
-  transition: background var(--time);
+  transition: background-color var(--time);
 }
 .message:hover, .message:focus-within {
   background-color: var(--bg-1);
 }
 .message:focus-within {
   z-index: 8;
+}
+.message.highlight {
+  background-color: var(--bg-3);
+  transition: none;
 }
 .message .avatar {
   display: flex;
