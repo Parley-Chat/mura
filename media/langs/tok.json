@@ -34,6 +34,7 @@
   "user": "Jan",
   "user.logout": "O weka",
   "user.logoutall": "O weka ale",
+  "user.changeserver": "O ante ilo linluwi",
   "user.edit": "O ante",
   "user.editing": "Ante e sona sina",
   "user.edit.display": "Sitelen:",
@@ -128,6 +129,8 @@
   "settings.font": "Toki sitelen:",
   "settings.medialways": "Pana sitelen kepeken linluwi pi ilo tawa:",
   "settings.rtl": "Toki tan pini:",
+  "settings.rc": "Sona tomo toki:",
+  "settings.rs": "Sona ilo linluwi:",
   "settings.copyid": "O jo sama nimi",
 
   "lang.settings": "Ante nasin toki",

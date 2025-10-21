@@ -34,6 +34,7 @@
   "user": "Usuario",
   "user.logout": "Cerrar sesión",
   "user.logoutall": "Cerrar todas las sesiónes",
+  "user.changeserver": "Cambiar servidor",
   "user.edit": "Editar",
   "user.editing": "Editando tu perfil",
   "user.edit.display": "Display:",
@@ -128,6 +129,8 @@
   "settings.font": "Fuente:",
   "settings.medialways": "Cargar archivos en datos móviles:",
   "settings.rtl": "RTL:",
+  "settings.rc": "Recordar canal:",
+  "settings.rs": "Recordar servidor:",
   "settings.copyid": "Copiar Id",
 
   "lang.settings": "Ajustes de idioma",

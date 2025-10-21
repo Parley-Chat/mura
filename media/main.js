@@ -489,7 +489,12 @@ async function getChannels() {
   });
   window.channels = res;
   if (!window.currentChannel && res[0]) {
-    loadChannel(res[0].id);
+    let lastCh = localStorage.getItem(window.currentServer+'-lc');
+    if (lastCh&&res.find(ch=>ch.id===lastCh)) {
+      loadChannel(lastCh);
+    } else {
+      loadChannel(res[0].id);
+    }
   }
   showChannels(res);
 }
@@ -620,6 +625,8 @@ function loadChannel(id) {
   let ch = window.channels.find(ch=>ch.id===id);
   window.currentChannel = id;
   window.currentChannelType = ch.type;
+  localStorage.setItem(window.currentServer+'-lc', id);
+  // Lateral
   document.querySelector('.lateraltoggle').style.display = 'none';
   if (smallScreen()) {
     document.querySelector('side').style.display = 'none';
@@ -1134,7 +1141,7 @@ window.showuserdata = (me)=>{
   getChannels();
 };
 
-// Split
+// Split & Layout
 let splitinst;
 function layout() {
   if (smallScreen()) {
@@ -1203,7 +1210,8 @@ function postLogin() {
     content: `<button onclick="window.useredit()" tlang="user.edit">Edit</button>
 <button onclick="window.viewblocks()" tlang="user.blocks">Blocks</button>
 <button onclick="window.viewsessions()" tlang="user.sessions">Sessions</button>
-<button onclick="logout()" tlang="user.logout">Log out</button>`,
+<button onclick="localStorage.removeItem('pls');location.reload()" tlang="user.changeserver">Change server</button>
+<button onclick="logout()" tlang="user.logout" style="color:var(--invalid)">Log out</button>`,
     interactive: true,
     trigger: 'click',
     placement: 'bottom-start',
@@ -1241,7 +1249,15 @@ function postLogin() {
 </span>
 <span>
   <label for="s-rtl" tlang="settings.rtl">RTL:</label>
-  <input id="s-rtl" type="checkbox" onchange="document.querySelector('body').style.setProperty('direction',this.checked?'rtl':'');localStorage.setItem('rtl',this.checked)"${localStorage.getItem('prtl')==='true'?' checked':''}>
+  <input id="s-rtl" type="checkbox" onchange="document.querySelector('body').style.setProperty('direction',this.checked?'rtl':'');localStorage.setItem('prtl',this.checked)"${localStorage.getItem('prtl')==='true'?' checked':''}>
+</span>
+<span>
+  <label for="s-rc" tlang="settings.rc">Remember channel:</label>
+  <input id="s-rc" type="checkbox" onchange="localStorage.setItem('prc',this.checked)"${localStorage.getItem('prc')==='true'?' checked':''}>
+</span>
+<span>
+  <label for="s-rs" tlang="settings.rs">Remember server:</label>
+  <input id="s-rs" type="checkbox" onchange="localStorage.setItem('prs',this.checked)"${localStorage.getItem('prs')==='true'?' checked':''}>
 </span>`,
     interactive: true,
     trigger: 'click',

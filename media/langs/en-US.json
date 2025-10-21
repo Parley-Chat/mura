@@ -34,6 +34,7 @@
   "user": "User",
   "user.logout": "Log out",
   "user.logoutall": "Log out all sessions",
+  "user.changeserver": "Change server",
   "user.edit": "Edit",
   "user.editing": "Editing your profile",
   "user.edit.display": "Display:",
@@ -128,6 +129,8 @@
   "settings.font": "Font:",
   "settings.medialways": "Load media on mobile data:",
   "settings.rtl": "RTL:",
+  "settings.rc": "Remember channel:",
+  "settings.rs": "Remember server:",
   "settings.copyid": "Copy Id",
 
   "lang.settings": "Language settings",

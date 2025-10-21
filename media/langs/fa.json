@@ -34,6 +34,7 @@
   "user": "کاربر",
   "user.logout": "خروج",
   "user.logoutall": "خروج از همه دستگاه‌ها",
+  "user.changeserver": "تغییر سرور",
   "user.edit": "ویرایش",
   "user.editing": "در حال ویرایش پروفایل شما",
   "user.edit.display": "نمایش:",
@@ -128,6 +129,8 @@
   "settings.font": "فونت:",
   "settings.medialways": "بارگذاری رسانه روی داده تلفن همراه:",
   "settings.rtl": "راست به چپ:",
+  "settings.rc": "به‌خاطر سپردن کانال:",
+  "settings.rs": "به‌خاطر سپردن سرور:",
   "settings.copyid": "کپی شناسه",
 
   "lang.settings": "تنظیمات زبان",

@@ -84,6 +84,7 @@ document.getElementById('server-select').onclick = function(){
   window.currentServer = document.querySelector('#server-list > span[selected]').getAttribute('data-id');
   document.getElementById('server-modal').close();
   clearInterval(checkOnlineInter);
+  localStorage.setItem('pls', window.currentServer);
   window.postServerSelect();
 };
 
@@ -124,6 +125,13 @@ window.currentServer = '';
     }
   }
   localStorage.setItem('servers', JSON.stringify(window.servers));
+  let lastSrv = localStorage.getItem('pls');
+  if (lastSrv&&localStorage.getItem('prs')==='true'&&window.servers[0]&&window.servers.find(srv=>srv.id===lastSrv)) {
+    window.currentServer = lastSrv;
+    clearInterval(checkOnlineInter);
+    window.postServerSelect();
+    return;
+  }
   showServerList();
   document.getElementById('server-modal').showModal();
 })();
