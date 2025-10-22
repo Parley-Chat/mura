@@ -22,6 +22,7 @@
   "signup.download": "Download",
   "signup.copy": "Copy",
   "signup.done": "Done",
+  "signup.password": "This server requires a password",
 
   "error.username": "Invalid username",
   "error.passkey": "Invalid passkey",

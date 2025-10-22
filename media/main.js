@@ -522,7 +522,7 @@ function showMembers(id) {
 <button onclick="window.banmember('${btn.getAttribute('username')}')" tlang="member.ban">Ban</button>`:''),
       interactive: true,
       trigger: 'click',
-      placement: 'left-start',
+      placement: smallScreen()?'bottom-start':'left-start',
       sticky: true
     });
   });

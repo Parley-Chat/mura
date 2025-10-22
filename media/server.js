@@ -88,10 +88,9 @@ document.getElementById('server-select').onclick = function(){
   window.postServerSelect();
 };
 
-document.getElementById('server-modal').addEventListener('cancel', (evt) => {
+document.getElementById('server-modal').onclose = (evt) => {
   evt.preventDefault();
-  setTimeout(()=>{document.getElementById('server-modal').showModal()}, 0);
-});
+};
 
 window.currentServer = '';
 (async()=>{
@@ -101,7 +100,11 @@ window.currentServer = '';
       let testFetchSelf = await fetch(location.protocol+'//'+window.location.host+path+'/api/v1');
       testFetchSelf = await testFetchSelf.json();
       if (testFetchSelf.running!=='Parley'||!backendVersions.includes(testFetchSelf.version)) throw new Error('Result is false');
-      window.servers = [location.protocol+'//'+window.location.host+path];
+      window.servers = [{
+        id: Math.floor(Math.random()*(16**8)).toString(16),
+        name: null,
+        url: normalizeServer(location.protocol+'//'+window.location.host+path)
+      }];
     } catch(err) {
       window.servers = [];
     }
@@ -126,7 +129,7 @@ window.currentServer = '';
   }
   localStorage.setItem('servers', JSON.stringify(window.servers));
   let lastSrv = localStorage.getItem('pls');
-  if (lastSrv&&localStorage.getItem('prs')==='true'&&window.servers[0]&&window.servers.find(srv=>srv.id===lastSrv)) {
+  if (lastSrv&&localStorage.getItem('prs')==='true'&&window.servers[0]&&window.servers.find(srv=>srv.id===lastSrv)&&localStorage.getItem(lastSrv+'-sessionToken')) {
     window.currentServer = lastSrv;
     clearInterval(checkOnlineInter);
     window.postServerSelect();

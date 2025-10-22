@@ -1,7 +1,6 @@
-document.getElementById('login-modal').addEventListener('cancel', (evt) => {
+document.getElementById('login-modal').onclose = document.getElementById('signup-modal').onclose = document.getElementById('signup-password').onclose = (evt) => {
   evt.preventDefault();
-  setTimeout(()=>{document.getElementById('login-modal').showModal()}, 0);
-});
+};
 document.getElementById('instead-btn').onclick = function() {
   let errors = document.getElementById('l-errors');
   let logining = document.querySelector('[tlang="login.title"]');
@@ -109,6 +108,7 @@ document.getElementById('login-btn').onclick = async function(){
   formData.append('username', document.getElementById('l-username').value);
   if (logining) formData.append('passkey', document.getElementById('l-passkey').value);
   formData.append('public', publickey);
+  if (!logining&&(serverData[getCurrentServerUrl()].password_protected||false)) formData.append('password', localStorage.getItem(getCurrentServerUrl()+'-password'));
 
   fetch(getCurrentServerUrl()+`/api/v1/${logining?'login':'signup'}`, {
     method: 'POST',
@@ -121,6 +121,17 @@ document.getElementById('login-btn').onclick = async function(){
       }
       if (res.status===401) {
         errors.setAttribute('tlang','error.'+(logining?'invalidcredentials':'usernameuse'));
+        return;
+      }
+      if (res.status===403) {
+        localStorage.removeItem(getCurrentServerUrl()+'-password');
+        document.getElementById('login-modal').close();
+        document.getElementById('signup-password').showModal();
+        document.querySelector('#signup-password button').onclick = ()=>{
+          localStorage.setItem(getCurrentServerUrl()+'-password', document.querySelector('#signup-password input').value);
+          document.getElementById('signup-password').close();
+          document.getElementById('login-modal').showModal();
+        };
         return;
       }
       if (res.status!==200 || !res.ok) {
@@ -158,7 +169,16 @@ function postServerSelect() {
     getRSAKeyPair();
     window.postLogin();
   } else {
-    document.getElementById('login-modal').showModal();
+    if ((serverData[getCurrentServerUrl()].password_protected||false)&&!localStorage.getItem(getCurrentServerUrl()+'-password')) {
+      document.getElementById('signup-password').showModal();
+      document.querySelector('#signup-password button').onclick = ()=>{
+        localStorage.setItem(getCurrentServerUrl()+'-password', document.querySelector('#signup-password input').value);
+        document.getElementById('signup-password').close();
+        document.getElementById('login-modal').showModal();
+      };
+    } else {
+      document.getElementById('login-modal').showModal();
+    }
   }
 }
 window.postServerSelect = postServerSelect;

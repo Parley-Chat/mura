@@ -22,6 +22,7 @@
   "signup.download": "Downloaden",
   "signup.copy": "Kopiëren",
   "signup.done": "Gereed",
+  "signup.password": "Deze server vereist een wachtwoord",
 
   "error.username": "Ongeldige gebruikersnaam",
   "error.passkey": "Ongeldige toegangscode",
@@ -34,6 +35,7 @@
   "user": "Gebruiker",
   "user.logout": "Uitloggen",
   "user.logoutall": "Alle sessies uitloggen",
+  "user.changeserver": "Server wijzijgen",
   "user.edit": "Bewerken",
   "user.editing": "Je profiel bewerken",
   "user.edit.display": "Weergave:",
@@ -128,6 +130,8 @@
   "settings.font": "Lettertype:",
   "settings.medialways": "Media laden via mobiele data:",
   "settings.rtl": "RTL:",
+  "settings.rc": "Kanaal herinneren:",
+  "settings.rs": "Server herinneren:",
   "settings.copyid": "ID kopiëren",
 
   "lang.settings": "Taal Instellingen",

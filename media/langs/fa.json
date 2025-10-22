@@ -22,6 +22,7 @@
   "signup.download": "دانلود",
   "signup.copy": "کپی",
   "signup.done": "انجام شد",
+  "signup.password": "این سرور نیاز به یک رمز عبور دارد",
 
   "error.username": "نام کاربری نامعتبر است",
   "error.passkey": "کلید عبور نامعتبر است",

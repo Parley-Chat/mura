@@ -92,6 +92,12 @@
       </span>
       <button tlang="signup.done" onclick="this.parentElement.close();window.postLogin();">Done</button>
     </dialog>
+    <dialog id="signup-password" closedby="none">
+      <h2 tlang="servers.title">Servers</h2>
+      <p tlang="signup.password">This server requires a password</p>
+      <input id="s-password" type="password">
+      <button tlang="signup.done">Done</button>
+    </dialog>
     <dialog id="edit-user">
       <button onclick="this.parentElement.close()" class="modal-close">x</button>
       <h2 tlang="user.editing">Editing your profile</h2>
@@ -214,8 +220,8 @@
     <div class="lateral" style="display:none"></div>
     <!-- Scripts -->
     <script>
-      window.version = '0.2.0';
-      window.backendVersions = ['0.2.0','0.2.2'];
+      window.version = '0.3.0';
+      window.backendVersions = ['0.2.0','0.2.2','0.3.0'];
       window.defaultpfp = '';
       window.currentServer = '';
       window.currentChannel = '';
