@@ -355,7 +355,7 @@ async function showMessages(messages) {
   let mangm = hasPerm(ch.permission,Permissions.MANAGE_MESSAGES);
   messagesContainer.innerHTML = messages
     .map(msg=>{
-      return `<div class="message" id="m-${sanitizeMinimChars(msg.id)}">
+      return `<div class="message${window.username===msg.user.username?' self':''}" id="m-${sanitizeMinimChars(msg.id)}">
   ${msg.user.hide?`<span class="time">${formatHour(msg.timestamp)}</span>`:`<div class="avatar"><img src="${msg.user.pfp?pfpById(msg.user.pfp):userToDefaultPfp(msg.user)}" width="42" height="42" aria-hidden="true"></div>`}
   <div class="inner">
     <div class="actions">
@@ -366,7 +366,7 @@ async function showMessages(messages) {
       <button class="more" username="${sanitizeMinimChars(msg.user.username)}" data-id="${sanitizeMinimChars(msg.id)}" aria-label="More" tlang="message.more"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill-rule="evenodd" clip-rule="evenodd" d="M128 158C111.431 158 98 144.569 98 128C98 111.431 111.431 98 128 98C144.569 98 158 111.431 158 128C158 144.569 144.569 158 128 158ZM128 60C111.432 60 98.0001 46.5685 98.0001 30C98.0001 13.4315 111.432 -5.87112e-07 128 -1.31135e-06C144.569 -2.03558e-06 158 13.4315 158 30C158 46.5685 144.569 60 128 60ZM98 226C98 242.569 111.431 256 128 256C144.569 256 158 242.569 158 226C158 209.431 144.569 196 128 196C111.431 196 98 209.431 98 226Z"/></svg></button>
     </div>
     ${msg.replied_to?`<span class="reply" onclick="previewMessage('${sanitizeMinimChars(msg.reply?.id??'')}')"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 256 256"><path d="M256 132C256 120.954 247.046 112 236 112H60V112C26.8629 112 0 138.863 0 172V172V236C0 247.046 8.95431 256 20 256V256C31.0457 256 40 247.046 40 236V172V172C40 160.954 48.9543 152 60 152V152H236C247.046 152 256 143.046 256 132V132Z"/></svg>${msg.reply?`${sanitizeHTML(msg.reply.user.display??sanitizeMinimChars(msg.reply.user.username))}: ${sanitizeHTML(msg.reply.content)||imageicon}`:'Cannot load message'}</span>`:''}
-    ${msg.user.hide?'':`<span class="author">${sanitizeHTML(msg.user.display??sanitizeMinimChars(msg.user.username))}</span><span class="time">${formatTime(msg.timestamp)}</span>`}
+    ${msg.user.hide?'':`<span class="topper"><span class="author">${sanitizeHTML(msg.user.display??sanitizeMinimChars(msg.user.username))}</span><span class="time">${formatTime(msg.timestamp)}</span></span>`}
     <span class="content">${window.MDParse(msg.content)}${msg.edited_at?`<span class="edited" title="${formatTime(msg.edited_at)}" tlang="message.edited">(Edited)</span>`:''}</span>
     <div class="fileList">
       ${msg.attachments.map(att=>attachToElem(att)).join('')}
@@ -1192,6 +1192,8 @@ const vts = {
 document.querySelector('body').style.setProperty('--accent', localStorage.getItem('ptheme')??'#221111');
 document.querySelector('body').style.setProperty('--font', vts[localStorage.getItem('pfont')??'lexend']??vts.lexend);
 document.querySelector('body').style.setProperty('direction', localStorage.getItem('prtl')==='true'?'rtl':'');
+document.querySelector('body').style.setProperty('--sbp', localStorage.getItem('psbp')??'');
+document.querySelector('body').style.setProperty('--obp', localStorage.getItem('pobp')??'');
 tippy([document.getElementById('btn-languages'),document.getElementById('srv-btn-languages')], {
   allowHTML: true,
   content: '<span tlang="lang.change">Change language</span>'+Array.from(new Set(Object.values(languages)))
@@ -1230,7 +1232,8 @@ function postLogin() {
   });
   tippy(document.getElementById('btn-settings'), {
     allowHTML: true,
-    content: `<span>
+    content: `<b tlang="settings.layout">Layout</b>
+<span>
   <label for="s-theme" tlang="settings.theme">Theme:</label>
   <input type="color" id="s-theme" oninput="document.querySelector('body').style.setProperty('--accent',this.value);localStorage.setItem('ptheme',this.value)" value="${localStorage.getItem('ptheme')??'#221111'}">
 </span>
@@ -1244,12 +1247,30 @@ function postLogin() {
   </select>
 </span>
 <span>
-  <label for="s-ma" tlang="settings.medialways">Load media on mobile data:</label>
-  <input id="s-ma" type="checkbox" onchange="localStorage.setItem('pmedialways',this.checked)"${localStorage.getItem('pmedialways')==='true'?' checked':''}>
-</span>
-<span>
   <label for="s-rtl" tlang="settings.rtl">RTL:</label>
   <input id="s-rtl" type="checkbox" onchange="document.querySelector('body').style.setProperty('direction',this.checked?'rtl':'');localStorage.setItem('prtl',this.checked)"${localStorage.getItem('prtl')==='true'?' checked':''}>
+</span>
+<b tlang="settings.messages">Messages</b>
+<span>
+  <label for="s-sbp" tlang="settings.sbp">Self Position:</label>
+  <select id="s-sbp">
+    <option value="" tlang="settings.auto">Auto</option>
+    <option value="ltr" tlang="settings.left">Left</option>
+    <option value="rtl" tlang="settings.right">Right</option>
+  </select>
+</span>
+<span>
+  <label for="s-obp" tlang="settings.obp">Other Position:</label>
+  <select id="s-obp">
+    <option value="" tlang="settings.auto">Auto</option>
+    <option value="ltr" tlang="settings.left">Left</option>
+    <option value="rtl" tlang="settings.right">Right</option>
+  </select>
+</span>
+<b tlang="settings.behavior">Behavior</b>
+<span>
+  <label for="s-ma" tlang="settings.medialways">Load media on mobile data:</label>
+  <input id="s-ma" type="checkbox" onchange="localStorage.setItem('pmedialways',this.checked)"${localStorage.getItem('pmedialways')==='true'?' checked':''}>
 </span>
 <span>
   <label for="s-rc" tlang="settings.rc">Remember channel:</label>
@@ -1266,8 +1287,18 @@ function postLogin() {
     onMount: ()=>{
       document.getElementById('s-font').value = localStorage.getItem('pfont')??'lexend';
       document.getElementById('s-font').onchange = (evt)=>{
-        document.querySelector('body').style.setProperty('--font',vts[evt.target.value]??vts.lexend);
+        document.querySelector('body').style.setProperty('--font', vts[evt.target.value]??vts.lexend);
         localStorage.setItem('pfont', evt.target.value);
+      };
+      document.getElementById('s-sbp').value = localStorage.getItem('psbp')??'';
+      document.getElementById('s-sbp').onchange = (evt)=>{
+        document.querySelector('body').style.setProperty('--sbp', evt.target.value);
+        localStorage.setItem('psbp', evt.target.value);
+      };
+      document.getElementById('s-obp').value = localStorage.getItem('pobp')??'';
+      document.getElementById('s-obp').onchange = (evt)=>{
+        document.querySelector('body').style.setProperty('--obp', evt.target.value);
+        localStorage.setItem('pobp', evt.target.value);
       };
     }
   });
