@@ -426,3 +426,28 @@ function processImageToPfp(file) {
     };
   });
 }
+
+function notify(type, data) {
+  if (Notification.permission !== 'granted') {
+    document.getElementById('s-notif').checked = false;
+    localStorage.setItem('pnotif','false');
+    return;
+  }
+  if (localStorage.getItem('pnotif')==='false') return;
+  let base = {
+    silent: false,
+    dir: localStorage.getItem('prtl')==='true'?'rtl':'ltr',
+    lang: localStorage.getItem('language')??'en'
+  };
+  switch(type) {
+    case 'message':
+      base.badge = './favicon.ico';
+      base.timestamp = data.timestamp;
+      if (data.content) base.body = data.content;
+      if (data.user.pfp) base.icon = '/pfp/'+data.user.pfp;
+      let att = data.attachments.filter(att=>att.mimetype.startsWith('image/'));
+      if (att[0]) base.image = '/attachment/'+att[0].id;
+      new Notification(data.user.display??data.user.username, base);
+      break;
+  }
+}

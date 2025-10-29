@@ -63,6 +63,10 @@ function showServerList() {
       let id = decodeURIComponent(spn.getAttribute('data-id'));
       window.servers = window.servers.filter(srv=>srv.id!==id);
       localStorage.setItem('servers', JSON.stringify(window.servers));
+      localStorage.removeItem(id+'-publicKey');
+      localStorage.removeItem(id+'-privateKey');
+      localStorage.removeItem(id+'-sessionToken');
+      localStorage.removeItem(id+'-lc');
       showServerList();
     };
   });
@@ -152,4 +156,5 @@ checkOnlineInter = setInterval(()=>{
       return;
     }
   });
+  if (!con) clearInterval(checkOnlineInter);
 }, 200);

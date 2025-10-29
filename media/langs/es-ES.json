@@ -137,6 +137,7 @@
   "settings.left": "Izquierda",
   "settings.right": "Derecha",
   "settings.behavior": "Comportamiento",
+  "settings.notif": "Notificaciones:",
   "settings.medialways": "Cargar archivos en datos móviles:",
   "settings.rc": "Recordar canal:",
   "settings.rs": "Recordar servidor:",

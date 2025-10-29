@@ -137,6 +137,7 @@
   "settings.left": "Left",
   "settings.right": "Right",
   "settings.behavior": "Behavior",
+  "settings.notif": "Notifications:",
   "settings.medialways": "Load media on mobile data:",
   "settings.rc": "Remember channel:",
   "settings.rs": "Remember server:",

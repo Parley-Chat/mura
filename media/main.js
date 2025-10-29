@@ -659,6 +659,10 @@ function loadChannel(id) {
     showMessages([]);
     backendfetch('/api/v1/channel/'+id+'/messages')
       .then(res=>{
+        if (!Array.isArray(res)) {
+          location.reload();
+          return;
+        }
         window.messages[id] = res;
         if (!window.keys[id]) window.keys[id]={};
         let missingKeys = Array.from(new Set(window.messages[id].map(msg=>msg.key).filter(key=>!window.keys[id][key])));
@@ -970,7 +974,7 @@ function startStrem() {
       return;
     }
     if (window.keys[window.currentChannel]) {
-      let last = Object.keys(window.keys[data.channel_id]).reduce((a, b) => window.keys[channel][a]?.expires_at > window.keys[channel][b]?.expires_at ? a : b, '');
+      let last = Object.keys(window.keys[data.channel_id]).reduce((a, b) => window.keys[data.channel_id][a]?.expires_at > window.keys[data.channel_id][b]?.expires_at ? a : b, '');
       if (last) window.keys[data.channel_id][last].expires_at = Date.now();
     }
     if (!window.channelMembers[data.channel_id]) return;
@@ -985,18 +989,22 @@ function startStrem() {
     window.channels.unshift(window.channels.splice(idx,1)[0]);
     if (window.currentChannel===data.channel_id) {
       if (window.messages[data.channel_id]) showMessages(window.messages[data.channel_id]);
-      window.channels[0].unread_count = 0;
-      if (data.message.user.username!==window.username) backendfetch('/api/v1/channel/'+data.channel_id+'/messages/ack', { method: 'POST' });
+      if (document.hasFocus()) {
+        window.channels[0].unread_count = 0;
+        if (data.message.user.username!==window.username) backendfetch('/api/v1/channel/'+data.channel_id+'/messages/ack', { method: 'POST' });
+        notify('message', window.messages[data.channel_id][0]);
+      }
     } else {
+      let idx2 = window.messages[data.channel_id].findIndex(msg=>msg.id===data.message.id);
+      if (window.messages[data.channel_id]&&data.message.key&&data.message.iv) {
+        window.messages[data.channel_id][idx2].content = await decodeMessage(data.message, data.channel_id);
+        window.messages[data.channel_id][idx2].iv = null;
+      }
       if (data.message.user.username===window.username) {
         window.channels[0].unread_count = 0;
       } else {
         window.channels[0].unread_count += 1;
-      }
-      if (window.messages[data.channel_id]&&data.message.key&&data.message.iv) {
-        let idx2 = window.messages[data.channel_id].findIndex(msg=>msg.id===data.message.id);
-        window.messages[data.channel_id][idx2].content = await decodeMessage(data.message, data.channel_id);
-        window.messages[data.channel_id][idx2].iv = null;
+        notify('message', window.messages[data.channel_id][idx2]);
       }
     }
     window.channels[0].last_message = {
@@ -1269,6 +1277,10 @@ function postLogin() {
 </span>
 <b tlang="settings.behavior">Behavior</b>
 <span>
+  <label for="s-notif" tlang="settings.notif">Notifications:</label>
+  <input id="s-notif" type="checkbox" ${localStorage.getItem('pnotif')==='true'?' checked':''}>
+</span>
+<span>
   <label for="s-ma" tlang="settings.medialways">Load media on mobile data:</label>
   <input id="s-ma" type="checkbox" onchange="localStorage.setItem('pmedialways',this.checked)"${localStorage.getItem('pmedialways')==='true'?' checked':''}>
 </span>
@@ -1285,16 +1297,31 @@ function postLogin() {
     placement: 'top-start',
     sticky: true,
     onMount: ()=>{
+      // Font
       document.getElementById('s-font').value = localStorage.getItem('pfont')??'lexend';
       document.getElementById('s-font').onchange = (evt)=>{
         document.querySelector('body').style.setProperty('--font', vts[evt.target.value]??vts.lexend);
         localStorage.setItem('pfont', evt.target.value);
       };
+      // Notifs
+      document.getElementById('s-notif').onchange = (evt)=>{
+        localStorage.setItem('pnotif', evt.target.checked);
+        if (Notification.permission !== 'granted') {
+          Notification.requestPermission().then((permission) => {
+            if (permission !== 'granted') {
+              document.getElementById('s-notif').checked = false;
+              localStorage.setItem('pnotif','false');
+            }
+          });
+        }
+      };
+      // Self bubble pos
       document.getElementById('s-sbp').value = localStorage.getItem('psbp')??'';
       document.getElementById('s-sbp').onchange = (evt)=>{
         document.querySelector('body').style.setProperty('--sbp', evt.target.value);
         localStorage.setItem('psbp', evt.target.value);
       };
+      // Other bubble pos
       document.getElementById('s-obp').value = localStorage.getItem('pobp')??'';
       document.getElementById('s-obp').onchange = (evt)=>{
         document.querySelector('body').style.setProperty('--obp', evt.target.value);
@@ -1309,8 +1336,15 @@ function postLogin() {
     .then(async(img)=>{
       window.defaultpfp = img;
       if (!window.serverData[getCurrentServerUrl()]) {
-        let dat = await fetch(getCurrentServerUrl()+'/api/v1');
-        dat = await dat.json();
+        let dat;
+        try {
+          dat = await fetch(getCurrentServerUrl()+'/api/v1');
+          dat = await dat.json();
+        } catch(err) {
+          localStorage.removeItem('pls');
+          location.reload();
+          return;
+        }
         window.serverData[getCurrentServerUrl()] = dat;
       }
       messageInput.setAttribute('maxlength', window.serverData[getCurrentServerUrl()]?.messages?.max_message_length??2000);
