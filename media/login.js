@@ -150,10 +150,10 @@ document.getElementById('login-btn').onclick = async function(){
             document.getElementById('s-passkey').select();
             navigator.clipboard.writeText(data.passkey);
           };
-          const blob = new Blob([`{
-  "publicKey": "${localStorage.getItem(window.currentServer+'-publicKey')}",
-  "privateKey": "${localStorage.getItem(window.currentServer+'-privateKey')}"
-}`], { type: "text/plain" });
+          const blob = new Blob([JSON.stringify({
+            publicKey: localStorage.getItem(window.currentServer+'-publicKey'),
+            privateKey: localStorage.getItem(window.currentServer+'-privateKey')
+          })], { type: 'text/plain' });
           document.getElementById('s-download').href = URL.createObjectURL(blob);
           document.getElementById('s-download').download = document.getElementById('l-username').value+'.keys';
           document.getElementById('signup-modal').showModal();
