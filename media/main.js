@@ -1,3 +1,8 @@
+const UserStore = new Map();
+const MemberStore = new Map();
+window.UserStore = UserStore;
+window.MemberStore = MemberStore;
+
 // Messages
 const messageInput = document.getElementById('input');
 const messageSned = document.getElementById('sned');
@@ -44,7 +49,7 @@ function BasicSend(msg, channel, key=null, iv=null) {
       sending = false;
       afterSend();
     })
-    .catch(err=>{
+    .catch(()=>{
       sending = false;
     });
 }
@@ -73,7 +78,7 @@ async function CryptSend(msg, channel) {
             let enc = await encryptAESString(msg, nkey);
             BasicSend(enc.txt, channel, pkey.key_id, enc.iv);
           })
-          .catch(err=>{
+          .catch(()=>{
             sending = false;
           });
       })
@@ -239,7 +244,6 @@ window.previewMessage = (msg)=>{
   }, 500);
 };
 
-
 class MediaCom extends HTMLElement {
   constructor() {
     super();
@@ -335,6 +339,8 @@ async function showMessages(messages) {
           pfp: ch.pfp
         };
       }
+    } else {
+      messages[i].user = Object.merge(messages[i].user, UserStore.get(messages[i].user.username));
     }
     messages[i].user.hide = false;
     if (!messages[i].replied_to && messages[i+1] && messages[i+1]?.user?.username===messages[i].user.username) {
@@ -498,12 +504,12 @@ async function getChannels() {
   }
   showChannels(res);
 }
-window.channelMembers = {};
 function showMembers(id) {
-  if (!channelMembers[id]) channelMembers[id] = [];
+  if (!MemberStore.has(id)) MemberStore.set(id, []);
   let ch = window.channels.find(ch=>ch.id===id);
   document.querySelector('.lateral').innerHTML = `<button class="mobile" onclick="document.querySelector('main').style.display='';document.querySelector('side').style.display='none';document.querySelector('.lateral').style.display='none';" aria-label="Close member list"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><rect x="12" y="21" width="88" height="216"></rect><rect width="232" height="232" rx="20" stroke-width="24" fill="none" x="12" y="12"></rect></svg></button>`+
-  channelMembers[id]
+  MemberStore.get(id)
+    .map(usr=>Object.merge(usr, UserStore.get(usr.username)))
     .toSorted((a,b)=>{
       if ((a.display??a.username)!==(b.display??b.username)) return (a.display??a.username).localeCompare(b.display??b.username);
       return b.joined_at - a.joined_at;
@@ -511,10 +517,11 @@ function showMembers(id) {
     .map(mem=>`<button username="${sanitizeMinimChars(mem.username)}"><img src="${mem.pfp?pfpById(mem.pfp):userToDefaultPfp(mem)}" width="30" height="30" aria-hidden="true" loading="lazy"><span>${sanitizeHTML(mem.display??mem.username)}</span></button>`)
     .join('');
   document.querySelectorAll('.lateral button:not(.mobile)').forEach(btn=>{
-    if (window.username === btn.getAttribute('username')) return;
     tippy(btn, {
       allowHTML: true,
-      content: (window.serverData[getCurrentServerUrl()]?.disable_channel_creation?'':`<button onclick="window.createChannel(1, '${btn.getAttribute('username')}')" tlang="member.message">Message</button>`)+
+      content: (window.username===btn.getAttribute('username'))?
+(hasPerm(ch.permission,Permissions.MANAGE_PERMISSION)?`<button onclick="window.permmember('${btn.getAttribute('username')}')" tlang="member.changeperms">Change permissions</button>`:''):
+(window.serverData[getCurrentServerUrl()]?.disable_channel_creation?'':`<button onclick="window.createChannel(1, '${btn.getAttribute('username')}')" tlang="member.message">Message</button>`)+
 `<button onclick="window.blockmember('${btn.getAttribute('username')}')" class="danger" tlang="member.block">Block</button>`+
 (hasPerm(ch.permission,Permissions.MANAGE_PERMISSION)||hasPerm(ch.permission,Permissions.MANAGE_MEMBERS)?`<hr style="width:90%">`:'')+
 (hasPerm(ch.permission,Permissions.MANAGE_PERMISSION)?`<button onclick="window.permmember('${btn.getAttribute('username')}')" tlang="member.changeperms">Change permissions</button>`:'')+
@@ -539,7 +546,7 @@ window.unblockmember = (id)=>{
     .then(()=>{window.viewblocks()});
 };
 window.permmember = (id)=>{
-  let perm = Number(window.channelMembers[window.currentChannel].find(mem=>mem.username===id).permissions)??0;
+  let perm = Number(MemberStore.get(window.currentChannel).find(mem=>mem.username===id).permissions)??0;
   if (hasPerm(perm,Permissions.OWNER)) perm = OwnerAlt;
   if (hasPerm(perm,Permissions.ADMIN)&&!hasPerm(perm,Permissions.OWNER)) perm = AdminAlt;
   let ch = window.channels.find(ch=>ch.id===window.currentChannel);
@@ -554,9 +561,9 @@ window.permmember = (id)=>{
       headers: {
         'content-type': 'application/json'
       },
-      body: `{
-  "permissions": ${Array.from(modal.querySelectorAll('input')).map(i=>i.checked?Number(i.getAttribute('data-weight')):0).reduce((a, b)=>a+b,0)}
-}`
+      body: JSON.stringify({
+        permissions: Array.from(modal.querySelectorAll('input')).map(i=>i.checked?Number(i.getAttribute('data-weight')):0).reduce((a, b)=>a+b,0)
+      })
     })
       .then(()=>{modal.close()});
   };
@@ -567,41 +574,39 @@ window.permmember = (id)=>{
       headers: {
         'content-type': 'application/json'
       },
-      body: `{
-  "permissions": null
-}`
+      body: JSON.stringify({ permissions: null })
     })
       .then(()=>{modal.close()});
   };
 };
 window.kickmember = (id)=>{
-  backendfetch('/api/v1/channel/'+window.currentChannel+'/member/'+id, {
+  backendfetch(`/api/v1/channel/${window.currentChannel}/member/${id}`, {
     method: 'DELETE'
   })
-    .then(res=>{
-      channelMembers[window.currentChannel] = [];
+    .then(()=>{
+      MemberStore.set(window.currentChannel, MemberStore.get(window.currentChannel).filter(usr=>usr.username!==id));
     });
 };
 window.banmember = async(id)=>{
   let formData = new FormData();
   formData.append('reason', await ask('member.ban.reason', 0, 100)??'');
-  backendfetch('/api/v1/channel/'+window.currentChannel+'/bans/'+id, {
+  backendfetch(`/api/v1/channel/${window.currentChannel}/bans/${id}`, {
     method: 'POST',
     body: formData
   })
-    .then(res=>{
-      channelMembers[window.currentChannel] = [];
+    .then(()=>{
+      MemberStore.set(window.currentChannel, MemberStore.get(window.currentChannel).filter(usr=>usr.username!==id));
     });
 };
 window.unbanmember = async(id)=>{
-  backendfetch('/api/v1/channel/'+window.currentChannel+'/bans/'+id, {
+  backendfetch(`/api/v1/channel/${window.currentChannel}/bans/${id}`, {
     method: 'DELETE'
   })
     .then(()=>{window.bansPanel()});
 };
 function getMembers(id, page=1) {
-  if (!channelMembers[id]) channelMembers[id] = [];
-  if (channelMembers[id].length>0&&page===1) {
+  if (!MemberStore.has(id)) MemberStore.set(id, []);
+  if (MemberStore.get(id).length>0&&page===1) {
     showMembers(id);
     return;
   }
@@ -609,8 +614,9 @@ function getMembers(id, page=1) {
   backendfetch('/api/v1/channel/'+id+'/members?page='+page)
     .then(res=>{
       if (!Array.isArray(res)) return;
-      channelMembers[id] = channelMembers[id].concat(res);
-      if (ch.member_count>channelMembers[id].length&&res.length>0) getMembers(id, page+1);
+      MemberStore.set(id, MemberStore.get(id).concat(res));
+      res.forEach(mem=>{UserStore.set(mem.username, Object.merge(UserStore.get(mem.username), mem))});
+      if (ch.member_count>MemberStore.get(id).length&&res.length>0) getMembers(id, page+1);
       showMembers(id);
     });
 }
@@ -657,13 +663,17 @@ function loadChannel(id) {
     showMessages(window.messages[id]);
   } else {
     showMessages([]);
-    backendfetch('/api/v1/channel/'+id+'/messages')
+    backendfetch(`/api/v1/channel/${id}/messages`)
       .then(res=>{
         if (!Array.isArray(res)) {
           location.reload();
           return;
         }
         window.messages[id] = res;
+        res.forEach(msg=>{
+          if (!msg.user) return;
+          UserStore.set(msg.user.username, Object.merge(UserStore.get(msg.user.username), msg.user))
+        });
         if (!window.keys[id]) window.keys[id]={};
         let missingKeys = Array.from(new Set(window.messages[id].map(msg=>msg.key).filter(key=>!window.keys[id][key])));
         getKeysBatch(id, missingKeys, ()=>{
@@ -932,7 +942,7 @@ function startStrem() {
   window.stream.addEventListener('channel_deleted', (event)=>{
     let data = JSON.parse(event.data);
     window.channels = window.channels.filter(ch=>ch.id!==data.channel_id);
-    delete window.channelMembers[data.channel_id];
+    MemberStore.delete(data.channel_id);
     showChannels(window.channels);
   });
   // Members
@@ -942,13 +952,14 @@ function startStrem() {
       let last = Object.keys(window.keys[data.channel_id]).reduce((a, b) => window.keys[data.channel_id][a]?.expires_at > window.keys[data.channel_id][b]?.expires_at ? a : b, '');
       if (last) window.keys[data.channel_id][last].expires_at = Date.now();
     }
-    if (!window.channelMembers[data.channel_id]) return;
-    window.channelMembers[data.channel_id].push(data.user);
-    let idx = window.channelMembers[data.channel_id].length-1;
+    if (!MemberStore.has(data.channel_id)) return;
+    let prev = MemberStore.get(data.channel_id);
+    prev.push(data.user);
     let perm = Number(data.permissions)&OwnerAlt;
     if (hasPerm(perm,Permissions.OWNER)) perm = OwnerAlt;
     if (hasPerm(perm,Permissions.ADMIN)&&!hasPerm(perm,Permissions.OWNER)) perm = AdminAlt;
-    window.channelMembers[data.channel_id][idx].permissions = perm;
+    prev[prev.length-1].permissions = perm;
+    MemberStore.set(data.channel_id, prev);
     if (window.currentChannel===data.channel_id) showMembers(data.channel_id);
   });
   window.stream.addEventListener('member_perms_changed', (event)=>{
@@ -961,15 +972,17 @@ function startStrem() {
       window.channels[idx2].permission = perm;
       if (window.currentChannel===data.channel_id) loadChannel(data.channel_id);
     }
-    if (!window.channelMembers[data.channel_id]||window.channelMembers[data.channel_id].length<1) return;
-    let idx = window.channelMembers[data.channel_id].findIndex(mem=>mem.username===data.username);
-    window.channelMembers[data.channel_id][idx].permissions = data.permissions;
+    let prev = MemberStore.get(data.channel_id);
+    if (!prev||prev.length<1) return;
+    let idx = prev.findIndex(mem=>mem.username===data.username);
+    prev[idx].permissions = data.permissions;
+    MemberStore.set(data.channel_id, prev);
   });
   window.stream.addEventListener('member_leave', (event)=>{
     let data = JSON.parse(event.data);
     if (data.user.username===window.username) {
       window.channels = window.channels.filter(ch=>ch.id!==data.channel_id);
-      delete window.channelMembers[data.channel_id];
+      MemberStore.delete(data.channel_id);
       showChannels(window.channels);
       return;
     }
@@ -977,8 +990,8 @@ function startStrem() {
       let last = Object.keys(window.keys[data.channel_id]).reduce((a, b) => window.keys[data.channel_id][a]?.expires_at > window.keys[data.channel_id][b]?.expires_at ? a : b, '');
       if (last) window.keys[data.channel_id][last].expires_at = Date.now();
     }
-    if (!window.channelMembers[data.channel_id]) return;
-    window.channelMembers[data.channel_id] = window.channelMembers[data.channel_id].filter(mem=>mem.username!==data.user.username);
+    if (!MemberStore.has(data.channel_id)) return;
+    MemberStore.set(data.channel_id, MemberStore.get(data.channel_id).filter(usr=>usr.username!==data.user.username));
     if (window.currentChannel===data.channel_id) showMembers(data.channel_id);
   });
   // Messages
@@ -1050,7 +1063,7 @@ window.deletesession = (id)=>{
   backendfetch('/api/v1/me/session/'+id, {
     method: 'DELETE'
   })
-    .then(res=>window.viewsessions());
+    .then(()=>window.viewsessions());
 };
 window.viewsessions = ()=>{
   let modal = document.getElementById('sessions');
@@ -1111,7 +1124,7 @@ window.useredit = ()=>{
       method: 'PATCH',
       body: formData
     })
-      .then(res=>{window.useredit()});
+      .then(()=>{window.useredit()});
   };
   document.getElementById('ue-imginp').onchange = async(evt)=>{
     if (!evt.target.files[0]) return;
@@ -1123,7 +1136,7 @@ window.useredit = ()=>{
       method: 'PATCH',
       body: formData
     })
-      .then(res=>{window.useredit()});
+      .then(()=>{window.useredit()});
   }
   document.getElementById('ue-img').onclick = function(){
     document.getElementById('ue-imginp').click();
@@ -1137,6 +1150,7 @@ window.showuserdata = (me)=>{
   } else if (me.success===false) {
     // Uh issue isn't the session or server but still failed, try to work without user data
   } else {
+    UserStore.set(me.username, Object.merge(UserStore.get(me.username), me));
     window.username = sanitizeMinimChars(me.username);
     window.servers[window.servers.findIndex(srv=>srv.id===window.currentServer)].name = me.username;
     localStorage.setItem('servers', JSON.stringify(window.servers));

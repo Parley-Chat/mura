@@ -15,6 +15,13 @@ const DummyUser = {
   pfp: null
 };
 
+Object.prototype.merge = (a,b)=>{
+  a ??= {};
+  b ??= {};
+  Object.keys(b).forEach(k=>a[k]=b[k]);
+  return a;
+}
+
 function getCurrentServerUrl() {
   return window.servers.find(srv=>srv.id===window.currentServer).url;
 }
