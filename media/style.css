@@ -27,6 +27,7 @@ body {
   --bg-1: color-mix(in oklab, #303030 80%, var(--accent) 20%);
   --bg-2: color-mix(in oklab, #404040 80%, var(--accent) 20%);
   --bg-3: color-mix(in oklab, #505050 80%, var(--accent) 20%);
+  --mention: color-mix(in oklab, #505050 50%, var(--accent) 50%);
   --tippy: color-mix(in oklab, #383838 80%, var(--accent) 20%);
   --bg-accent: color-mix(in oklab, #303030 70%, var(--accent) 30%);
   --valid: color-mix(in oklab, #0b0 40%, var(--text-1) 60%);
@@ -110,6 +111,7 @@ dialog {
   border-radius: var(--roundness-1);
   background-color: var(--bg-1);
   border: 2px currentColor solid;
+  z-index: 12;
 }
 ::backdrop {
   backdrop-filter: blur(5px);
@@ -450,6 +452,9 @@ main {
   background-color: var(--bg-3);
   transition: none;
 }
+.message.mention {
+  background-color: var(--mention);
+}
 .message .avatar {
   display: flex;
   flex: 1;
@@ -507,6 +512,11 @@ main {
   word-break: break-word;
   white-space: break-spaces;
   box-sizing: border-box;
+}
+.message .content .mention {
+  color: var(--mention);
+  background-color: color-mix(in oklab, var(--text-1) 80%, var(--accent) 20%);
+  border-radius: 0.25rem;
 }
 .message .edited {
   font-size: 65%;
@@ -629,14 +639,44 @@ main {
   max-height: 35dvh;
 }
 
-#pinsModal {
+#mentionmenu {
+  display: flex;
+  gap: 5px;
+  flex-direction: column;
+  max-height: 20dvh;
+  padding: 5px;
+  margin-bottom: 5px;
+  border-radius: 0.5rem;
+  background-color: var(--bg-1);
+  overflow: hidden auto;
+}
+#mentionmenu > div {
+  cursor: pointer;
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+#mentionmenu img {
+  width: 42px;
+  height: 42px;
+  border-radius: 5rem;
+}
+#mentionmenu > div > div {
+  display: flex;
+  flex-direction: column;
+}
+#mentionmenu .small {
+  color: var(--text-2);
+  font-size: 75%;
+}
+
+#pinsModal, #notifModal {
   width: 25vw;
   margin: 0px;
   box-sizing: border-box;
-  z-index: 10;
 }
 #pinsModal > div {
-  max-height: 75vh;
+  max-height: 65vh;
   padding-top: 10px;
   overflow-y: auto;
 }

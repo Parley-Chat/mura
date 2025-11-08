@@ -80,6 +80,9 @@
   "channel.edit.image": "Sitelen lukin:",
   "channel.edit.change": "Oante",
   "channel.editperms": "O ante ken",
+  "channel.notif.all": "Ale",
+  "channel.notif.mention": "Nimi e sina",
+  "channel.notif.none": "Ala",
 
   "member.message": "O toki",
   "member.block": "O weka",

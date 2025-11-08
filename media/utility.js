@@ -212,6 +212,10 @@ function pfpById(id) {
   return getCurrentServerUrl()+'/pfp/'+sanitizeMinimChars(id);
 }
 
+function getNotifStateChannel(id, type) {
+  return ChannelNotifStore.get(id)??['mentions','all','mentions','mentions'][type];
+}
+
 async function newRSAKeys() {
   window.keyPair = null;
   const keyPair = await window.crypto.subtle.generateKey({
@@ -434,7 +438,7 @@ function processImageToPfp(file) {
   });
 }
 
-function notify(type, data) {
+function notify(type, data, context=null) {
   if (Notification.permission !== 'granted') {
     document.getElementById('s-notif').checked = false;
     localStorage.setItem('pnotif','false');
@@ -446,6 +450,10 @@ function notify(type, data) {
     dir: localStorage.getItem('prtl')==='true'?'rtl':'ltr',
     lang: localStorage.getItem('language')??'en'
   };
+  if (context) {
+    base.renotify = true;
+    base.tag = context;
+  }
   switch(type) {
     case 'message':
       base.badge = './favicon.ico';

@@ -80,6 +80,9 @@
   "channel.edit.image": "Afbeelding:",
   "channel.edit.change": "Wijzigen",
   "channel.editperms": "Machtigingen bewerken",
+  "channel.notif.all": "Alle",
+  "channel.notif.mention": "Vermeldingen",
+  "channel.notif.none": "Geen meldingen",
 
   "member.message": "Bericht sturen",
   "member.block": "Blokkeren",

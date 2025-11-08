@@ -80,6 +80,9 @@
   "channel.edit.image": "Imagen:",
   "channel.edit.change": "Cambiar",
   "channel.editperms": "Editar permisos",
+  "channel.notif.all": "Todas",
+  "channel.notif.mention": "Menciones",
+  "channel.notif.none": "Ninguna",
 
   "member.message": "Mandar Mensaje",
   "member.block": "Bloquear",

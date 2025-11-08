@@ -1,13 +1,19 @@
+// Stores
 const UserStore = new Map();
 const MemberStore = new Map();
 window.UserStore = UserStore;
 window.MemberStore = MemberStore;
 
+let ChannelNotifStore = new Map();
+window.ChannelNotifStore = ChannelNotifStore;
+
 // Messages
 const messageInput = document.getElementById('input');
+window.messageInput = messageInput;
 const messageSned = document.getElementById('sned');
 const fileButton = document.getElementById('addfilebutton');
 const fileInput = document.getElementById('addfile');
+const mentionMenu = document.getElementById('mentionmenu');
 const imageicon = '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 256 256"><path fill-rule="evenodd" clip-rule="evenodd" d="M0 40C0 28.9543 8.95431 20 20 20H236C247.046 20 256 28.9543 256 40V215C256 226.046 247.046 235 236 235H20C8.95431 235 0 226.046 0 215V40ZM78 68C78 81.8071 66.8071 93 53 93C39.1929 93 28 81.8071 28 68C28 54.1929 39.1929 43 53 43C66.8071 43 78 54.1929 78 68ZM150.135 91.8679C153.266 86.7107 160.734 86.7107 163.865 91.8679L234.817 208.76C238.075 214.127 234.22 221 227.952 221H142.029H86.048H26.9705C20.3787 221 16.6463 213.367 20.6525 208.08L78.1821 132.152C81.3664 127.949 87.6335 127.949 90.8179 132.152L110.176 157.7L150.135 91.8679Z"/></svg>';
 window.messages = {};
 let files = [];
@@ -102,15 +108,48 @@ async function MessageSend() {
     CryptSend(msg, window.currentChannel);
   }
 }
+let lastMention = '';
+function handleMentionMenu() {
+  mentionMenu.style.display = 'none';
+  if (messageInput.selectionStart===messageInput.selectionEnd) {
+    let content = messageInput.value;
+    if (!content.includes('@')) return;
+    content = content.slice(Math.max(messageInput.selectionStart-20,0), messageInput.selectionStart);
+    if (!content.includes('@')) return;
+    content = content.split('@').slice(-1)[0];
+    if (!content || content.length<2 || !(/^[a-z0-9\-_]+?$/i).test(content)) return;
+    if (lastMention===content) return;
+    lastMention = content;
+    mentionMenu.style.display = '';
+    mentionMenu.innerHTML = (MemberStore.get(window.currentChannel)??[])
+      .map(usr=>{
+        let letters = content.split('');
+        usr.sim = usr.username.split('').map(l=>letters.includes(l)).reduce((acc,cur)=>acc+cur,0);
+        if (usr.username.includes(content)) usr.sim += content.length*1.5;
+        return usr;
+      })
+      .filter(usr=>usr.sim>(usr.username.length/3))
+      .toSorted((a,b)=>b.sim-a.sim)
+      .map(usr=>`<div tabindex="0" role="button" onclick="let k=messageInput.value.slice(0,messageInput.selectionStart).split('@').slice(0,-1).join('@').length+1;messageInput.value=messageInput.value.slice(0,k)+'${sanitizeMinimChars(usr.username)} '+messageInput.value.slice(k+${content.length});messageInput.focus();messageInput.setSelectionRange(k+${sanitizeMinimChars(usr.username).length+1},k+${sanitizeMinimChars(usr.username).length+1});messageInput.onkeyup();">
+  <img src="${usr.pfp?pfpById(usr.pfp):userToDefaultPfp(usr)}" width="42" height="42" aria-hidden="true" loading="lazy" alt="User pfp">
+  <div>
+    <span>${sanitizeHTML(usr.display??sanitizeMinimChars(usr.username))}</span>
+    <span class="small">@${sanitizeMinimChars(usr.username)}</span>
+  </div>
+</div>`)
+      .join('');
+    if (mentionMenu.innerHTML.length<3) mentionMenu.style.display = 'none';
+  }
+}
 messageInput.onkeydown = function(event) {
   if (sending) event.preventDefault();
   if (event.key!=='Enter'||event.shiftKey) return;
   event.preventDefault();
+  mentionMenu.style.display = 'none';
   MessageSend();
 };
-messageSned.onclick = function() {
-  MessageSend();
-};
+messageInput.onkeyup = handleMentionMenu;
+messageSned.onclick = MessageSend;
 function elemfilepreview(file) {
   let url = URL.createObjectURL(file);
   let type = file.type.split('/')[0];
@@ -274,7 +313,7 @@ class TxtLoader extends HTMLElement {
         return res.text();
       })
       .then(res=>this.innerHTML=sanitizeHTML(res))
-      .catch(err=>this.remove());
+      .catch(()=>this.remove());
   }
 }
 customElements.define('media-com', MediaCom);
@@ -292,6 +331,11 @@ window.downloadfile = (id, name)=>{
       down.click();
       URL.revokeObjectURL(url);
     });
+};
+
+let MDCustom = (txt)=>{
+  return txt
+    .replaceAll(/@([a-zA-Z0-9_\-]{3,20}?|e)(?=$|\s|\*|\_|\~|<|@)/gi, function(match){return `<span class="mention">${match}</span>`});
 };
 
 const textdisplay = ['text/plain','text/html','text/css','text/csv','text/tab-separated-values','text/markdown','text/x-markdown','text/xml','application/xhtml+xml','text/javascript','text/ecmascript','text/x-python','text/x-c','text/x-c++','text/x-java','text/x-java-source','text/x-rustsrc','text/x-go','text/x-php','text/x-perl','text/x-ruby','text/x-lua','text/vcard','text/vcalendar','text/calendar','text/x-vcard','text/x-vcalendar','application/json','application/ld+json','application/xml','application/javascript','application/ecmascript','application/x-www-form-urlencoded','application/yaml','application/x-yaml','text/x-yaml','application/graphql','application/sql','application/toml','application/x-toml','text/x-toml','application/ini','text/x-ini','application/x-sh','application/x-httpd-php']
@@ -361,7 +405,7 @@ async function showMessages(messages) {
   let mangm = hasPerm(ch.permission,Permissions.MANAGE_MESSAGES);
   messagesContainer.innerHTML = messages
     .map(msg=>{
-      return `<div class="message${window.username===msg.user.username?' self':''}" id="m-${sanitizeMinimChars(msg.id)}">
+      return `<div class="message${(new RegExp('@('+window.username+'|e)($|\\s|\\*|\\_|\\~|<|@)','im')).test(msg.content)||(msg.replied_to&&msg.reply?.user?.username===window.username)?' mention':''}${window.username===msg.user.username?' self':''}" id="m-${sanitizeMinimChars(msg.id)}">
   ${msg.user.hide?`<span class="time">${formatHour(msg.timestamp)}</span>`:`<div class="avatar"><img src="${msg.user.pfp?pfpById(msg.user.pfp):userToDefaultPfp(msg.user)}" width="42" height="42" aria-hidden="true"></div>`}
   <div class="inner">
     <div class="actions">
@@ -373,7 +417,7 @@ async function showMessages(messages) {
     </div>
     ${msg.replied_to?`<span class="reply" onclick="previewMessage('${sanitizeMinimChars(msg.reply?.id??'')}')"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 256 256"><path d="M256 132C256 120.954 247.046 112 236 112H60V112C26.8629 112 0 138.863 0 172V172V236C0 247.046 8.95431 256 20 256V256C31.0457 256 40 247.046 40 236V172V172C40 160.954 48.9543 152 60 152V152H236C247.046 152 256 143.046 256 132V132Z"/></svg>${msg.reply?`${sanitizeHTML(msg.reply.user.display??sanitizeMinimChars(msg.reply.user.username))}: ${sanitizeHTML(msg.reply.content)||imageicon}`:'Cannot load message'}</span>`:''}
     ${msg.user.hide?'':`<span class="topper"><span class="author">${sanitizeHTML(msg.user.display??sanitizeMinimChars(msg.user.username))}</span><span class="time">${formatTime(msg.timestamp)}</span></span>`}
-    <span class="content">${window.MDParse(msg.content)}${msg.edited_at?`<span class="edited" title="${formatTime(msg.edited_at)}" tlang="message.edited">(Edited)</span>`:''}</span>
+    <span class="content">${window.MDParse(msg.content, MDCustom)}${msg.edited_at?`<span class="edited" title="${formatTime(msg.edited_at)}" tlang="message.edited">(Edited)</span>`:''}</span>
     <div class="fileList">
       ${msg.attachments.map(att=>attachToElem(att)).join('')}
     </div>
@@ -514,7 +558,7 @@ function showMembers(id) {
       if ((a.display??a.username)!==(b.display??b.username)) return (a.display??a.username).localeCompare(b.display??b.username);
       return b.joined_at - a.joined_at;
     })
-    .map(mem=>`<button username="${sanitizeMinimChars(mem.username)}"><img src="${mem.pfp?pfpById(mem.pfp):userToDefaultPfp(mem)}" width="30" height="30" aria-hidden="true" loading="lazy"><span>${sanitizeHTML(mem.display??mem.username)}</span></button>`)
+    .map(mem=>`<button username="${sanitizeMinimChars(mem.username)}"><img src="${mem.pfp?pfpById(mem.pfp):userToDefaultPfp(mem)}" width="30" height="30" aria-hidden="true" loading="lazy"><span title="${sanitizeMinimChars(mem.username)}">${sanitizeHTML(mem.display??mem.username)}</span></button>`)
     .join('');
   document.querySelectorAll('.lateral button:not(.mobile)').forEach(btn=>{
     tippy(btn, {
@@ -641,8 +685,9 @@ function loadChannel(id) {
   // Labels & Buttons
   document.querySelector('.top .name').innerText = ch.name;
   document.querySelector('.top .type').outerHTML = TypeIcons[ch.type];
-  document.getElementById('inviteButton').style.display = 'none';
   document.getElementById('bansButton').style.display = 'none';
+  document.getElementById('inviteButton').style.display = 'none';
+  document.getElementById('notifButton').style.display = localStorage.getItem('pnotif')==='true'?'':'none';
   document.querySelector('.lateral').style.display = 'none';
   if (ch.type===2||(ch.type===3&&(hasPerm(ch.permission,Permissions.MANAGE_CHANNEL)||hasPerm(ch.permission,Permissions.MANAGE_MEMBERS)))) {
     if (smallScreen()) {
@@ -652,8 +697,8 @@ function loadChannel(id) {
     }
     showMembers(id);
     getMembers(id);
-    if (hasPerm(ch.permission,Permissions.MANAGE_CHANNEL)) document.getElementById('inviteButton').style.display = '';
     if (hasPerm(ch.permission,Permissions.MANAGE_MEMBERS)) document.getElementById('bansButton').style.display = '';
+    if (hasPerm(ch.permission,Permissions.MANAGE_CHANNEL)) document.getElementById('inviteButton').style.display = '';
   }
   // Messages
   let canSendMsgs = hasPerm(ch.permission,Permissions.SEND_MESSAGES);
@@ -709,6 +754,7 @@ function changeChannel(id) {
   modal.showModal();
   let channel = window.channels.find(ch=>ch.id===id);
   modal.querySelector('.name').innerText = channel.name;
+  modal.querySelector('.name').setAttribute('title', channel.name);
   document.getElementById('ce-name').value = channel.name;
   modal.querySelector('.img').src = channel.pfp?pfpById(channel.pfp):userToDefaultPfp(channel);
 
@@ -807,7 +853,7 @@ document.getElementById('search').onkeyup = function(evt) {
 }
 window.bansPanel = ()=>{
   document.getElementById('bansModal').showModal();
-  backendfetch('/api/v1/channel/'+window.currentChannel+'/bans')
+  backendfetch(`/api/v1/channel/${window.currentChannel}/bans`)
     .then(res=>{
       document.querySelector('#bansModal div').innerHTML = res
         .map(ban=>`<div class="ban">
@@ -824,31 +870,54 @@ window.bansPanel = ()=>{
 };
 window.invitePanel = ()=>{
   document.getElementById('inviteModal').showModal();
-  backendfetch('/api/v1/channel/'+window.currentChannel+'/invite')
+  backendfetch(`/api/v1/channel/${window.currentChannel}/invite`)
     .then(res=>{
       document.querySelector('#inviteModal .cur').innerText = sanitizeMinimChars(res.invite_code??'None');
     });
   document.querySelector('#inviteModal .rand').onclick = ()=>{
-    backendfetch('/api/v1/channel/'+window.currentChannel+'/invite', {
+    backendfetch(`/api/v1/channel/${window.currentChannel}/invite`, {
       method: 'POST'
     })
-      .then(res=>window.invitePanel());
+      .then(()=>window.invitePanel());
   };
   document.querySelector('#inviteModal .rem').onclick = ()=>{
-    backendfetch('/api/v1/channel/'+window.currentChannel+'/invite', {
+    backendfetch(`/api/v1/channel/${window.currentChannel}/invite`, {
       method: 'DELETE'
     })
-      .then(res=>window.invitePanel());
+      .then(()=>window.invitePanel());
   };
   document.querySelector('#inviteModal .set').onclick = ()=>{
     let formData = new FormData();
     formData.append('invite_code', document.getElementById('invitenew').value);
 
-    backendfetch('/api/v1/channel/'+window.currentChannel+'/invite', {
+    backendfetch(`/api/v1/channel/${window.currentChannel}/invite`, {
       method: 'POST',
       body: formData
     })
-      .then(res=>window.invitePanel());
+      .then(()=>window.invitePanel());
+  };
+};
+window.notifPanel = ()=>{
+  let modal = document.getElementById('notifModal');
+  modal.show();
+  let button = document.getElementById('notifButton');
+  let bb = button.getBoundingClientRect();
+  modal.style.top = bb.bottom+10+'px';
+  modal.style.left = `calc(${bb.right}px - 25dvw)`;
+  let select = document.getElementById('ce-notifs');
+  select.value = getNotifStateChannel(window.currentChannel, window.currentChannelType);
+  select.onchange = ()=>{
+    ChannelNotifStore.set(window.currentChannel, select.value);
+    (async()=>{
+      let tx = db.transaction(['servers'], 'readwrite');
+      let store = tx.objectStore('servers');
+      let req = store.get(window.currentServer);
+      req.onsuccess = (e)=>{
+        let val = e.target.value??{ notifs: {}, public: {} };
+        val.notifs = Object.fromEntries(ChannelNotifStore);
+        store.put(val, window.currentServer);
+      }
+    })();
   };
 };
 window.pinsPanel = ()=>{
@@ -857,8 +926,8 @@ window.pinsPanel = ()=>{
   let button = document.getElementById('pinsButton');
   let bb = button.getBoundingClientRect();
   modal.style.top = bb.bottom+10+'px';
-  modal.style.left = 'calc('+bb.right+'px - 25vw)';
-  backendfetch('/api/v1/channel/'+window.currentChannel+'/pins')
+  modal.style.left = `calc(${bb.right}px - 25dvw)`;
+  backendfetch(`/api/v1/channel/${window.currentChannel}/pins`)
     .then(async(messages)=>{
       if (messages.length<1) {
         document.querySelector('#pinsModal div').innerText = '';
@@ -881,7 +950,7 @@ window.pinsPanel = ()=>{
       <button onclick="window.unpinMessage('${sanitizeMinimChars(msg.id)}');window.pinsPanel()" aria-label="Unpin" tlang="message.unpin" style="color:var(--invalid)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M117.925 15.287C119.283 9.11438 126.925 6.88031 131.394 11.3495L244.087 124.041C248.556 128.51 246.321 136.153 240.148 137.511L201.418 146.029C199.553 146.439 197.845 147.375 196.495 148.724L177.921 167.299C176.97 168.249 176.222 169.382 175.719 170.629L152.677 227.748C149.996 234.394 141.4 236.146 136.332 231.078L97.7987 192.545L18.5585 245.401C16.1203 247.027 12.8731 246.706 10.8007 244.634C8.72831 242.561 8.40702 239.314 10.0331 236.876L62.8886 157.636L24.3564 119.103C19.2888 114.036 21.0402 105.44 27.6864 102.759L84.8066 79.7167C86.0533 79.2137 87.186 78.465 88.1366 77.5145L106.71 58.9403C108.06 57.5903 108.996 55.882 109.406 54.0174L117.925 15.287Z"/><path d="M20 20L236 236" stroke-width="40" stroke-linecap="round"/></svg></button>
     </div>`:''}
     <span class="author">${sanitizeHTML(msg.user.display??sanitizeMinimChars(msg.user.username))}</span><span class="time">${formatTime(msg.timestamp)}</span>
-    <span class="content">${window.MDParse(msg.content)}${msg.edited_at?`<span class="edited" title="${formatTime(msg.edited_at)}" tlang="message.edited">(Edited)</span>`:''}</span>
+    <span class="content">${window.MDParse(msg.content, MDCustom)}${msg.edited_at?`<span class="edited" title="${formatTime(msg.edited_at)}" tlang="message.edited">(Edited)</span>`:''}</span>
     <div class="fileList">
       ${msg.attachments.map(att=>attachToElem(att)).join('')}
     </div>
@@ -1004,8 +1073,12 @@ function startStrem() {
       if (window.messages[data.channel_id]) showMessages(window.messages[data.channel_id]);
       if (document.hasFocus()) {
         window.channels[0].unread_count = 0;
-        if (data.message.user.username!==window.username) backendfetch('/api/v1/channel/'+data.channel_id+'/messages/ack', { method: 'POST' });
-        notify('message', window.messages[data.channel_id][0]);
+        if (data.message.user.username!==window.username) backendfetch(`/api/v1/channel/${data.channel_id}/messages/ack`, { method: 'POST' });
+      } else {
+        if (data.message.user.username!==window.username) {
+          let notifstate = getNotifStateChannel(window.channels[0].id, window.channels[0].type);
+          if (notifstate==='all'||(notifstate==='mentions'&&(new RegExp('@('+window.username+'|e)($|\\s|\\*|\\_|\\~|<|@)','im')).test(window.messages[data.channel_id][0].content))) notify('message', window.messages[data.channel_id][0], data.channel_id);
+        }
       }
     } else {
       let idx2 = window.messages[data.channel_id].findIndex(msg=>msg.id===data.message.id);
@@ -1017,7 +1090,8 @@ function startStrem() {
         window.channels[0].unread_count = 0;
       } else {
         window.channels[0].unread_count += 1;
-        notify('message', window.messages[data.channel_id][idx2]);
+        let notifstate = getNotifStateChannel(window.channels[0].id, window.channels[0].type);
+        if (notifstate==='all'||(notifstate==='mentions'&&(new RegExp('@('+window.username+'|e)($|\\s|\\*|\\_|\\~|<|@)','im')).test(window.messages[data.channel_id][idx2].content))) notify('message', window.messages[data.channel_id][idx2], data.channel_id);
       }
     }
     window.channels[0].last_message = {
@@ -1228,6 +1302,29 @@ tippy([document.getElementById('btn-languages'),document.getElementById('srv-btn
   onMount: ()=>{document.getElementById('timeuilang').checked=localStorage.getItem('timeUILang')==='true'}
 });
 function postLogin() {
+  // DB
+  let dbRequest = indexedDB.open('data', 1);
+  dbRequest.onupgradeneeded = function(e) {
+    let db = e.target.result;
+    if (!db.objectStoreNames.contains('servers')) {
+      db.createObjectStore('servers');
+    }
+  };
+  dbRequest.onsuccess = async(e)=>{
+    let db = e.target.result;
+    window.db = db;
+    let tx = db.transaction(['servers'], 'readwrite');
+    let store = tx.objectStore('servers');
+    let addreq = store.add({ notifs: {}, public: {} }, window.currentServer);
+    addreq.onerror = (evt)=>{evt.preventDefault()};
+    let req = store.get(window.currentServer);
+    req.onsuccess = (e)=>{
+      let val = e.target.result;
+      ChannelNotifStore = new Map(Object.entries(val.notifs));
+      window.ChannelNotifStore = ChannelNotifStore;
+    };
+  };
+
   // Tippy
   tippy(document.getElementById('user'), {
     allowHTML: true,

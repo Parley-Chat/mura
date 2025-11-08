@@ -80,6 +80,9 @@
   "channel.edit.image": "تصویر:",
   "channel.edit.change": "تغییر",
   "channel.editperms": "ویرایش مجوزها",
+  "channel.notif.all": "همه",
+  "channel.notif.mention": "اشاره ها",
+  "channel.notif.none": "هیچ کدام",
 
   "member.message": "پیام",
   "member.block": "مسدود کردن",
