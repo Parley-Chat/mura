@@ -98,6 +98,11 @@ form input:valid {
 form input:invalid, form input[invalid] {
   border-color: var(--invalid);
 }
+form {
+  width: fit-content;
+  max-width: 100%;
+  overflow: auto;
+}
 .invalid-text, .danger {
   color: var(--invalid);
 }
@@ -410,6 +415,7 @@ main {
   display: flex;
   gap: 5px;
   align-items: center;
+  padding: 5px 0px;
 }
 .top button {
   height: 20px;
@@ -418,6 +424,11 @@ main {
 }
 .top svg {
   flex-shrink: 0;
+}
+.top .name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 #messages {
@@ -671,7 +682,9 @@ main {
 }
 
 #pinsModal, #notifModal {
+  left: calc(var(--left) - max(25dvw, 250px));
   width: 25vw;
+  min-width: 250px;
   margin: 0px;
   box-sizing: border-box;
 }

@@ -903,7 +903,7 @@ window.notifPanel = ()=>{
   let button = document.getElementById('notifButton');
   let bb = button.getBoundingClientRect();
   modal.style.top = bb.bottom+10+'px';
-  modal.style.left = `calc(${bb.right}px - 25dvw)`;
+  modal.style.setProperty('--left', bb.right+'px');
   let select = document.getElementById('ce-notifs');
   select.value = getNotifStateChannel(window.currentChannel, window.currentChannelType);
   select.onchange = ()=>{
@@ -926,7 +926,7 @@ window.pinsPanel = ()=>{
   let button = document.getElementById('pinsButton');
   let bb = button.getBoundingClientRect();
   modal.style.top = bb.bottom+10+'px';
-  modal.style.left = `calc(${bb.right}px - 25dvw)`;
+  modal.style.setProperty('--left', bb.right+'px');
   backendfetch(`/api/v1/channel/${window.currentChannel}/pins`)
     .then(async(messages)=>{
       if (messages.length<1) {
