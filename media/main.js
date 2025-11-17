@@ -203,6 +203,24 @@ messageInput.onpaste = function(event) {
   if (items.length<1) return;
   addFiles(items);
 };
+document.body.ondrop = (evt)=>{
+  if (document.querySelector('dialog[open]')) return;
+  evt.stopPropagation();
+  evt.preventDefault();
+
+  if (evt.dataTransfer.items) {
+    for (let i = 0; i<evt.dataTransfer.items.length; i++) {
+      if (evt.dataTransfer.items[i].kind!=='file') continue;
+      addFiles([evt.dataTransfer.items[i].getAsFile()]);
+    }
+  } else {
+    addFiles(evt.dataTransfer.files);
+  }
+};
+document.body.ondragover = (evt)=>{
+  if (document.querySelector('dialog[open]')) return;
+  evt.preventDefault();
+};
 
 function EditMessage(channel, msg, content, iv=null) {
   let formData = new FormData();
@@ -472,6 +490,7 @@ const NonFocusKeys = 'Alt,AltGraph,AudioVolumeDown,AudioVolumeMute,AudioVolumeUp
 window.onkeydown = (evt)=>{
   if (['body'].includes(document.activeElement.tagName.toLowerCase())) {
     if (NonFocusKeys.includes(evt.key)) return;
+    if (evt.ctrlKey) return;
     messageInput.focus();
   }
 };
