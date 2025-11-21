@@ -39,6 +39,13 @@
       <input>
       <button class="set"></button>
     </dialog>
+    <dialog id="affirm">
+      <button onclick="this.parentElement.close()" class="modal-close">x</button>
+      <h2></h2>
+      <p></p>
+      <button class="yes"></button>
+      <button class="no"></button>
+    </dialog>
     <dialog id="notice">
       <button onclick="this.parentElement.close()" class="modal-close">x</button>
       <h3></h3>
@@ -230,8 +237,7 @@
     <div class="lateral" style="display:none"></div>
     <!-- Scripts -->
     <script>
-      window.version = '0.3.0';
-      window.backendVersions = ['0.2.0','0.2.2','0.3.0'];
+      window.backendVersions = ['0.2.0','0.2.2','0.3.0', '0.4.0'];
       window.defaultpfp = '';
       window.currentServer = '';
       window.currentChannel = '';

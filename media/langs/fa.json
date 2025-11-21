@@ -127,6 +127,11 @@
   "message.download": "دانلود",
   "message.attachment.toobig": "{} خیلی بزرگ است",
   "message.attachment.toomany": "نمی‌توان بیش از {} پیوست داشت",
+  "message.unverified": "نمی‌توان نویسندهٔ این پیام را تأیید کرد",
+  "message.publicChange": "کلید عمومی {} تغییر کرده است!",
+  "message.publicChange.body": "این یعنی او فرد دیگری است.",
+  "message.publicChange.yes": "اعتماد کردن",
+  "message.publicChange.no": "لغو",
 
   "settings": "تنظیمات",
   "settings.layout": "چیدمان",

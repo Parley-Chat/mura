@@ -46,8 +46,8 @@ function showServerList() {
     <span>${sanitizeHTML(srv.url)}</span>
     <span>
       ${srv.name?`<span style="font-size:90%"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 256 256"><path fill-rule="evenodd" clip-rule="evenodd" d="M128 128C163.346 128 192 99.3462 192 64C192 28.6538 163.346 0 128 0C92.6538 0 64 28.6538 64 64C64 99.3462 92.6538 128 128 128ZM151 146H148H108H105C49.7715 146 5 190.772 5 246V256H108H148H251V246C251 190.772 206.228 146 151 146Z"/></svg>${sanitizeMinimChars(srv.name)}</span>`:''}
-      ${extraServers[srv]?.dev?'<span title="This is a dev server">⚠️</span>':''}
-      ${extraServers[srv]?.vermiss?'<span title="There is a version missmatch">❌</span>':''}
+      ${extraServers[srv.url]?.dev?'<span title="This is a dev server">⚠️</span>':''}
+      ${extraServers[srv.url]?.vermiss?'<span title="There is a version missmatch">❌</span>':''}
     </span>
   </button>
   <button class="del">x</button>

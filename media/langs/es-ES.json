@@ -127,6 +127,11 @@
   "message.download": "Descargar",
   "message.attachment.toobig": "{} es demasiado grande",
   "message.attachment.toomany": "No se pueden tener mas de {} archivos",
+  "message.unverified": "No se ha podido verificar el autor de este mensaje",
+  "message.publicChange": "¡La llave publica de {} ha cambiado!",
+  "message.publicChange.body": "Esto significa que son otra persona.",
+  "message.publicChange.yes": "Confiar",
+  "message.publicChange.no": "Cancelar",
 
   "settings": "Ajustes",
   "settings.layout": "Diseño",

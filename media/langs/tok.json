@@ -127,6 +127,11 @@
   "message.download": "O awen jo",
   "message.attachment.toobig": "{} li suli ike",
   "message.attachment.toomany": "Toki li ken ala jo e lipu pi {} mute",
+  "message.unverified": "Ken ala sona e jan pi toki ni",
+  "message.publicChange": "Nimi lawa lipu pi {} li ante",
+  "message.publicChange.body": "Ona li jan ante.",
+  "message.publicChange.yes": "O pilin pona",
+  "message.publicChange.no": "O pini",
 
   "settings": "Ante nasin",
   "settings.layout": "Nasin",

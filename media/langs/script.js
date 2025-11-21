@@ -95,9 +95,10 @@ function translate(attempt=0) {
           elem.setAttribute(p, trans);
           return;
         }
-        if (elem.tagName.toLowerCase()==='button'&&elem.querySelector('svg,img')) {
+        if (['button','span'].includes(elem.tagName.toLowerCase())&&elem.querySelector('svg,img')) {
           if (elem.getAttribute('aria-label')===trans) return;
           elem.setAttribute('aria-label', trans);
+          elem.setAttribute('title', trans);
           return;
         }
         if (elem.innerText===trans) return;

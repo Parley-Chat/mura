@@ -127,6 +127,11 @@
   "message.download": "Download",
   "message.attachment.toobig": "{} is too big",
   "message.attachment.toomany": "Cannot have more than {} attachments",
+  "message.unverified": "Could not verify the author of this message",
+  "message.publicChange": "{}'s public key has changed!",
+  "message.publicChange.body": "This means they are a different person.",
+  "message.publicChange.yes": "Trust",
+  "message.publicChange.no": "Cancel",
 
   "settings": "Settings",
   "settings.layout": "Layout",

@@ -115,6 +115,35 @@ function ask(title, min=0, max=20, def='') {
   });
 }
 
+const AffirmModal = document.getElementById('affirm');
+function affirm(title, rep='') {
+  let buttony = AskModal.querySelector('button.yes');
+  let buttonn = AskModal.querySelector('button.no');
+  let h = AskModal.querySelector('h2');
+  let body = AskModal.querySelector('p');
+  AffirmModal.showModal();
+  h.setAttribute('tlang', title);
+  body.setAttribute('tlang', title+'.body');
+  buttony.setAttribute('tlang', title+'.yes');
+  buttonn.setAttribute('tlang', title+'.no');
+  window.translate();
+  setTimeout(()=>{
+    h.innerText = h.innerText.replace('{}', rep);
+    body.innerText = body.innerText.replace('{}', rep);
+  },0);
+  return new Promise((resolve, reject)=>{
+    AskModal.onclose = ()=>{resolve(false)};
+    buttonn.onclick = ()=>{
+      AskModal.close();
+      resolve(false);
+    };
+    buttony.onclick = ()=>{
+      AskModal.close();
+      resolve(true);
+    };
+  });
+}
+
 const NoticeModal = document.getElementById('notice');
 let NoticeBacklog = [];
 function notice(title, rep='', bypass=false) {
@@ -227,11 +256,23 @@ async function newRSAKeys() {
     true,
     ['encrypt', 'decrypt']);
 
-  let exportedPublicKey = await window.crypto.subtle.exportKey("spki", keyPair.publicKey);
-  let exportedPrivateKey = await window.crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
+  let exportedPublicKey = await window.crypto.subtle.exportKey('spki', keyPair.publicKey);
+  let exportedPrivateKey = await window.crypto.subtle.exportKey('pkcs8', keyPair.privateKey);
 
   localStorage.setItem(window.currentServer+'-publicKey', bufferToBase64(exportedPublicKey));
   localStorage.setItem(window.currentServer+'-privateKey', bufferToBase64(exportedPrivateKey));
+}
+async function OAEPtoPSS(key, private=false) {
+  let exported = await window.crypto.subtle.exportKey((private?'pkcs8':'spki'), key);  
+  let imported = await window.crypto.subtle.importKey((private?'pkcs8':'spki'),
+    exported,
+    {
+      name: 'RSA-PSS',
+      hash: 'SHA-256'
+    },
+    true,
+    [private?'sign':'verify']);
+  return imported;
 }
 async function getRSAKeyFromPublic64(public) {
   return await window.crypto.subtle.importKey("spki",
@@ -247,7 +288,7 @@ window.keyPair = undefined;
 async function getRSAKeyPair() {
   if (window.keyPair) return window.keyPair;
   const publicKey = await getRSAKeyFromPublic64(localStorage.getItem(window.currentServer+'-publicKey'));
-  const privateKey = await window.crypto.subtle.importKey("pkcs8",
+  const privateKey = await window.crypto.subtle.importKey('pkcs8',
     base64ToBuffer(localStorage.getItem(window.currentServer+'-privateKey')),
     {
       name: 'RSA-OAEP',
@@ -267,7 +308,17 @@ async function encryptRSAString(string, key) {
 }
 async function decryptRSAString(string, key) {
   const decoder = new TextDecoder();
-  return decoder.decode(await window.crypto.subtle.decrypt({ name: "RSA-OAEP", label: RSAlabel }, key, base64ToBuffer(string)));
+  return decoder.decode(await window.crypto.subtle.decrypt({ name: 'RSA-OAEP', label: RSAlabel }, key, base64ToBuffer(string)));
+}
+async function signRSAString(string, key) {
+  const encoder = new TextEncoder();
+  let data = encoder.encode(string);
+  return bufferToBase64(await window.crypto.subtle.sign({ name: 'RSA-PSS', saltLength: 222 }, await OAEPtoPSS(key, true), data))
+}
+async function verifyRSAString(string, signature, key) {
+  const encoder = new TextEncoder();
+  let data = encoder.encode(string);
+  return (await window.crypto.subtle.verify({ name: 'RSA-PSS', saltLength: 222 }, await OAEPtoPSS(key, false), base64ToBuffer(signature), data));
 }
 
 async function newAESKey() {

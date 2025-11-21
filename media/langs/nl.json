@@ -101,6 +101,11 @@
   "permission.manage_members": "Leden beheren",
   "permission.manage_channel": "Kanaal beheren",
   "permission.manage_permission": "Machtigingen beheren",
+  "message.unverified": "De auteur van dit bericht kon niet worden geverifieerd",
+  "message.publicChange": "De openbare sleutel van {} is gewijzigd!",
+  "message.publicChange.body": "Dat betekent dat ze een ander persoon zijn.",
+  "message.publicChange.yes": "Vertrouwen",
+  "message.publicChange.no": "Annuleren",
 
   "invite.current": "Huidige",
   "invite.copy": "Kopiëren",

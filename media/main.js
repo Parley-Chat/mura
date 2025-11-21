@@ -6,6 +6,25 @@ window.MemberStore = MemberStore;
 
 let ChannelNotifStore = new Map();
 window.ChannelNotifStore = ChannelNotifStore;
+let PKStore = new Map();
+window.PKStore = PKStore;
+const PKChannels = [];
+
+async function saveToDB() {
+  let tx = db.transaction(['servers'], 'readwrite');
+  let store = tx.objectStore('servers');
+  let req = store.get(window.currentServer);
+  req.onsuccess = (e)=>{
+    let val = e.target.value??{ notifs: {}, public: {} };
+    val.notifs = Object.fromEntries(ChannelNotifStore);
+    val.public = Object.fromEntries(PKStore);
+    store.put(val, window.currentServer);
+  }
+}
+window.saveToDB = saveToDB;
+
+const ValidSignature = Symbol('Valid signature');
+const InvalidSignature = Symbol('Invalid signature');
 
 // Messages
 const messageInput = document.getElementById('input');
@@ -33,21 +52,26 @@ function afterSend() {
   window.closereply();
   document.getElementById('messages').scrollTop = 0;
 }
-function BasicSend(msg, channel, key=null, iv=null) {
+async function BasicSend(msg, sign, channel, akey=null, iv=null) {
   let formData = new FormData();
+  // Data
   formData.append('content', msg);
-  if (key) {
-    formData.append('key', key);
+  if (akey) {
+    formData.append('key', akey);
     formData.append('iv', iv);
   }
-  if (reply) {
-    formData.append('replied_to', reply);
-  }
-  files.forEach(file=>{
-    formData.append('files', file, file.name);
-  });
+  if (reply) formData.append('replied_to', reply);
+  files.forEach(file=>formData.append('files', file, file.name));
+  // Signature
+  let sdate = Math.ceil(Date.now()/1000);
+  let signat = `${sign}:${channel}:${sdate}`;
+  let skey = await getRSAKeyPair();
+  let signature = await signRSAString(signat, skey.privateKey);
+  formData.append('timestamp', sdate);
+  formData.append('signature', signature);
+  // Send
   setTimeout(()=>{sending=false}, 500);
-  backendfetch('/api/v1/channel/'+channel+'/messages', {
+  backendfetch(`/api/v1/channel/${channel}/messages`, {
     method: 'POST',
     body: formData
   })
@@ -63,36 +87,57 @@ async function CryptSend(msg, channel) {
   getCurrentKeyChannel(channel, async()=>{
     let last = Object.keys(window.keys[channel]).reduce((a, b) => window.keys[channel][a]?.expires_at > window.keys[channel][b]?.expires_at ? a : b, '');
     if (!last || Date.now()>window.keys[channel][last].expires_at) {
-      backendfetch('/api/v1/channel/'+channel+'/members?pb=true')
+      backendfetch(`/api/v1/channel/${channel}/members?pb=true`)
         .then(async(members)=>{
-        let nkey = await newAESKey();
-        let newKey = await AESKeyToBase64(nkey);
-        let body = {};
-        for (let i=0; i<members.length; i++) {
-          const publicKey = await getRSAKeyFromPublic64(members[i].public);
-          body[members[i].username] = await encryptRSAString(newKey, publicKey);
-        }
-        backendfetch('/api/v1/channel/'+channel+'/key', {
-          method: 'POST',
-          headers: {
-            'content-type': 'application/json'
-          },
-          body: JSON.stringify(body)
-        })
-          .then(async(pkey)=>{
-            getKeyContents(channel, pkey.key_id);
-            let enc = await encryptAESString(msg, nkey);
-            BasicSend(enc.txt, channel, pkey.key_id, enc.iv);
-          })
-          .catch(()=>{
+          let nkey = await newAESKey();
+          let newKey = await AESKeyToBase64(nkey);
+          let body = {};
+          let discontinue = false;
+          for (let i=0; i<members.length; i++) {
+            let publicKey;
+            if (PKStore.has(members[i].username)) {
+              publicKey = PKStore.get(members[i].username);
+              if (publicKey!==members[i].public) {
+                let conf = await affirm('message.publicChange', members[i].username);
+                if (!discontinue) discontinue = !conf;
+                if (conf) {
+                  PKStore.set(members[i].username, members[i].public);
+                  publicKey = members[i].public;
+                }
+              }
+            } else {
+              publicKey = members[i].public;
+              PKStore.set(members[i].username, publicKey);
+              saveToDB();
+            }
+            publicKey = await getRSAKeyFromPublic64(publicKey);
+            body[members[i].username] = await encryptRSAString(newKey, publicKey);
+          }
+          if (discontinue) {
             sending = false;
-          });
-      })
+            return;
+          }
+          backendfetch(`/api/v1/channel/${channel}/key`, {
+            method: 'POST',
+            headers: {
+              'content-type': 'application/json'
+            },
+            body: JSON.stringify(body)
+          })
+            .then(async(pkey)=>{
+              getKeyContents(channel, pkey.key_id);
+              let enc = await encryptAESString(msg, nkey);
+              BasicSend(enc.txt, msg, channel, pkey.key_id, enc.iv);
+            })
+            .catch(()=>{
+              sending = false;
+            });
+        });
     } else {
       const privateKey = (await getRSAKeyPair()).privateKey;
       let nkey = await base64ToAESKey(await decryptRSAString(window.keys[channel][last].key, privateKey));
       let enc = await encryptAESString(msg, nkey);
-      BasicSend(enc.txt, channel, last, enc.iv);
+      BasicSend(enc.txt, msg, channel, last, enc.iv);
     }
   });
 }
@@ -103,7 +148,7 @@ async function MessageSend() {
   if (msg.length<1&&files.length<1) return;
   sending = true;
   if (window.currentChannelType===3) {
-    BasicSend(msg, window.currentChannel);
+    BasicSend(msg, msg, window.currentChannel);
   } else {
     CryptSend(msg, window.currentChannel);
   }
@@ -222,11 +267,20 @@ document.body.ondragover = (evt)=>{
   evt.preventDefault();
 };
 
-function EditMessage(channel, msg, content, iv=null) {
+async function EditMessage(channel, msg, content, sign, iv=null) {
   let formData = new FormData();
+  // Data
   formData.append('content', content);
   if (iv) formData.append('iv', iv);
-  backendfetch('/api/v1/channel/'+channel+'/message/'+msg, {
+  // Signature
+  let sdate = Math.ceil(Date.now()/1000);
+  let signat = `${sign}:${channel}:${sdate}`;
+  let skey = await getRSAKeyPair();
+  let signature = await signRSAString(signat, skey.privateKey);
+  formData.append('timestamp', sdate);
+  formData.append('signature', signature);
+  // Send
+  backendfetch(`/api/v1/channel/${channel}/message/${msg}`, {
     method: 'PATCH',
     body: formData
   })
@@ -237,7 +291,7 @@ function CryptEditMessage(channel, msg, content, key) {
     const privateKey = (await getRSAKeyPair()).privateKey;
     let nkey = await base64ToAESKey(await decryptRSAString(window.keys[channel][key].key, privateKey));
     let enc = await encryptAESString(content, nkey);
-    EditMessage(channel, msg, enc.txt, enc.iv);
+    EditMessage(channel, msg, enc.txt, content, enc.iv);
   });
 }
 
@@ -278,7 +332,7 @@ window.editMessage = (msg, key, elem, cont)=>{
   textarea.oninput();
   elem.querySelector('button.save').onclick = ()=>{
     if (window.currentChannelType===3) {
-      EditMessage(window.currentChannel, msg, textarea.value);
+      EditMessage(window.currentChannel, msg, textarea.value, textarea.value);
     } else {
       CryptEditMessage(window.currentChannel, msg, textarea.value, key);
     }
@@ -391,28 +445,37 @@ async function showMessages(messages) {
   // Pre
   let decrypt = false;
   for (let i=0; i<messages.length; i++) {
+    // Populate user
     if (!messages[i].user) {
       if (window.currentChannelType!==3) {
         messages[i].user = DummyUser;
       } else {
         messages[i].user = {
           display: ch.name,
-          username: 'b',
+          username: 'e',
           pfp: ch.pfp
         };
       }
     } else {
       messages[i].user = Object.merge(messages[i].user, UserStore.get(messages[i].user.username));
     }
+    // Hide author?
     messages[i].user.hide = false;
     if (!messages[i].replied_to && messages[i+1] && messages[i+1]?.user?.username===messages[i].user.username) {
       messages[i].user.hide = (messages[i].timestamp-messages[i+1].timestamp)<TimeSeparation; // Only hide is smaller than time separation
     }
+    // Decrypt
     if (messages[i].key&&messages[i].iv) {
       decrypt = true;
       messages[i].content = await decodeMessage(messages[i]);
       messages[i].iv = null;
     }
+    // Signature
+    if (messages[i].signature&&PKStore.has(messages[i].user.username)&&![ValidSignature,InvalidSignature].includes(messages[i].signature)) {
+      let valid = await verifyRSAString(`${messages[i].content}:${window.currentChannel}:${messages[i].signed_timestamp}`, messages[i].signature, (await getRSAKeyFromPublic64(PKStore.get(messages[i].user.username))));
+      messages[i].signature = valid?ValidSignature:InvalidSignature;
+    }
+    // Replies
     if (messages[i].replied_to) {
       messages[i].reply = messages.find(msg=>msg.id===messages[i].replied_to);
     }
@@ -434,7 +497,7 @@ async function showMessages(messages) {
       <button class="more" username="${sanitizeMinimChars(msg.user.username)}" data-id="${sanitizeMinimChars(msg.id)}" aria-label="More" tlang="message.more"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill-rule="evenodd" clip-rule="evenodd" d="M128 158C111.431 158 98 144.569 98 128C98 111.431 111.431 98 128 98C144.569 98 158 111.431 158 128C158 144.569 144.569 158 128 158ZM128 60C111.432 60 98.0001 46.5685 98.0001 30C98.0001 13.4315 111.432 -5.87112e-07 128 -1.31135e-06C144.569 -2.03558e-06 158 13.4315 158 30C158 46.5685 144.569 60 128 60ZM98 226C98 242.569 111.431 256 128 256C144.569 256 158 242.569 158 226C158 209.431 144.569 196 128 196C111.431 196 98 209.431 98 226Z"/></svg></button>
     </div>
     ${msg.replied_to?`<span class="reply" onclick="previewMessage('${sanitizeMinimChars(msg.reply?.id??'')}')"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 256 256"><path d="M256 132C256 120.954 247.046 112 236 112H60V112C26.8629 112 0 138.863 0 172V172V236C0 247.046 8.95431 256 20 256V256C31.0457 256 40 247.046 40 236V172V172C40 160.954 48.9543 152 60 152V152H236C247.046 152 256 143.046 256 132V132Z"/></svg>${msg.reply?`${sanitizeHTML(msg.reply.user.display??sanitizeMinimChars(msg.reply.user.username))}: ${sanitizeHTML(msg.reply.content)||imageicon}`:'Cannot load message'}</span>`:''}
-    ${msg.user.hide?'':`<span class="topper"><span class="author">${sanitizeHTML(msg.user.display??sanitizeMinimChars(msg.user.username))}</span><span class="time">${formatTime(msg.timestamp)}</span></span>`}
+    ${msg.user.hide?'':`<span class="topper"><span class="author">${sanitizeHTML(msg.user.display??sanitizeMinimChars(msg.user.username))}</span>${msg.signature!==ValidSignature?'<span style="display:inline-flex" aria-label="Could not verify the author of this message" title="Could not verify the author of this message" tlang="message.unverified"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 256 256"><path fill-rule="evenodd" clip-rule="evenodd" d="M148.419 20.5C139.566 5.16667 117.434 5.16667 108.581 20.5L6.8235 196.75C-2.02921 212.083 9.03666 231.25 26.7421 231.25H230.258C247.963 231.25 259.029 212.083 250.177 196.75L148.419 20.5ZM116 72C116 65.9249 120.925 61 127 61H130C136.075 61 141 65.9249 141 72V147C141 153.075 136.075 158 130 158H127C120.925 158 116 153.075 116 147V72ZM141 182.5C141 189.404 135.404 195 128.5 195C121.596 195 116 189.404 116 182.5C116 175.596 121.596 170 128.5 170C135.404 170 141 175.596 141 182.5Z"/></svg></span>':''}<span class="time">${formatTime(msg.timestamp)}</span></span>`}
     <span class="content">${window.MDParse(msg.content, MDCustom)}${msg.edited_at?`<span class="edited" title="${formatTime(msg.edited_at)}" tlang="message.edited">(Edited)</span>`:''}</span>
     <div class="fileList">
       ${msg.attachments.map(att=>attachToElem(att)).join('')}
@@ -674,7 +737,7 @@ function getMembers(id, page=1) {
     return;
   }
   let ch = window.channels.find(ch=>ch.id===id);
-  backendfetch('/api/v1/channel/'+id+'/members?page='+page)
+  backendfetch(`/api/v1/channel/${id}/members?page=${page}`)
     .then(res=>{
       if (!Array.isArray(res)) return;
       MemberStore.set(id, MemberStore.get(id).concat(res));
@@ -718,6 +781,19 @@ function loadChannel(id) {
     getMembers(id);
     if (hasPerm(ch.permission,Permissions.MANAGE_MEMBERS)) document.getElementById('bansButton').style.display = '';
     if (hasPerm(ch.permission,Permissions.MANAGE_CHANNEL)) document.getElementById('inviteButton').style.display = '';
+  }
+  // Get public keys
+  if (!PKChannels.includes(id)) {
+    PKChannels.push(id);
+    backendfetch(`/api/v1/channel/${id}/members?pb=true`)
+      .then(members=>{
+        for (let i=0; i<members.length; i++) {
+          if (!PKStore.has(members[i].username)) {
+            PKStore.set(members[i].username, members[i].public);
+            saveToDB();
+          }
+        }
+      });
   }
   // Messages
   let canSendMsgs = hasPerm(ch.permission,Permissions.SEND_MESSAGES);
@@ -927,16 +1003,7 @@ window.notifPanel = ()=>{
   select.value = getNotifStateChannel(window.currentChannel, window.currentChannelType);
   select.onchange = ()=>{
     ChannelNotifStore.set(window.currentChannel, select.value);
-    (async()=>{
-      let tx = db.transaction(['servers'], 'readwrite');
-      let store = tx.objectStore('servers');
-      let req = store.get(window.currentServer);
-      req.onsuccess = (e)=>{
-        let val = e.target.value??{ notifs: {}, public: {} };
-        val.notifs = Object.fromEntries(ChannelNotifStore);
-        store.put(val, window.currentServer);
-      }
-    })();
+    saveToDB();
   };
 };
 window.pinsPanel = ()=>{
@@ -1252,6 +1319,7 @@ window.showuserdata = (me)=>{
     document.getElementById('ue-display').value = me.display??'';
     document.getElementById('ue-display').placeholder = me.username??'';
     document.querySelector('#edit-user img').src = me.pfp?pfpById(me.pfp):userToDefaultPfp(me);
+    PKStore.set(window.username, localStorage.getItem(window.currentServer+'-publicKey'));
   }
   getChannels();
 };
@@ -1341,6 +1409,8 @@ function postLogin() {
       let val = e.target.result;
       ChannelNotifStore = new Map(Object.entries(val.notifs));
       window.ChannelNotifStore = ChannelNotifStore;
+      PKStore = new Map(Object.entries(val.public));
+      window.PKStore = PKStore;
     };
   };
 
