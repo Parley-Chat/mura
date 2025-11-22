@@ -72,10 +72,10 @@ function sanitizeMinimChars(text) {
   return text.replaceAll(/[^a-zA-Z0-9_\-]/g,'');
 }
 function sanitizeAttr(inp) {
-  return inp.replaceAll('\\', '\\\\').replaceAll("'", "\\'").replaceAll('¬', '¬|').replaceAll('"', "¬'").replaceAll(/\r?\n/g, '\\n');
+  return inp.replaceAll('\\', '\\\\').replaceAll('¬', '¬|').replaceAll('"', "¬@").replaceAll(/\r?\n/g, '\\n');
 }
 function desanitizeAttr(inp) {
-  return inp.replaceAll("¬'", '"').replaceAll('¬|', '¬');
+  return inp.replaceAll("¬@", '"').replaceAll('¬|', '¬');
 }
 
 function bufferToBase64(buf) {
