@@ -1,3 +1,6 @@
+// Imports
+import * as calls from './calls.js';
+
 // Stores
 const UserStore = new Map();
 const MemberStore = new Map();
@@ -767,6 +770,7 @@ function loadChannel(id) {
   // Labels & Buttons
   document.querySelector('.top .name').innerText = ch.name;
   document.querySelector('.top .type').outerHTML = TypeIcons[ch.type];
+  document.getElementById('callsButton').style.display = (ch.type===1&&(window.serverData[getCurrentServerUrl()]?.calls?.enabled||false))?'':'none';
   document.getElementById('bansButton').style.display = 'none';
   document.getElementById('inviteButton').style.display = 'none';
   document.getElementById('notifButton').style.display = localStorage.getItem('pnotif')==='true'?'':'none';
@@ -945,6 +949,12 @@ document.getElementById('search').onkeyup = function(evt) {
   if (last===query) return;
   last = query;
   showChannels(window.channels.filter(ch=>ch.name.toLowerCase().includes(query)));
+}
+window.startCall = ()=>{
+  calls.startCall(window.currentChannel);
+};
+window.endCall = ()=>{
+  calls.leaveCall();
 }
 window.bansPanel = ()=>{
   document.getElementById('bansModal').showModal();
@@ -1215,6 +1225,20 @@ function startStrem() {
     if (!window.messages[data.channel_id]) return;
     window.messages[data.channel_id] = window.messages[data.channel_id].filter(msg=>msg.id!==data.message_id);
     if (window.currentChannel===data.channel_id) showMessages(window.messages[data.channel_id]);
+  });
+  window.stream.addEventListener('call_start', (event)=>{
+    calls.event('start', JSON.parse(event.data));
+  });
+  window.stream.addEventListener('call_join', (event)=>{
+    calls.event('join', JSON.parse(event.data));
+  });
+  window.stream.addEventListener('call_left', (event)=>{
+    calls.event('left', JSON.parse(event.data));
+  });
+  window.stream.addEventListener('call_signal', (event)=>{
+    let data = JSON.parse(event.data);
+    if (data.from_user===window.username) return;
+    calls.signal(data);
   });
 }
 
