@@ -108,7 +108,7 @@ document.getElementById('login-btn').onclick = async function(){
   formData.append('username', document.getElementById('l-username').value);
   if (logining) formData.append('passkey', document.getElementById('l-passkey').value);
   formData.append('public', publickey);
-  if (!logining&&(serverData[getCurrentServerUrl()].password_protected||false)) formData.append('password', localStorage.getItem(getCurrentServerUrl()+'-password'));
+  if (!logining&&(serverData[getCurrentServerUrl()]?.password_protected||false)) formData.append('password', localStorage.getItem(getCurrentServerUrl()+'-password'));
 
   fetch(getCurrentServerUrl()+`/api/v1/${logining?'login':'signup'}`, {
     method: 'POST',

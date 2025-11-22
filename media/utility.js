@@ -117,10 +117,10 @@ function ask(title, min=0, max=20, def='') {
 
 const AffirmModal = document.getElementById('affirm');
 function affirm(title, rep='') {
-  let buttony = AskModal.querySelector('button.yes');
-  let buttonn = AskModal.querySelector('button.no');
-  let h = AskModal.querySelector('h2');
-  let body = AskModal.querySelector('p');
+  let buttony = AffirmModal.querySelector('button.yes');
+  let buttonn = AffirmModal.querySelector('button.no');
+  let h = AffirmModal.querySelector('h2');
+  let body = AffirmModal.querySelector('p');
   AffirmModal.showModal();
   h.setAttribute('tlang', title);
   body.setAttribute('tlang', title+'.body');
@@ -132,13 +132,13 @@ function affirm(title, rep='') {
     body.innerText = body.innerText.replace('{}', rep);
   },0);
   return new Promise((resolve, reject)=>{
-    AskModal.onclose = ()=>{resolve(false)};
+    AffirmModal.onclose = ()=>{resolve(false)};
     buttonn.onclick = ()=>{
-      AskModal.close();
+      AffirmModal.close();
       resolve(false);
     };
     buttony.onclick = ()=>{
-      AskModal.close();
+      AffirmModal.close();
       resolve(true);
     };
   });
