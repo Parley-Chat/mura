@@ -169,7 +169,7 @@ function postServerSelect() {
     getRSAKeyPair();
     window.postLogin();
   } else {
-    if ((serverData[getCurrentServerUrl()].password_protected||false)&&!localStorage.getItem(getCurrentServerUrl()+'-password')) {
+    if ((serverData[getCurrentServerUrl()]?.password_protected||false)&&!localStorage.getItem(getCurrentServerUrl()+'-password')) {
       document.getElementById('signup-password').showModal();
       document.querySelector('#signup-password button').onclick = ()=>{
         localStorage.setItem(getCurrentServerUrl()+'-password', document.querySelector('#signup-password input').value);
