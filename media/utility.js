@@ -505,7 +505,7 @@ function notify(type, data, context=null) {
   };
   if (context) {
     base.renotify = true;
-    base.tag = context;
+    base.tag = type+'-'+context;
   }
   switch(type) {
     case 'message':

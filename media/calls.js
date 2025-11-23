@@ -27,7 +27,7 @@ function showConnections() {
     });
 }
 
-async function connect() {
+async function connect(min=false) {
   if (peerConnection) return;
   // Connect
   let servers = window.serverData[getCurrentServerUrl()].calls.stun_servers.map(url=>({urls:[url]}));
@@ -93,7 +93,7 @@ async function connect() {
   showConnections();
 
   // Offer
-  if (peerConnection.currentRemoteDescription||peerConnection.signalingState!=='stable') return;
+  if (min||peerConnection.currentRemoteDescription||peerConnection.signalingState!=='stable') return;
   let offer = await peerConnection.createOffer();
   await peerConnection.setLocalDescription(offer);
   await backendfetch(`/api/v1/channel/${currentCallCh}/call/signal`, {
@@ -137,7 +137,7 @@ export async function startCall(channel, ans=false) {
       // Ignore :3
     }
   } catch(err) {
-      // Ignore :3
+    // Ignore :3
   }
   window.toggleMic = ()=>{
     if (!mediaStream) return;
@@ -164,22 +164,22 @@ export async function startCall(channel, ans=false) {
   }
 
   setTimeout(()=>{
-    if (!answered||!peerConnection||currentCallCh!=='') leaveCall();
+    if (!answered||!peerConnection||currentCallCh==='') leaveCall();
   }, 2*60*1000); // 2 mins
 };
 export async function event(type, data) {
   if (data.started_by===window.username) return;
   switch(type) {
     case 'start':
-      if (!document.hasFocus()) notify('call_start', data);
+      if (!document.hasFocus()) notify('call_start', data, data.started_by);
       let pick = await affirm('channel.callincoming', data.started_by);
       if (pick) startCall(data.channel_id, true);
       break;
     case 'join':
       showConnections();
-      if (data.user.username!==window.username) {
+      if (data.user.username!==window.username&&!answered) {
         answered = true;
-        connect();
+        connect(true);
       }
       break;
     case 'left':
