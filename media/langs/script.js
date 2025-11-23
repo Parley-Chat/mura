@@ -78,7 +78,7 @@ function translate(attempt=0) {
         let trans = file[elem.getAttribute('tlang')];
         if (trans===undefined) {
           console.log('Missing translation for '+elem.getAttribute('tlang'), elem);
-          if (attempt<5) translate(attempt+1);
+          if (attempt<2) translate(attempt+1);
           window.caches.delete('lang-cache-'+getUserLang());
           delete mcache[getUserLang()];
           return;
@@ -105,6 +105,10 @@ function translate(attempt=0) {
         elem.innerText = trans;
       })
     });
+}
+async function getTranslation(name) {
+  let file = await getTranslationFile(getUserLang());
+  return file[name]??'';
 }
 if (!localStorage.getItem('language')) localStorage.setItem('language', getUserLang());
 window.translate = translate;

@@ -518,7 +518,8 @@ function notify(type, data, context=null) {
       break;
     case 'call_start':
       base.timestamp = Date.now();
-      new Notification('Call from '+data.started_by, base);
+      getTranslation('channel.callincoming')
+        .then(t=>new Notification(t.replace('{}',data.started_by), base));
       break;
   }
 }
