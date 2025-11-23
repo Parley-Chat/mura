@@ -951,7 +951,10 @@ document.getElementById('search').onkeyup = function(evt) {
   showChannels(window.channels.filter(ch=>ch.name.toLowerCase().includes(query)));
 }
 window.startCall = ()=>{
-  calls.startCall(window.currentChannel);
+  backendfetch(`/api/v1/channel/${window.currentChannel}/call`)
+    .then(res=>{
+      calls.startCall(window.currentChannel, (res.participants?true:false));
+    });
 };
 window.endCall = ()=>{
   calls.leaveCall();

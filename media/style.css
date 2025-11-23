@@ -789,6 +789,13 @@ txt-loader {
 }
 #call-display .grid {
   flex: 1;
+  display: flex;
+  gap: 5px;
+  height: 0px;
+}
+#call-display .grid img {
+  flex: 1;
+  border-radius: 10rem;
 }
 #call-display .controls {
   flex-shrink: 0;
