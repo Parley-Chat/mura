@@ -16,6 +16,7 @@ function showConnections() {
   if (!display) return;
   backendfetch(`/api/v1/channel/${window.currentChannel}/call`)
     .then(res=>{
+      if (!res.active) return;
       display.querySelector('.grid').innerHTML = res.participants
         .map(m=>`<img src="${m.pfp?pfpById(m.pfp):userToDefaultPfp(m)}">`)
         .join('');
@@ -127,6 +128,7 @@ export async function event(type, data) {
   if (data.started_by===window.username) return;
   switch(type) {
     case 'start':
+      if (!document.hasFocus()) notify('call_start', data);
       let pick = await affirm('channel.callincoming', data.started_by);
       if (pick) startCall(data.channel_id, true);
       break;

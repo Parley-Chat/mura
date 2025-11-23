@@ -490,13 +490,15 @@ function processImageToPfp(file) {
 }
 
 function notify(type, data, context=null) {
+  if (localStorage.getItem('pnotif')==='false') return;
   if (Notification.permission !== 'granted') {
-    document.getElementById('s-notif').checked = false;
     localStorage.setItem('pnotif','false');
+    let s = document.getElementById('s-notif');
+    if (s) s.checked = false;
     return;
   }
-  if (localStorage.getItem('pnotif')==='false') return;
   let base = {
+    badge: './favicon.ico',
     silent: false,
     dir: localStorage.getItem('prtl')==='true'?'rtl':'ltr',
     lang: localStorage.getItem('language')??'en'
@@ -507,13 +509,16 @@ function notify(type, data, context=null) {
   }
   switch(type) {
     case 'message':
-      base.badge = './favicon.ico';
       base.timestamp = data.timestamp;
       if (data.content) base.body = data.content;
       if (data.user.pfp) base.icon = '/pfp/'+data.user.pfp;
       let att = data.attachments.filter(att=>att.mimetype.startsWith('image/'));
       if (att[0]) base.image = '/attachment/'+att[0].id;
       new Notification(data.user.display??data.user.username, base);
+      break;
+    case 'call_start':
+      base.timestamp = Date.now();
+      new Notification('Call from '+data.started_by, base);
       break;
   }
 }

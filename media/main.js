@@ -526,7 +526,7 @@ async function showMessages(messages) {
     messagesContainer.onscroll = ()=>{
       if (!more && (messagesContainer.scrollHeight-messagesContainer.clientHeight+messagesContainer.scrollTop)<101) {
         more = true;
-        backendfetch('/api/v1/channel/'+window.currentChannel+'/messages?before_message_id='+window.messages[window.currentChannel].slice(-1)[0].id)
+        backendfetch(`/api/v1/channel/${window.currentChannel}/messages?before_message_id=${(window.messages[window.currentChannel]??[]).slice(-1)[0]?.id}`)
           .then(res=>{
             if (res.length<1) return;
             window.messages[window.currentChannel] = window.messages[window.currentChannel].concat(res);
@@ -541,6 +541,7 @@ async function showMessages(messages) {
     };
   }
   setList();
+  messagesContainer.onscroll();
   // Ack
   let idx = window.channels.findIndex(ch=>ch.id===window.currentChannel);
   if (messages.length>0&&window.channels[idx].unread_count>0) {
@@ -1165,34 +1166,32 @@ function startStrem() {
   // Messages
   window.stream.addEventListener('message_sent', async(event)=>{
     let data = JSON.parse(event.data);
-    if (window.messages[data.channel_id]) window.messages[data.channel_id].unshift(data.message);
+    // Move channel
     let idx = window.channels.findIndex(ch=>ch.id===data.channel_id);
     window.channels.unshift(window.channels.splice(idx,1)[0]);
-    if (window.currentChannel===data.channel_id) {
-      if (window.messages[data.channel_id]) showMessages(window.messages[data.channel_id]);
-      if (document.hasFocus()) {
-        window.channels[0].unread_count = 0;
-        if (data.message.user.username!==window.username) backendfetch(`/api/v1/channel/${data.channel_id}/messages/ack`, { method: 'POST' });
-      } else {
-        if (data.message.user.username!==window.username) {
-          let notifstate = getNotifStateChannel(window.channels[0].id, window.channels[0].type);
-          if (notifstate==='all'||(notifstate==='mentions'&&(new RegExp('@('+window.username+'|e)($|\\s|\\*|\\_|\\~|<|@)','im')).test(window.messages[data.channel_id][0].content))) notify('message', window.messages[data.channel_id][0], data.channel_id);
-        }
-      }
+    // Handle message
+    if (!window.messages[data.channel_id]) window.messages[data.channel_id] = [];
+    window.messages[data.channel_id].unshift(data.message);
+    if (data.message.key&&data.message.iv) {
+      window.messages[data.channel_id][0].content = await decodeMessage(data.message, data.channel_id);
+      window.messages[data.channel_id][0].iv = null;
+    }
+    // Unread count
+    if (data.message.user.username===window.username) {
+      window.channels[0].unread_count = 0;
     } else {
-      let idx2 = window.messages[data.channel_id].findIndex(msg=>msg.id===data.message.id);
-      if (window.messages[data.channel_id]&&data.message.key&&data.message.iv) {
-        window.messages[data.channel_id][idx2].content = await decodeMessage(data.message, data.channel_id);
-        window.messages[data.channel_id][idx2].iv = null;
-      }
-      if (data.message.user.username===window.username) {
+      window.channels[0].unread_count += 1;
+      if (window.currentChannel===data.channel_id&&document.hasFocus()) {
         window.channels[0].unread_count = 0;
+        backendfetch(`/api/v1/channel/${data.channel_id}/messages/ack`, { method: 'POST' });
       } else {
-        window.channels[0].unread_count += 1;
         let notifstate = getNotifStateChannel(window.channels[0].id, window.channels[0].type);
-        if (notifstate==='all'||(notifstate==='mentions'&&(new RegExp('@('+window.username+'|e)($|\\s|\\*|\\_|\\~|<|@)','im')).test(window.messages[data.channel_id][idx2].content))) notify('message', window.messages[data.channel_id][idx2], data.channel_id);
+        if (notifstate==='all'||(notifstate==='mentions'&&(new RegExp('@('+window.username+'|e)($|\\s|\\*|\\_|\\~|<|@)','im')).test(window.messages[data.channel_id][0].content))) notify('message', window.messages[data.channel_id][0], data.channel_id);
       }
     }
+    // Show
+    if (window.currentChannel===data.channel_id) showMessages(window.messages[data.channel_id]);
+    // Save last
     window.channels[0].last_message = {
       id: sanitizeMinimChars(data.message.id),
       content: sanitizeHTML(data.message.content||'')||imageicon,
