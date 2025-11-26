@@ -130,6 +130,7 @@ dialog {
   padding: 0;
   border: none;
   background: none;
+  z-index: 6;
 }
 
 .gutter {
@@ -498,6 +499,9 @@ main {
 }
 .message:hover .actions, .message:focus-within .actions {
   opacity: 1;
+}
+.message .actions:not(:has(button)) {
+  display: none;
 }
 .message .actions button {
   margin: 0px;
