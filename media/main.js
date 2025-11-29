@@ -44,17 +44,6 @@ messageInput.oninput = messageInput.onchange = function() {
   messageInput.style.height = 'auto';
   messageInput.style.height = Math.min(messageInput.scrollHeight-4, 16 * 10) + 'px';
 };
-let sending = false;
-function afterSend() {
-  sending = false;
-  messageInput.value = '';
-  files = [];
-  reply = null;
-  messageInput.oninput();
-  filePreview();
-  window.closereply();
-  document.getElementById('messages').scrollTop = 0;
-}
 async function BasicSend(msg, sign, channel, akey=null, iv=null) {
   let formData = new FormData();
   // Data
@@ -72,18 +61,57 @@ async function BasicSend(msg, sign, channel, akey=null, iv=null) {
   let signature = await signRSAString(signat, skey.privateKey);
   formData.append('timestamp', sdate);
   formData.append('signature', signature);
+  // Ghost
+  if (!window.messages[channel]) window.messages[channel] = [];
+  let nonce = Math.floor(Math.random()*16**6).toString(16);
+  formData.append('nonce', nonce);
+  window.messages[channel].unshift({
+    ghost: 1,
+    id: 'nonce-'+nonce,
+    timestamp: Date.now(),
+    content: sign,
+    signature,
+    signed_timestamp: sdate,
+    user: UserStore.get(window.username),
+    attachments: files.map(f=>{return {
+      id: '',
+      filename: f.name,
+      size: f.size,
+      mimetype: f.type
+    }}),
+    key: null,
+    iv: null,
+    edited_at: null,
+    replied_to: null,
+  });
+  window.messages[channel][0].user.hide = shouldHideUser(window.messages[channel], 0);
+  messagesContainer.insertAdjacentHTML('afterbegin', await displayMessage(window.messages[channel][0], channel, 2));
+  // Cleanup
+  messageInput.value = '';
+  messageInput.oninput();
+  files = [];
+  filePreview();
+  reply = null;
+  window.closereply();
+  document.getElementById('messages').scrollTop = 0;
   // Send
-  setTimeout(()=>{sending=false}, 500);
   backendfetch(`/api/v1/channel/${channel}/messages`, {
     method: 'POST',
-    body: formData
+    body: formData,
+    passstatus: true
   })
-    .then(()=>{
-      sending = false;
-      afterSend();
-    })
-    .catch(()=>{
-      sending = false;
+    .then(async(res)=>{
+      if (res.status.toString().startsWith('2')) return;
+      let o;
+      window.messages[channel] = window.messages[channel]
+        .map(msg=>{
+          if (msg.id === 'nonce-'+nonce) {
+            msg.ghost = 2;
+            o = msg;
+          }
+          return msg;
+        });
+      if (window.currentChannel===channel) document.getElementById('m-nonce-'+nonce).outerHTML = await displayMessage(o, channel, 2);
     });
 }
 async function CryptSend(msg, channel) {
@@ -116,10 +144,7 @@ async function CryptSend(msg, channel) {
             publicKey = await getRSAKeyFromPublic64(publicKey);
             body[members[i].username] = await encryptRSAString(newKey, publicKey);
           }
-          if (discontinue) {
-            sending = false;
-            return;
-          }
+          if (discontinue) return;
           backendfetch(`/api/v1/channel/${channel}/key`, {
             method: 'POST',
             headers: {
@@ -131,9 +156,6 @@ async function CryptSend(msg, channel) {
               getKeyContents(channel, pkey.key_id);
               let enc = await encryptAESString(msg, nkey);
               BasicSend(enc.txt, msg, channel, pkey.key_id, enc.iv);
-            })
-            .catch(()=>{
-              sending = false;
             });
         });
     } else {
@@ -145,11 +167,9 @@ async function CryptSend(msg, channel) {
   });
 }
 async function MessageSend() {
-  if (sending) return;
   let msg = messageInput.value.trim()
   messageInput.value = msg;
   if (msg.length<1&&files.length<1) return;
-  sending = true;
   if (window.currentChannelType===3) {
     BasicSend(msg, msg, window.currentChannel);
   } else {
@@ -190,7 +210,6 @@ function handleMentionMenu() {
   }
 }
 messageInput.onkeydown = function(event) {
-  if (sending) event.preventDefault();
   if (event.key!=='Enter'||event.shiftKey) return;
   event.preventDefault();
   mentionMenu.style.display = 'none';
@@ -244,8 +263,7 @@ fileInput.onchange = (event)=>{
   addFiles(Array.from(event.target.files));
   fileInput.value = '';
 };
-messageInput.onpaste = function(event) {
-  if (sending) event.preventDefault();
+messageInput.onpaste = (event)=>{
   let items = (event.clipboardData??event.originalEvent.clipboardData).items;
   items = Array.from(items).filter(item=>item.kind==='file').map(item=>item.getAsFile());
   if (items.length<1) return;
@@ -445,12 +463,21 @@ function decodeMessage(msg, ch=window.currentChannel) {
     });
   });
 }
-const TimeSeparation = 10 * 60 * 1000;
 const messagesContainer = document.getElementById('messages');
-function displayMessage(msg, ch, limited=0) {
+async function displayMessage(msg, ch, limited=0) {
   let sendm = hasPerm(ch.permission,Permissions.SEND_MESSAGES);
   let mangm = hasPerm(ch.permission,Permissions.MANAGE_MESSAGES);
-  return `<div class="message${(new RegExp('@('+window.username+'|e)($|\\s|\\*|\\_|\\~|<|@)','im')).test(msg.content)||(msg.replied_to&&msg.reply?.user?.username===window.username)?' mention':''}${window.username===msg.user.username?' self':''}" id="m-${sanitizeMinimChars(msg.id)}">
+  // Decrypt
+  if (msg.key&&msg.iv) {
+    msg.content = await decodeMessage(msg);
+    msg.iv = null;
+  }
+  // Signature
+  if (msg.signature&&PKStore.has(msg.user.username)&&![ValidSignature,InvalidSignature].includes(msg.signature)) {
+    let valid = await verifyRSAString(`${msg.content}:${window.currentChannel}:${msg.signed_timestamp}`, msg.signature, (await getRSAKeyFromPublic64(PKStore.get(msg.user.username))));
+    msg.signature = valid?ValidSignature:InvalidSignature;
+  }
+  return `<div class="message${msg.ghost?' ghost-'+msg.ghost:''}${(new RegExp('@('+window.username+'|e)($|\\s|\\*|\\_|\\~|<|@)','im')).test(msg.content)||(msg.replied_to&&msg.reply?.user?.username===window.username)?' mention':''}${window.username===msg.user.username?' self':''}" id="m-${sanitizeMinimChars(msg.id)}">
   ${msg.user.hide?`<span class="time">${formatHour(msg.timestamp)}</span>`:`<div class="avatar"><img src="${msg.user.pfp?pfpById(msg.user.pfp):userToDefaultPfp(msg.user)}" width="42" height="42" aria-hidden="true"></div>`}
   <div class="inner">
     <div class="actions">
@@ -476,7 +503,6 @@ function displayMessage(msg, ch, limited=0) {
 async function showMessages(messages) {
   let ch = window.channels.find(ch=>ch.id===window.currentChannel);
   // Pre
-  let decrypt = false;
   for (let i=0; i<messages.length; i++) {
     // Populate user
     if (!messages[i].user) {
@@ -494,31 +520,18 @@ async function showMessages(messages) {
       messages[i].user = Object.merge(messages[i].user, UserStore.get(messages[i].user.username));
     }
     // Hide author?
-    messages[i].user.hide = false;
-    if (!messages[i].replied_to && messages[i+1] && messages[i+1]?.user?.username===messages[i].user.username) {
-      messages[i].user.hide = (messages[i].timestamp-messages[i+1].timestamp)<TimeSeparation; // Only hide is smaller than time separation
-    }
-    // Decrypt
-    if (messages[i].key&&messages[i].iv) {
-      decrypt = true;
-      messages[i].content = await decodeMessage(messages[i]);
-      messages[i].iv = null;
-    }
-    // Signature
-    if (messages[i].signature&&PKStore.has(messages[i].user.username)&&![ValidSignature,InvalidSignature].includes(messages[i].signature)) {
-      let valid = await verifyRSAString(`${messages[i].content}:${window.currentChannel}:${messages[i].signed_timestamp}`, messages[i].signature, (await getRSAKeyFromPublic64(PKStore.get(messages[i].user.username))));
-      messages[i].signature = valid?ValidSignature:InvalidSignature;
-    }
+    messages[i].user.hide = shouldHideUser(messages, i);
     // Replies
     if (messages[i].replied_to) {
       messages[i].reply = messages.find(msg=>msg.id===messages[i].replied_to);
     }
   }
-  if (decrypt) showChannels(window.channels);
   // Show
-  messagesContainer.innerHTML = messages
-    .map(msg=>displayMessage(msg,ch))
-    .join('');
+  let message = '';
+  for (let i=0; i<messages.length; i++) {
+    message += await displayMessage(messages[i], ch);
+  }
+  messagesContainer.innerHTML = message;
   Array.from(document.querySelectorAll('.message .more')).forEach(btn=>{
     tippy(btn, {
       allowHTML: true,
@@ -530,6 +543,7 @@ async function showMessages(messages) {
       sticky: true
     });
   });
+  showChannels(window.channels);
   // Load more listener
   let more = false;
   function setList() {
@@ -557,7 +571,7 @@ async function showMessages(messages) {
   if (messages.length>0&&window.channels[idx].unread_count>0) {
     window.channels[idx].unread_count = 0;
     showChannels(window.channels);
-    backendfetch('/api/v1/channel/'+window.currentChannel+'/messages/ack', { method: 'POST' });
+    backendfetch(`/api/v1/channel/${window.currentChannel}/messages/ack`, { method: 'POST' });
   }
 }
 
@@ -767,7 +781,6 @@ const TypeIcons = [
   '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" class="type"><rect x="7" y="76" width="25" height="104" rx="12.5"/><path d="M160 207C160 232.405 139.853 253 115 253C90.1472 253 70 232.405 70 207C70 181.595 90.1472 161 115 161C139.853 161 160 181.595 160 207ZM88 207C88 222.243 100.088 234.6 115 234.6C129.912 234.6 142 222.243 142 207C142 191.757 129.912 179.4 115 179.4C100.088 179.4 88 191.757 88 207Z"/><path d="M219 12C219 5.37258 224.373 0 231 0H239C245.627 0 251 5.37258 251 12V244C251 250.627 245.627 256 239 256H231C224.373 256 219 250.627 219 244V12Z"/><path d="M41 90.9502C41 82.374 46.4679 74.7524 54.592 72.0045L232 12V244L54.592 183.995C46.4679 181.248 41 173.626 41 165.05V90.9502Z"/></svg>'
 ];
 function loadChannel(id) {
-  sending = false;
   let ch = window.channels.find(ch=>ch.id===id);
   window.currentChannel = id;
   window.currentChannelType = ch.type;
@@ -820,10 +833,7 @@ function loadChannel(id) {
     showMessages([]);
     backendfetch(`/api/v1/channel/${id}/messages`)
       .then(res=>{
-        if (!Array.isArray(res)) {
-          location.reload();
-          return;
-        }
+        if (!Array.isArray(res)) return;
         window.messages[id] = res;
         res.forEach(msg=>{
           if (!msg.user) return;
@@ -1051,15 +1061,17 @@ window.pinsPanel = ()=>{
         messages[i].content = messages[i].key?(await decodeMessage(messages[i])):messages[i].content;
       }
       // Show
-      document.querySelector('#pinsModal div').innerHTML = messages
-        .map(msg=>displayMessage(msg, ch, 1))
-        .join('');
+      let message = '';
+      for (let i=0; i<messages.length; i++) {
+        message += await displayMessage(messages[i], ch, 1);
+      }
+      document.querySelector('#pinsModal div').innerHTML = message;
     });
 };
 
 // Stream
 window.stream = null;
-function startStrem() {
+function startStream() {
   if (window.stream) return;
   window.stream = new EventSource(`${getCurrentServerUrl()}/api/v1/stream?authorization=Bearer ${localStorage.getItem(window.currentServer+'-sessionToken')}`);
   window.stream.addEventListener('error', (event)=>{
@@ -1068,7 +1080,7 @@ function startStrem() {
     console.log('Stream error:', data.error);
     window.stream.close();
     window.stream = null;
-    startStrem();
+    startStream();
   });
   // Channels
   window.stream.addEventListener('channel_added', (event)=>{
@@ -1091,6 +1103,7 @@ function startStrem() {
     window.channels[0].member_count = Number(data.channel.member_count)??1;
     window.channels[0].unread_count = 0;
     showChannels(window.channels);
+    if (window.currentChannel==='') window.loadChannel(sanitizeMinimChars(data.channel.id));
   });
   window.stream.addEventListener('channel_edited', (event)=>{
     let data = JSON.parse(event.data);
@@ -1171,9 +1184,12 @@ function startStrem() {
       window.messages[data.channel_id][0].content = await decodeMessage(data.message, data.channel_id);
       window.messages[data.channel_id][0].iv = null;
     }
-    // Unread count
+    // Unread, ghost and other
     if (data.message.user.username===window.username) {
       window.channels[0].unread_count = 0;
+      window.messages[data.channel_id] = window.messages[data.channel_id]
+        .filter(m=>m.id!=='nonce-'+data.message.nonce);
+      if (window.currentChannel===data.channel_id) document.getElementById('m-nonce-'+data.message.nonce)?.remove();
     } else {
       window.channels[0].unread_count += 1;
       if (window.currentChannel===data.channel_id&&document.hasFocus()) {
@@ -1185,7 +1201,8 @@ function startStrem() {
       }
     }
     // Show
-    if (window.currentChannel===data.channel_id) showMessages(window.messages[data.channel_id]);
+    window.messages[data.channel_id][0].user.hide = shouldHideUser(window.messages[data.channel_id], 0);
+    if (window.currentChannel===data.channel_id) messagesContainer.insertAdjacentHTML('afterbegin', await displayMessage(window.messages[data.channel_id][0], window.channels[0]));
     // Save last
     window.channels[0].last_message = {
       id: sanitizeMinimChars(data.message.id),
@@ -1377,14 +1394,14 @@ window.onresize = ()=>{layout()};
 window.username = '';
 async function loadMain() {
   // User
-  backendfetch('/api/v1/me', { passstatus: true })
-    .then(me=>{showuserdata(me)});
+  let me = await backendfetch('/api/v1/me', { passstatus: true })
+  showuserdata(me);
 
   // Channel list
   getChannels();
 
   // Stream
-  startStrem();
+  startStream();
 }
 
 const vts = {

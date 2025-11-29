@@ -244,6 +244,13 @@ function pfpById(id) {
 function getNotifStateChannel(id, type) {
   return ChannelNotifStore.get(id)??['mentions','all','mentions','mentions'][type];
 }
+const MessageTimeSeparation = 10 * 60 * 1000; // 10 mins
+function shouldHideUser(messages, i) {
+  if (!messages[i].replied_to && messages[i+1] && messages[i+1]?.user?.username===messages[i].user.username) {
+    return (messages[i].timestamp-messages[i+1].timestamp)<MessageTimeSeparation; // Only hide is smaller than time separation
+  }
+  return false;
+}
 
 async function newRSAKeys() {
   const keyPair = await window.crypto.subtle.generateKey({
@@ -433,16 +440,21 @@ function getKeysBatch(id, keys, callback=()=>{}) {
       callback();
     });
 }
-function getCurrentKeyChannel(id, callback=()=>{}) {
-  if (!window.keys[id]) window.keys[id] = {};
-  backendfetch('/api/v1/channel/'+id+'/key')
-    .then(async(key)=>{
-      if (!key.key_id || window.keys[id][key.key_id]) {
-        callback();
-        return;
-      }
-      getKeyContents(id, key.key_id, callback);
-    });
+function getCurrentKeyChannel(ch, callback=()=>{}) {
+  if (!window.keys[ch]) window.keys[ch] = {};
+  let last = Object.keys(window.keys[ch]).reduce((a,b)=>window.keys[ch][a]?.expires_at>window.keys[ch][b]?.expires_at?a:b, '');
+  if (!last || Date.now()>window.keys[ch][last].expires_at) {
+    backendfetch(`/api/v1/channel/${ch}/key`)
+      .then(async(key)=>{
+        if (!key.key_id || window.keys[ch][key.key_id]) {
+          callback();
+          return;
+        }
+        getKeyContents(ch, key.key_id, callback);
+      });
+  } else {
+    callback();
+  }
 }
 
 let pfpSize = 256;
