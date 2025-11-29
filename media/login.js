@@ -22,7 +22,7 @@ document.getElementById('l-username').oninput = function(evt) {
       return;
     }
     let errors = document.getElementById('l-errors');
-    if (evt.target.value.length<3||evt.target.value.length>20) {
+    if (!(/^[a-z0-9_\-]{3,20}$/).test(evt.target.value)) {
       errors.setAttribute('tlang', 'error.username');
       evt.target.setAttribute('invalid', true);
       return;
@@ -30,14 +30,14 @@ document.getElementById('l-username').oninput = function(evt) {
     fetch(getCurrentServerUrl()+'/api/v1/username_check?username='+evt.target.value)
       .then(res=>{
         if (res.status===200) {
-          if (errors.getAttribute('tlang') === 'error.usernameuse') errors.setAttribute('tlang', 'empty');
+          errors.setAttribute('tlang', 'empty');
           evt.target.removeAttribute('invalid');
         } else {
           errors.setAttribute('tlang', 'error.usernameuse');
           evt.target.setAttribute('invalid', true);
         }
       });
-  }, 1000)
+  }, 1000);
 }
 
 let LoginFileContents = {};

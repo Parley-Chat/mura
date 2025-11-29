@@ -359,7 +359,7 @@ async function backendfetch(url, opts={}) {
   let req = await fetch(getCurrentServerUrl()+url, opts);
   let res = await req.json();
   if (req.status===419) {
-    await solveChallenge(res.challenge, res.id, ()=>{});
+    await new Promise((resolve)=>{solveChallenge(res.challenge, res.id, resolve)});
     return await backendfetch(url, opts);
   } else {
     if (opts.passstatus) res.status = req.status;
