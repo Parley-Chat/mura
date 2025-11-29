@@ -94,6 +94,19 @@ async function BasicSend(msg, sign, channel, akey=null, iv=null) {
   reply = null;
   window.closereply();
   document.getElementById('messages').scrollTop = 0;
+  // In case of fail
+  let failed = async()=>{
+    let o;
+    window.messages[channel] = window.messages[channel]
+      .map(msg=>{
+        if (msg.id === 'nonce-'+nonce) {
+          msg.ghost = 2;
+          o = msg;
+        }
+        return msg;
+      });
+    if (window.currentChannel===channel) document.getElementById('m-nonce-'+nonce).outerHTML = await displayMessage(o, channel, 2);
+  }
   // Send
   backendfetch(`/api/v1/channel/${channel}/messages`, {
     method: 'POST',
@@ -102,16 +115,10 @@ async function BasicSend(msg, sign, channel, akey=null, iv=null) {
   })
     .then(async(res)=>{
       if (res.status.toString().startsWith('2')) return;
-      let o;
-      window.messages[channel] = window.messages[channel]
-        .map(msg=>{
-          if (msg.id === 'nonce-'+nonce) {
-            msg.ghost = 2;
-            o = msg;
-          }
-          return msg;
-        });
-      if (window.currentChannel===channel) document.getElementById('m-nonce-'+nonce).outerHTML = await displayMessage(o, channel, 2);
+      failed();
+    })
+    .catch(()=>{
+      failed();
     });
 }
 async function CryptSend(msg, channel) {
