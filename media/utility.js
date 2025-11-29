@@ -246,7 +246,6 @@ function getNotifStateChannel(id, type) {
 }
 
 async function newRSAKeys() {
-  window.keyPair = null;
   const keyPair = await window.crypto.subtle.generateKey({
       name: 'RSA-OAEP',
       modulusLength: 2048,
@@ -284,9 +283,9 @@ async function getRSAKeyFromPublic64(public) {
     true,
     ['encrypt']);
 }
-window.keyPair = undefined;
+window.keyPair = {};
 async function getRSAKeyPair() {
-  if (window.keyPair) return window.keyPair;
+  if (window.keyPair[window.currentServer]) return window.keyPair[window.currentServer];
   const publicKey = await getRSAKeyFromPublic64(localStorage.getItem(window.currentServer+'-publicKey'));
   const privateKey = await window.crypto.subtle.importKey('pkcs8',
     base64ToBuffer(localStorage.getItem(window.currentServer+'-privateKey')),
@@ -297,8 +296,8 @@ async function getRSAKeyPair() {
     true,
     ['decrypt']);
 
-  window.keyPair = { publicKey, privateKey };
-  return window.keyPair;
+  window.keyPair[window.currentServer] = { publicKey, privateKey };
+  return window.keyPair[window.currentServer];
 }
 const RSAlabel = new TextEncoder().encode('parley');
 async function encryptRSAString(string, key) {
