@@ -262,6 +262,7 @@ nav button img {
   overflow-y: auto;
 }
 #channels > span {
+  position: relative;
   display: flex;
   border-radius: var(--roundness-1);
   background-color: var(--bg-2);
@@ -325,6 +326,13 @@ nav button img {
   height: 20px;
   border-radius: 1rem;
   background-color: var(--bg-1);
+}
+#channels .pin-indicator {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  fill: var(--text-2);
+  pointer-events: none;
 }
 #edit-channel h2 {
   display: flex;

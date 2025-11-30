@@ -56,6 +56,8 @@
   "channel.add": "افزودن کانال",
   "channel.listempty": "شما هیچ کانالی ندارید، با + یکی اضافه کنید",
   "channel.edit": "ویرایش",
+  "channel.pin": "پین کردن کانال",
+  "channel.unpin": "برداشتن پین کانال",
   "channel.leave": "ترک",
   "channel.delete": "حذف کانال",
   "channel.newdm": "پیام مستقیم",

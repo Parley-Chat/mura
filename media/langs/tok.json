@@ -56,6 +56,8 @@
   "channel.add": "Pali tomo toki",
   "channel.listempty": "sina jo ala e tomo toki, pali tomo toki e +",
   "channel.edit": "O ante",
+  "channel.pin": "O suli",
+  "channel.unpin": "O ala suli",
   "channel.leave": "O weka",
   "channel.delete": "O weka tomo toki",
   "channel.newdm": "Toki jan wan",

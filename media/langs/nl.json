@@ -56,6 +56,8 @@
   "channel.add": "Kanaal toevoegen",
   "channel.listempty": "Je hebt geen kanalen, klik op + om sommige toe te voegen",
   "channel.edit": "Bewerken",
+  "channel.pin": "Pin channel",
+  "channel.unpin": "Unpin channel",
   "channel.leave": "Verlaten",
   "channel.delete": "Kanaal verwijderen",
   "channel.newdm": "Privébericht",

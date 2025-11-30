@@ -9,6 +9,8 @@ window.MemberStore = MemberStore;
 
 let ChannelNotifStore = new Map();
 window.ChannelNotifStore = ChannelNotifStore;
+let PinnedChannelsStore = new Map();
+window.PinnedChannelsStore = PinnedChannelsStore;
 let PKStore = new Map();
 window.PKStore = PKStore;
 const PKChannels = [];
@@ -18,9 +20,10 @@ async function saveToDB() {
   let store = tx.objectStore('servers');
   let req = store.get(window.currentServer);
   req.onsuccess = (e)=>{
-    let val = e.target.value??{ notifs: {}, public: {} };
+    let val = e.target.value??{ notifs: {}, public: {}, pinned: {} };
     val.notifs = Object.fromEntries(ChannelNotifStore);
     val.public = Object.fromEntries(PKStore);
+    val.pinned = Object.fromEntries(PinnedChannelsStore);
     store.put(val, window.currentServer);
   }
 }
@@ -595,23 +598,18 @@ window.onkeydown = (evt)=>{
 
 // Channels
 window.channels = [];
-function showChannels(channels) {
-  if (channels.length<1) {
-    document.getElementById('channels').innerHTML = '<p tlang="channel.listempty"></p>';
-    window.translate();
-    return;
+function displayChannel(ch) {
+  let lstmsgcnt;
+  if (ch.last_message) {
+    lstmsgcnt = ch.last_message.content;
+    if (ch.last_message.key&&window.keys[ch.id]&&window.keys[ch.id][ch.last_message.key]) {
+      let msg = messages[ch.id].find(msg=>msg.id===ch.last_message.id);
+      if (msg) lstmsgcnt = msg.content;
+    }
   }
-  document.getElementById('channels').innerHTML = channels
-    .map(ch=>{
-      let lstmsgcnt;
-      if (ch.last_message) {
-        lstmsgcnt = ch.last_message.content;
-        if (ch.last_message.key&&window.keys[ch.id]&&window.keys[ch.id][ch.last_message.key]) {
-          let msg = messages[ch.id].find(msg=>msg.id===ch.last_message.id);
-          if (msg) lstmsgcnt = msg.content;
-        }
-      }
-      return `<span>
+  let isPinned = PinnedChannelsStore.has(ch.id);
+  return `<span>
+  ${isPinned?'<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 256 256" class="pin-indicator"><path d="M117.4 6.28699C118.758 0.114336 126.401 -2.11969 130.87 2.34949L253.649 125.126C258.118 129.595 255.883 137.239 249.71 138.597L206.755 148.044C204.89 148.454 203.182 149.39 201.832 150.74L181.588 170.983C180.637 171.934 179.889 173.067 179.386 174.313L154.115 236.957C151.434 243.603 142.838 245.354 137.771 240.287L95.5138 198.03L10.2823 254.884C7.65962 256.633 4.16588 256.288 1.93663 254.058C-0.292345 251.829 -0.63778 248.336 1.11143 245.714L57.964 160.48L15.7091 118.225C10.642 113.158 12.3932 104.562 19.0392 101.881L81.6827 76.6112C82.9295 76.1083 84.0621 75.3587 85.0128 74.4081L105.257 54.1649C106.607 52.8149 107.542 51.1066 107.952 49.2421L117.4 6.28699Z"/></svg>':''}
   <button onclick="window.loadChannel('${ch.id}')">
     <img src="${ch.pfp?pfpById(ch.pfp):userToDefaultPfp(ch)}" width="30" height="30" aria-hidden="true" loading="lazy">
     <span class="div">
@@ -620,10 +618,20 @@ function showChannels(channels) {
     </span>
     ${(ch.unread_count??0)>0?`<span class="unread">${ch.unread_count}</span>`:''}
   </button>
-  ${ch.type!==1&&hasPerm(ch.permission,Permissions.MANAGE_CHANNEL)?`<button class="other" onclick="window.changeChannel('${ch.id}')" aria-label="Edit" tlang="channel.edit"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill-rule="evenodd" clip-rule="evenodd" d="M128.601 218.743C178.384 218.743 218.742 178.385 218.742 128.602C218.742 78.8184 178.384 38.4609 128.601 38.4609C78.8175 38.4609 38.4601 78.8184 38.4601 128.602C38.4601 178.385 78.8175 218.743 128.601 218.743ZM128.601 167.062C149.842 167.062 167.061 149.843 167.061 128.602C167.061 107.361 149.842 90.1415 128.601 90.1415C107.36 90.1415 90.1408 107.361 90.1408 128.602C90.1408 149.843 107.36 167.062 128.601 167.062Z"></path><path d="M101.001 11.0292C101.507 4.79869 106.711 0 112.962 0H143.038C149.289 0 154.493 4.79868 154.999 11.0292L158 48H98L101.001 11.0292Z"></path><path d="M101.001 244.971C101.507 251.201 106.711 256 112.962 256H143.038C149.289 256 154.493 251.201 154.999 244.971L158 208H98L101.001 244.971Z"></path><path d="M244.971 101.001C251.201 101.507 256 106.711 256 112.962L256 143.038C256 149.289 251.201 154.493 244.971 154.999L208 158L208 98L244.971 101.001Z"></path><path d="M11.0292 101.001C4.79869 101.507 -3.80751e-07 106.711 -6.5399e-07 112.962L-1.96869e-06 143.038C-2.24193e-06 149.289 4.79868 154.493 11.0292 154.999L48 158L48 98L11.0292 101.001Z"></path><path d="M192.883 25.8346C197.645 21.7687 204.733 22.0477 209.16 26.4753L229.71 47.025C234.137 51.4526 234.416 58.5404 230.351 63.3023L205.964 91.8642L164.321 50.2213L192.883 25.8346Z"></path><path d="M26.135 192.008C22.0807 196.77 22.3646 203.849 26.7873 208.271L47.7285 229.212C52.1512 233.635 59.2294 233.919 63.9921 229.865L92.2857 205.78L50.2198 163.714L26.135 192.008Z"></path><path d="M229.879 191.979C233.94 196.742 233.658 203.825 229.233 208.25L208.673 228.811C204.247 233.236 197.164 233.517 192.402 229.457L164.137 205.358L205.78 163.715L229.879 191.979Z"></path><path d="M63.9921 26.1356C59.2293 22.0813 52.1512 22.3652 47.7284 26.7879L26.7874 47.7289C22.3647 52.1517 22.0808 59.2298 26.1351 63.9926L50.22 92.2862L92.2857 50.2205L63.9921 26.1356Z"></path></svg></button>`:''}
-  ${window.serverData[getCurrentServerUrl()]?.disable_channel_deletion?'':`<button class="other" onclick="window.leaveChannel('${ch.id}')" aria-label="Leave" tlang="channel.leave"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 256 256"><path d="M219.856 5.85765C227.666 -1.95251 240.33 -1.95258 248.14 5.85765L250.141 7.85961C257.951 15.6701 257.951 28.3334 250.141 36.1438L158.285 127.999L250.141 219.857C257.952 227.667 257.952 240.33 250.141 248.141L248.14 250.142C240.33 257.952 227.666 257.952 219.856 250.142L127.999 158.285L36.143 250.142C28.3326 257.952 15.6693 257.952 7.85884 250.142L5.85786 248.141C-1.95262 240.33 -1.95262 227.667 5.85786 219.857L97.7133 127.999L5.85786 36.1438C-1.95262 28.3333 -1.95261 15.6701 5.85786 7.85961L7.85884 5.85765C15.6693 -1.95245 28.3327 -1.95266 36.143 5.85765L127.999 97.7141L219.856 5.85765Z"/></svg></button>`}
+  ${ch.type!==1&&hasPerm(ch.permission,Permissions.MANAGE_CHANNEL)?`<button class="other" onclick="window.changeChannel('${sanitizeMinimChars(ch.id)}')" aria-label="Edit" tlang="channel.edit"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill-rule="evenodd" clip-rule="evenodd" d="M128.601 218.743C178.384 218.743 218.742 178.385 218.742 128.602C218.742 78.8184 178.384 38.4609 128.601 38.4609C78.8175 38.4609 38.4601 78.8184 38.4601 128.602C38.4601 178.385 78.8175 218.743 128.601 218.743ZM128.601 167.062C149.842 167.062 167.061 149.843 167.061 128.602C167.061 107.361 149.842 90.1415 128.601 90.1415C107.36 90.1415 90.1408 107.361 90.1408 128.602C90.1408 149.843 107.36 167.062 128.601 167.062Z"></path><path d="M101.001 11.0292C101.507 4.79869 106.711 0 112.962 0H143.038C149.289 0 154.493 4.79868 154.999 11.0292L158 48H98L101.001 11.0292Z"></path><path d="M101.001 244.971C101.507 251.201 106.711 256 112.962 256H143.038C149.289 256 154.493 251.201 154.999 244.971L158 208H98L101.001 244.971Z"></path><path d="M244.971 101.001C251.201 101.507 256 106.711 256 112.962L256 143.038C256 149.289 251.201 154.493 244.971 154.999L208 158L208 98L244.971 101.001Z"></path><path d="M11.0292 101.001C4.79869 101.507 -3.80751e-07 106.711 -6.5399e-07 112.962L-1.96869e-06 143.038C-2.24193e-06 149.289 4.79868 154.493 11.0292 154.999L48 158L48 98L11.0292 101.001Z"></path><path d="M192.883 25.8346C197.645 21.7687 204.733 22.0477 209.16 26.4753L229.71 47.025C234.137 51.4526 234.416 58.5404 230.351 63.3023L205.964 91.8642L164.321 50.2213L192.883 25.8346Z"></path><path d="M26.135 192.008C22.0807 196.77 22.3646 203.849 26.7873 208.271L47.7285 229.212C52.1512 233.635 59.2294 233.919 63.9921 229.865L92.2857 205.78L50.2198 163.714L26.135 192.008Z"></path><path d="M229.879 191.979C233.94 196.742 233.658 203.825 229.233 208.25L208.673 228.811C204.247 233.236 197.164 233.517 192.402 229.457L164.137 205.358L205.78 163.715L229.879 191.979Z"></path><path d="M63.9921 26.1356C59.2293 22.0813 52.1512 22.3652 47.7284 26.7879L26.7874 47.7289C22.3647 52.1517 22.0808 59.2298 26.1351 63.9926L50.22 92.2862L92.2857 50.2205L63.9921 26.1356Z"></path></svg></button>`:''}
+  <button class="other" onclick="window.togglePinChannel('${sanitizeMinimChars(ch.id)}')" tlang="channel.${isPinned?'un':''}pin"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M117.4 6.28699C118.758 0.114336 126.401 -2.11969 130.87 2.34949L253.649 125.126C258.118 129.595 255.883 137.239 249.71 138.597L206.755 148.044C204.89 148.454 203.182 149.39 201.832 150.74L181.588 170.983C180.637 171.934 179.889 173.067 179.386 174.313L154.115 236.957C151.434 243.603 142.838 245.354 137.771 240.287L95.5138 198.03L10.2823 254.884C7.65962 256.633 4.16588 256.288 1.93663 254.058C-0.292345 251.829 -0.63778 248.336 1.11143 245.714L57.964 160.48L15.7091 118.225C10.642 113.158 12.3932 104.562 19.0392 101.881L81.6827 76.6112C82.9295 76.1083 84.0621 75.3587 85.0128 74.4081L105.257 54.1649C106.607 52.8149 107.542 51.1066 107.952 49.2421L117.4 6.28699Z"/>${isPinned?'<path d="M20 20L236 236" stroke-width="40" stroke-linecap="round"/>':''}</svg></button>
+  ${window.serverData[getCurrentServerUrl()]?.disable_channel_deletion?'':`<button class="other" onclick="window.leaveChannel('${sanitizeMinimChars(ch.id)}')" aria-label="Leave" tlang="channel.leave"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 256 256"><path d="M219.856 5.85765C227.666 -1.95251 240.33 -1.95258 248.14 5.85765L250.141 7.85961C257.951 15.6701 257.951 28.3334 250.141 36.1438L158.285 127.999L250.141 219.857C257.952 227.667 257.952 240.33 250.141 248.141L248.14 250.142C240.33 257.952 227.666 257.952 219.856 250.142L127.999 158.285L36.143 250.142C28.3326 257.952 15.6693 257.952 7.85884 250.142L5.85786 248.141C-1.95262 240.33 -1.95262 227.667 5.85786 219.857L97.7133 127.999L5.85786 36.1438C-1.95262 28.3333 -1.95261 15.6701 5.85786 7.85961L7.85884 5.85765C15.6693 -1.95245 28.3327 -1.95266 36.143 5.85765L127.999 97.7141L219.856 5.85765Z"/></svg></button>`}
 </span>`;
-    })
+}
+function showChannels(channels) {
+  if (channels.length<1) {
+    document.getElementById('channels').innerHTML = '<p tlang="channel.listempty"></p>';
+    window.translate();
+    return;
+  }
+  document.getElementById('channels').innerHTML = channels
+    .toSorted((a,b)=>PinnedChannelsStore.has(b.id)-PinnedChannelsStore.has(a.id))
+    .map(displayChannel)
     .join('');
 }
 async function getChannels() {
@@ -933,6 +941,12 @@ function leaveChannel(id, del=false) {
   });
 }
 window.leaveChannel = leaveChannel;
+function togglePinChannel(id) {
+  PinnedChannelsStore[PinnedChannelsStore.has(id)?'delete':'set'](id, true);
+  saveToDB();
+  showChannels(window.channels);
+}
+window.togglePinChannel = togglePinChannel;
 async function createChannel(type, data) {
   if (!data) {
     try {
@@ -1431,7 +1445,7 @@ tippy([document.getElementById('btn-languages'),document.getElementById('srv-btn
 });
 function postLogin() {
   // DB
-  let dbRequest = indexedDB.open('data', 1);
+  let dbRequest = indexedDB.open('data', 2);
   dbRequest.onupgradeneeded = function(e) {
     let db = e.target.result;
     if (!db.objectStoreNames.contains('servers')) {
@@ -1443,13 +1457,15 @@ function postLogin() {
     window.db = db;
     let tx = db.transaction(['servers'], 'readwrite');
     let store = tx.objectStore('servers');
-    let addreq = store.add({ notifs: {}, public: {} }, window.currentServer);
+    let addreq = store.add({ notifs: {}, public: {}, pinned: {} }, window.currentServer);
     addreq.onerror = (evt)=>{evt.preventDefault()};
     let req = store.get(window.currentServer);
     req.onsuccess = (e)=>{
       let val = e.target.result;
       ChannelNotifStore = new Map(Object.entries(val.notifs));
       window.ChannelNotifStore = ChannelNotifStore;
+      PinnedChannelsStore = new Map(Object.entries(val.pinned??{}));
+      window.PinnedChannelsStore = PinnedChannelsStore;
       PKStore = new Map(Object.entries(val.public));
       window.PKStore = PKStore;
     };

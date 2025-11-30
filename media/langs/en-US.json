@@ -56,6 +56,8 @@
   "channel.add": "Add channel",
   "channel.listempty": "You don't have any channels, add some with the +",
   "channel.edit": "Edit",
+  "channel.pin": "Pin channel",
+  "channel.unpin": "Unpin channel",
   "channel.leave": "Leave",
   "channel.delete": "Delete Channel",
   "channel.newdm": "Direct Message",
