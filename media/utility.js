@@ -451,6 +451,9 @@ function getCurrentKeyChannel(ch, callback=()=>{}) {
           return;
         }
         getKeyContents(ch, key.key_id, callback);
+      })
+      .catch(()=>{
+        callback();
       });
   } else {
     callback();

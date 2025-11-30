@@ -1063,10 +1063,6 @@ window.pinsPanel = ()=>{
       }
       document.querySelector('#pinsModal div').removeAttribute('tlang');
       let ch = window.channels.find(ch=>ch.id===window.currentChannel);
-      // Pre
-      for (let i=0; i<messages.length; i++) {
-        messages[i].content = messages[i].key?(await decodeMessage(messages[i])):messages[i].content;
-      }
       // Show
       let message = '';
       for (let i=0; i<messages.length; i++) {
