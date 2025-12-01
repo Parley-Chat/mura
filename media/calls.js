@@ -32,12 +32,15 @@ async function connect(min=false) {
   // Connect
   let servers = [{urls: window.serverData[getCurrentServerUrl()].calls.stun_servers}];
   if (window.serverData[getCurrentServerUrl()].calls.turn_servers.length) servers.push({
-    urls: [window.serverData[getCurrentServerUrl()].calls.turn_servers],
+    urls: window.serverData[getCurrentServerUrl()].calls.turn_servers,
     username: window.serverData[getCurrentServerUrl()].calls.turn_username,
     credential: window.serverData[getCurrentServerUrl()].calls.turn_password
   });
-  let config = { iceServers: servers };
-  peerConnection = new RTCPeerConnection(config);
+  peerConnection = new RTCPeerConnection({
+    iceCandidatePoolSize: 8,
+    iceServers: servers,
+    iceTransportPolicy: 'all'
+  });
 
   if (mediaStream) {
     mediaStream.getTracks().forEach(track=>{
