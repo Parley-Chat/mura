@@ -30,7 +30,7 @@ function showConnections() {
 async function connect(min=false) {
   if (peerConnection) return;
   // Connect
-  let servers = window.serverData[getCurrentServerUrl()].calls.stun_servers.map(url=>({urls:[url]}));
+  let servers = [{urls: window.serverData[getCurrentServerUrl()].calls.stun_servers}];
   if (window.serverData[getCurrentServerUrl()].calls.turn_servers.length) servers.push({
     urls: [window.serverData[getCurrentServerUrl()].calls.turn_servers],
     username: window.serverData[getCurrentServerUrl()].calls.turn_username,
