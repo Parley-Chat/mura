@@ -437,8 +437,17 @@ window.downloadfile = (id, name)=>{
 };
 
 let MDCustom = (txt)=>{
-  return txt
+  // User mentions
+  txt = txt
     .replaceAll(/@([a-zA-Z0-9_\-]{3,20}?|e)(?=$|\s|\*|\_|\~|<|@)/gi, function(match){return `<span class="mention">${match}</span>`});
+  // Emoji
+  txt = txt
+    .replaceAll(/:[a-zA-Z0-9:_-]+?:/g, (match)=>{
+      if (!window.emoji_colons[match.toLowerCase()]) return match;
+      return window.emoji_colons[match.toLowerCase()];
+    });
+  txt = twemoji.parse(txt, twemojiConfig);
+  return txt;
 };
 
 const textdisplay = ['text/plain','text/html','text/css','text/csv','text/tab-separated-values','text/markdown','text/x-markdown','text/xml','application/xhtml+xml','text/javascript','text/ecmascript','text/x-python','text/x-c','text/x-c++','text/x-java','text/x-java-source','text/x-rustsrc','text/x-go','text/x-php','text/x-perl','text/x-ruby','text/x-lua','text/vcard','text/vcalendar','text/calendar','text/x-vcard','text/x-vcalendar','application/json','application/ld+json','application/xml','application/javascript','application/ecmascript','application/x-www-form-urlencoded','application/yaml','application/x-yaml','text/x-yaml','application/graphql','application/sql','application/toml','application/x-toml','text/x-toml','application/ini','text/x-ini','application/x-sh','application/x-httpd-php']

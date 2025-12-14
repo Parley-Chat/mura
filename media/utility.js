@@ -14,6 +14,11 @@ const DummyUser = {
   username: 'r',
   pfp: null
 };
+const twemojiConfig = {
+  size: 'svg',
+  ext: '.svg',
+  base: 'https://raw.githubusercontent.com/twitter/twemoji/refs/heads/master/assets/'
+};
 
 Object.prototype.merge = (a,b)=>{
   a ??= {};

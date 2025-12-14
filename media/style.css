@@ -482,6 +482,12 @@ main {
 .message.mention {
   background-color: var(--mention);
 }
+.emoji {
+  width: 1em;
+  height: 1em;
+  object-fit: contain;
+  vertical-align: middle;
+}
 .message .avatar {
   display: flex;
   flex: 1;
@@ -723,6 +729,7 @@ main {
 .bar textarea, .bar button {
   margin: 0px;
   border: none;
+  border-radius: 2rem;
   background: none;
 }
 .bar textarea {
