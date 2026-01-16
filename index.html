@@ -30,9 +30,22 @@
     <script src="./external/split.js" integrity="sha384-inRU+dMUHZkI+by/jwwjwqQTdT+2ETewFWSk9dnXIs5XrUtx22wq5ODzVh2dx1QE" crossorigin="anonymous"></script>
     <script src="./external/popperjs.js" integrity="sha384-G7huVt67Qr1CANYHnRvh0huQFYyMgIREFwJrh2qZw/Capp1tCC3Px+meA/5YAVG2" crossorigin="anonymous"></script>
     <script src="./external/tippy.js" integrity="sha384-Ex/maivNgbNC5oCY7IoOEm1CnA5wOx/NxMhrbCcaABO5rOlIFVMIaPWL/FgQqME5" crossorigin="anonymous"></script>
-    <script src="./external/mdparse.js" integrity="sha384-zciAg67wpK9QS+vgqYGsvAQQUvlmlqEiAHmDqtrezsXGvQbzs5nlIr21w645lqjA" crossorigin="anonymous"></script>
+    <script src="./external/mdparse.js" crossorigin="anonymous"></script>
     <script src="./external/twemoji.js" integrity="sha384-32KMvAMS4DUBcQtHG6fzADguo/tpN1Nh6BAJa2QqZc6/i0K+YPQE+bWiqBRAWuFs" crossorigin="anonymous"></script>
-    <script src="./external/colons.js" integrity="sha384-m5MkO1X75t0YJQTvuSSk8J2WGN0MjQqTaWxdUEixN765FGVeO9dFman0d2qXwIfB" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js" type="module"></script>
+    <script>
+      // From emoji-picker-element-data
+      fetch('./external/emoji.json')
+        .then(res=>res.json())
+        .then(res=>{
+          window.emojiData = res;
+          window.emojiShort = {};
+          res.forEach(emoji=>{
+            emoji.shortcodes.forEach(sc=>window.emojiShort[sc]=emoji.emoji);
+            emoji.tags.forEach(tag=>{if(!window.emojiShort[tag]&&Number.isNaN(Number(tag)))window.emojiShort[tag]=emoji.emoji});
+          });
+        });
+    </script>
   </head>
   <body>
     <dialog id="ask">
@@ -229,6 +242,7 @@
           </div>
         </div>
         <div id="messages"></div>
+        <emoji-picker data-source='./external/emoji.json' style="display:none"></emoji-picker>
         <div id="mentionmenu" style="display:none"></div>
         <div id="replypreview" style="display:none">
           <span tlang="message.replying">Replying to</span>
@@ -240,7 +254,7 @@
           <button id="addfilebutton" tlang="message.addfile"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" style="color:var(--text-2)"><rect x="103" width="50" height="256" rx="25"/><rect y="103" width="256" height="50" rx="25"/></svg></button>
           <input id="addfile" type="file" multiple style="display:none">
           <textarea id="input" tlang="message" placeholder="Message" rows="1"></textarea>
-          <!--<button id="emoj" tlang="message.emoj"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M128 0C198.692 0 256 57.3076 256 128C256 198.692 198.692 256 128 256C57.3076 256 0 198.692 0 128C0 57.3076 57.3076 0 128 0ZM53 143C53 162.891 60.9016 181.968 74.9668 196.033C89.032 210.098 108.109 218 128 218C147.891 218 166.968 210.098 181.033 196.033C195.098 181.968 203 162.891 203 143H53ZM78 71C64.1929 71 53 82.1929 53 96C53 109.807 64.1929 121 78 121C91.8071 121 103 109.807 103 96C103 82.1929 91.8071 71 78 71ZM178 71C164.193 71 153 82.1929 153 96C153 109.807 164.193 121 178 121C191.807 121 203 109.807 203 96C203 82.1929 191.807 71 178 71Z"/></svg></button>-->
+          <button id="emoj" tlang="message.emoji"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M128 0C198.692 0 256 57.3076 256 128C256 198.692 198.692 256 128 256C57.3076 256 0 198.692 0 128C0 57.3076 57.3076 0 128 0ZM53 143C53 162.891 60.9016 181.968 74.9668 196.033C89.032 210.098 108.109 218 128 218C147.891 218 166.968 210.098 181.033 196.033C195.098 181.968 203 162.891 203 143H53ZM78 71C64.1929 71 53 82.1929 53 96C53 109.807 64.1929 121 78 121C91.8071 121 103 109.807 103 96C103 82.1929 91.8071 71 78 71ZM178 71C164.193 71 153 82.1929 153 96C153 109.807 164.193 121 178 121C191.807 121 203 109.807 203 96C203 82.1929 191.807 71 178 71Z"/></svg></button>
           <button id="sned" tlang="message.sned"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M240.772 120.273C246.865 123.165 246.865 131.835 240.772 134.727L19.2293 239.874C12.5566 243.041 5.52289 236.245 8.45783 229.467L43.5297 148.472C44.8279 145.474 47.5088 143.299 50.7102 142.647L110.635 130.44C113.837 129.787 113.837 125.213 110.635 124.56L50.7102 112.352C47.5088 111.7 44.8279 109.525 43.5297 106.527L8.45792 25.5326C5.52295 18.7546 12.5566 11.9595 19.2294 15.1264L240.772 120.273Z"/></svg></button>
         </div>
         <div class="bar fake" tlang="message.cant" style="display:none">You can't send messages here</div>

@@ -411,6 +411,7 @@ nav button, footer button {
 }
 
 main {
+  position: relative;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -487,6 +488,26 @@ main {
   height: 1em;
   object-fit: contain;
   vertical-align: middle;
+}
+.big-emoji .emoji {
+  width: 2em;
+  height: 2em;
+}
+emoji-picker {
+  --background: var(--bg-1);
+  --border-color: var(--bg-2);
+  --input-border-color: var(--text-2);
+  --input-font-color: var(--text-1);
+  --input-placeholder-color: var(--text-2);
+  --outline-color: var(--text-1);
+  --category-font-color: var(--text-1);
+  --button-active-background: var(--bg-2);
+  --button-hover-background: var(--bg-2);
+  --border-radius: 0.5rem;
+  position: absolute;
+  bottom: 50px;
+  right: 16px;
+  z-index: 10;
 }
 .message .avatar {
   display: flex;

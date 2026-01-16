@@ -131,6 +131,7 @@
   "message.reply": "Antwoorden",
   "message.replying": "Antwoord op",
   "message.edit": "Bewerken",
+  "message.emoji": "Emoji",
   "message.edit.save": "Opslaan",
   "message.edit.cancel": "Annuleren",
   "message.edited": "(Bewerkt)",

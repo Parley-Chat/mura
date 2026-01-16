@@ -34,6 +34,8 @@ window.MDParse = function(text, custom=(t)=>{return t}) {
     .replaceAll('~lt;', '&lt;')
     .replaceAll('~quot;', '&quot;')
     .replaceAll("'", '&apos;');
+  // Custom
+  text = custom(text);
   // General
   text = text
     .replaceAll(/\`.+?\`/g, function(match){return '<code>'+reservemd(match.slice(1,-1))+'</code>'}) // Inline code
@@ -51,8 +53,6 @@ window.MDParse = function(text, custom=(t)=>{return t}) {
     .replaceAll(/^## .+?$/gm, function(match){return '<span style="font-size:125%">'+match.slice(3)+'</span>'}) // 2nd heading
     .replaceAll(/^# .+?$/gm, function(match){return '<span style="font-size:150%">'+match.slice(2)+'</span>'}) // 1st heading
     .replaceAll(/^-# .+?$/gm, function(match){return '<span style="font-size:80%;color:var(--text-2);">'+match.slice(3)+'</span>'}); // Parley: -1st heading
-
-  text = custom(text);
 
   // Reserve
   text = text.replaceAll(/¬r[0-9]{16}¬r/g, function(match){

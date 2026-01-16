@@ -131,6 +131,7 @@
   "message.edited": "(Editado)",
   "message.pin": "Fijar",
   "message.unpin": "Desfijar",
+  "message.emoji": "Emoji",
   "message.delete": "Borrar",
   "message.more": "Más",
   "message.nopins": "No hay mensajes fijados",

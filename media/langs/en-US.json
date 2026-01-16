@@ -131,6 +131,7 @@
   "message.edited": "(Edited)",
   "message.pin": "Pin",
   "message.unpin": "Unpin",
+  "message.emoji": "Emoji",
   "message.delete": "Delete",
   "message.more": "More",
   "message.nopins": "There are no pinned messages",

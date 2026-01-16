@@ -131,6 +131,7 @@
   "message.edited": "(ویرایش شده)",
   "message.pin": "سنجاق",
   "message.unpin": "برداشتن سنجاق",
+  "message.emoji": "ایموجی",
   "message.delete": "حذف",
   "message.more": "بیشتر",
   "message.nopins": "پیام‌های سنجاق شده‌ای وجود ندارد",
