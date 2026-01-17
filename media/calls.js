@@ -6,6 +6,7 @@ let queue = [];
 let gc = [];
 
 let answered = false;
+let hasvideo = false;
 
 const micIcons = [
   '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><rect x="83" y="0.00195312" width="90" height="150" rx="45"/><path d="M53 95.002V105.002C53 146.423 86.5786 180.002 128 180.002C169.421 180.002 203 146.423 203 105.002V95.002" stroke-width="30" stroke-linecap="round" fill="none"/><path d="M128 180.002V240.002" stroke-width="30" stroke-linecap="round" fill="none"/><path d="M153 241.002H103" stroke-width="30" stroke-linecap="round" fill="none"/><path d="M58 235.002L198 20.002" stroke-width="40" stroke-linecap="round" fill="none"/></svg>',
@@ -17,7 +18,7 @@ const camIcons = [
 ];
 
 function showConnections() {
-  if (!display) return;
+  if (!display||hasvideo) return;
   backendfetch(`/api/v1/channel/${window.currentChannel}/call`)
     .then(res=>{
       if (!res.active) return;
@@ -41,6 +42,7 @@ async function connect(min=false) {
     iceServers: servers,
     iceTransportPolicy: 'all'
   });
+  if (window.debugCall) console.log(peerConnection);
 
   if (mediaStream) {
     mediaStream.getTracks().forEach(track=>{
@@ -57,28 +59,18 @@ async function connect(min=false) {
     });
   };
   peerConnection.ontrack = (evt)=>{
-    switch(evt.track.kind) {
-      case 'audio':
-        if (!evt.streams||!evt.streams[0]) return;
-        let audio = new Audio();
-        audio.autoplay = true;
-        audio.playsinline = true;
-        audio.srcObject = evt.streams[0];
-        gc.push(audio);
-        break;
-      case 'video':
-        if (!evt.streams||!evt.streams[0]) return;
-        let video = document.createElement('video');
-        video.style.display = 'none';
-        video.autoplay = true;
-        video.playsinline = true;
-        video.srcObject = evt.streams[0];
-        document.body.appendChild(video);
-        gc.push(video);
-        break;
-    }
+    if (!evt.streams||!evt.streams[0]) return;
+    let elem = document.createElement(evt.track.kind);
+    elem.style.display = 'none';
+    elem.autoplay = true;
+    elem.playsInline = true;
+    elem.srcObject = evt.streams[0];
+    gc.push(elem);
+    document.body.appendChild(elem);
+    if (window.debugCall) console.log(evt.track, evt.streams[0], gc);
   };
   peerConnection.onconnectionstatechange = ()=>{
+    if (window.debugCall) console.log(peerConnection.connectionState);
     switch (peerConnection.connectionState) {
       case 'disconnected':
       case 'failed':
@@ -132,7 +124,7 @@ export async function startCall(channel, ans=false) {
     // Video (optional)
     try {
       let video = await navigator.mediaDevices.getUserMedia({ video: true });
-      const track = video.getVideoTracks()[0];
+      let track = video.getVideoTracks()[0];
       mediaStream.addTrack(track);
       mediaStream.getVideoTracks()[0].enabled = false;
       camButton.disabled = false;
@@ -155,6 +147,11 @@ export async function startCall(channel, ans=false) {
     videoTrack.enabled = !videoTrack.enabled;
     camButton.setAttribute('tlang', 'channel.call.camera.'+(videoTrack.enabled?'off':'on'));
     camButton.innerHTML = camIcons[Number(videoTrack.enabled)];
+    backendfetch(`/api/v1/channel/${currentCallCh}/call/signal`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'settings', data: { video: videoTrack.enabled } })
+    });
   };
   // Join call
   await backendfetch(`/api/v1/channel/${channel}/call`, {
@@ -191,6 +188,7 @@ export async function event(type, data) {
   }
 }
 async function handleSignal(data) {
+  if (window.debugCall) console.log(data);
   switch(data.type) {
     case 'offer':
       await peerConnection.setRemoteDescription(new RTCSessionDescription(data.data));
@@ -199,7 +197,7 @@ async function handleSignal(data) {
       await backendfetch(`/api/v1/channel/${currentCallCh}/call/signal`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type:'answer', data: answer })
+        body: JSON.stringify({ type: 'answer', data: answer })
       });
       break;
     case 'answer':
@@ -216,6 +214,14 @@ async function handleSignal(data) {
       } catch(err) {
         // Ignore :3
       }
+      break;
+    case 'settings':
+      hasvideo = data.data.video;
+      let video = gc.find(g=>g.tagName.toLowerCase()==='video');
+      video.style.display = hasvideo?'':'none';
+      display.querySelector('.grid').innerText = '';
+      (hasvideo?display.querySelector('.grid'):document.body).appendChild(video);
+      showConnections();
       break;
   }
 }
@@ -240,6 +246,7 @@ export function leaveCall() {
       mediaStream?.getTracks().forEach(track=>track.stop());
       mediaStream = null;
       gc.forEach(garbage=>garbage.remove());
+      gc = [];
     });
 }
 window.addEventListener('pagehide', ()=>{
