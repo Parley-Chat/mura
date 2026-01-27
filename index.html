@@ -100,7 +100,7 @@
     </dialog>
     <dialog id="signup-modal" closedby="none">
       <h2 tlang="signup.title">Sign up</h2>
-      <p tlang="signup.save">Save these to be able to log in</p>
+      <p tlang="signup.save" style="color:var(--invalid)">Save these to be able to log in</p>
       <span>
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256"><path d="M177.5 0C220.854 0 256 35.1456 256 78.5C256 121.854 220.854 157 177.5 157C134.146 157 99 121.854 99 78.5C99 35.1456 134.146 0 177.5 0ZM203.5 30C191.074 30 181 40.0736 181 52.5C181 64.9264 191.074 75 203.5 75C215.926 75 226 64.9264 226 52.5C226 40.0736 215.926 30 203.5 30Z"/><path d="M118.509 86.0404C123.098 81.4436 130.783 82.3726 134.144 87.9304L160.948 132.254C163.328 136.19 162.717 141.241 159.467 144.495L137.402 166.588C135.526 168.467 132.981 169.522 130.327 169.522H96.3242C93.5627 169.522 91.3242 171.761 91.3242 174.522V202.761C91.3242 208.284 86.847 212.761 81.3241 212.761H53.1621C50.4006 212.761 48.1621 215 48.1621 217.761V246C48.1621 251.523 43.6849 256 38.1621 256H9.99999C4.47715 256 0 251.523 0 246V208.898C0 206.249 1.05112 203.708 2.92264 201.833L118.509 86.0404Z"/></svg>
         <label for="s-passkey" tlang="login.passkey">Passkey:</label>
@@ -112,7 +112,7 @@
         <span tlang="login.keyfile">Key file:</span>
         <a href="#" download id="s-download"><button tlang="signup.download">Download</button></a>
       </span>
-      <button tlang="signup.done" onclick="this.parentElement.close();window.postLogin();">Done</button>
+      <button tlang="signup.done" id="s-done" disabled>Done</button>
     </dialog>
     <dialog id="signup-password" closedby="none">
       <h2 tlang="servers.title">Servers</h2>

@@ -156,7 +156,24 @@ document.getElementById('login-btn').onclick = async function(){
           })], { type: 'text/plain' });
           document.getElementById('s-download').href = URL.createObjectURL(blob);
           document.getElementById('s-download').download = document.getElementById('l-username').value+'.keys';
-          document.getElementById('signup-modal').showModal();
+          let modal = document.getElementById('signup-modal');
+          modal.showModal();
+          let doneBtn = document.getElementById('s-done');
+          doneBtn.onclick = ()=>{};
+          doneBtn.setAttribute('disabled','');
+          doneBtn.removeAttribute('tlang');
+          doneBtn.innerText = '...';
+          setTimeout(()=>{doneBtn.innerText = '..';}, 1000);
+          setTimeout(()=>{doneBtn.innerText = '.';}, 2000);
+          setTimeout(()=>{
+            doneBtn.setAttribute('tlang','signup.done');
+            window.translate();
+            doneBtn.removeAttribute('disabled');
+            doneBtn.onclick = ()=>{
+              modal.close();
+              window.postLogin();
+            };
+          }, 3000);
         } else {
           window.postLogin();
         }
