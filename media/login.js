@@ -1,7 +1,7 @@
 document.getElementById('login-modal').onclose = document.getElementById('signup-modal').onclose = document.getElementById('signup-password').onclose = (evt) => {
   evt.preventDefault();
 };
-document.getElementById('instead-btn').onclick = function() {
+document.getElementById('instead-btn').onclick = ()=>{
   let errors = document.getElementById('l-errors');
   let logining = document.querySelector('[tlang="login.title"]');
   document.querySelector(`[tlang="${logining?'login':'signup'}.title"]`).setAttribute('tlang', `${logining?'signup':'login'}.title`);
@@ -13,7 +13,7 @@ document.getElementById('instead-btn').onclick = function() {
 }
 
 let TypingTimer = null;
-document.getElementById('l-username').oninput = function(evt) {
+document.getElementById('l-username').oninput = (evt)=>{
   clearTimeout(TypingTimer);
   evt.target.value = evt.target.value.toLowerCase();
   TypingTimer = setTimeout(()=>{
@@ -41,7 +41,7 @@ document.getElementById('l-username').oninput = function(evt) {
 }
 
 let LoginFileContents = {};
-document.getElementById('l-keyfile').onchange = function(evt) {
+document.getElementById('l-keyfile').onchange = (evt)=>{
   const file = evt.target.files[0];
   if (!file) {
     LoginFileContents = {};
@@ -49,20 +49,21 @@ document.getElementById('l-keyfile').onchange = function(evt) {
   }
 
   const reader = new FileReader();
-  reader.onload = function(res){
+  reader.onload = (res)=>{
     try {
       LoginFileContents = JSON.parse(res.target.result);
+      if (LoginFileContents.passKey) document.getElementById('l-passkey').value = LoginFileContents.passKey;
     } catch(err) {
       LoginFileContents = {};
     }
   };
-  reader.onerror = function(err){
+  reader.onerror = ()=>{
     LoginFileContents = {};
   };
   reader.readAsText(file);
 };
 
-document.getElementById('login-btn').onclick = async function(){
+document.getElementById('login-btn').onclick = async()=>{
   const errors = document.getElementById('l-errors');
   if (!document.getElementById('l-username').checkValidity() || document.getElementById('l-username').getAttribute('invalid')) {
     errors.setAttribute('tlang','error.username');
