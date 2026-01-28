@@ -6,7 +6,7 @@ document.getElementById('instead-btn').onclick = ()=>{
   let logining = document.querySelector('[tlang="login.title"]');
   document.querySelector(`[tlang="${logining?'login':'signup'}.title"]`).setAttribute('tlang', `${logining?'signup':'login'}.title`);
   document.querySelector(`[tlang="${logining?'login':'signup'}.button"]`).setAttribute('tlang', `${logining?'signup':'login'}.button`);
-  this.setAttribute('tlang', `${logining?'signup':'login'}.instead`);
+  document.getElementById('instead-btn').setAttribute('tlang', `${logining?'signup':'login'}.instead`);
   document.getElementById('s-hide').style.display = logining?'none':'';
   errors.setAttribute('tlang', 'empty');
   document.getElementById('l-username').removeAttribute('invalid');

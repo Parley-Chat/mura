@@ -825,6 +825,7 @@ txt-loader {
 
 /* Calls */
 #call-display {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -854,6 +855,12 @@ txt-loader {
 }
 #call-display .controls button {
   padding: 5px;
+}
+#call-display .expand {
+  display: none;
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
 }
 
 /* Scrollbars */

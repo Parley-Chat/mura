@@ -23,7 +23,7 @@ function showConnections() {
     .then(res=>{
       if (!res.active) return;
       display.querySelector('.grid').innerHTML = res.participants
-        .map(m=>`<img src="${m.pfp?pfpById(m.pfp):userToDefaultPfp(m)}">`)
+        .map(m=>`<img src="${m.pfp?pfpById(m.pfp):userToDefaultPfp(m)}" draggable="false">`)
         .join('');
     });
 }

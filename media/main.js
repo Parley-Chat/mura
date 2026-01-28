@@ -638,7 +638,7 @@ function displayChannel(ch) {
   <button onclick="window.loadChannel('${ch.id}')">
     <img src="${ch.pfp?pfpById(ch.pfp):userToDefaultPfp(ch)}" width="30" height="30" aria-hidden="true" loading="lazy">
     <span class="div">
-      <span class="name"${ch.name.length>7?` title="${sanitizeHTML(ch.name)}"`:''}>${sanitizeHTML(ch.name)}</span>
+      <span class="name"${ch.name.length>7||(ch.type===1&&ch.username)?` title="${sanitizeHTML(ch.username??ch.name)}"`:''}>${sanitizeHTML(ch.name)}</span>
       ${ch.last_message?`<span class="msg">${ch.last_message.author.length?ch.last_message.author+': ':''}${lstmsgcnt.replaceAll(/:([a-zA-Z0-9_<!%&\?\*\+\.\- ]+?):/g,(match,g1)=>window.emojiShort[g1.toLowerCase()]??match)}</span>`:''}
     </span>
     ${(ch.unread_count??0)>0?`<span class="unread">${ch.unread_count}</span>`:''}
@@ -673,6 +673,7 @@ async function getChannels() {
       id: sanitizeMinimChars(ch.id),
       type: Number(ch.type),
       name: ch.name??'',
+      username: sanitizeMinimChars(ch.username??'')||null,
       pfp: ch.pfp?sanitizeMinimChars(ch.pfp):null,
       permission: perm,
       base_permissions: chperm,
@@ -832,7 +833,7 @@ function loadChannel(id) {
     document.querySelector('main').style.display = '';
   }
   // Labels & Buttons
-  document.querySelector('.top .name').innerText = ch.name;
+  document.querySelector('.top .name').innerText = ch.name+(ch.type===1&&ch.username?` (${ch.username})`:'');
   document.querySelector('.top .type').outerHTML = TypeIcons[ch.type];
   document.getElementById('callsButton').style.display = (ch.type===1&&(window.serverData[getCurrentServerUrl()]?.calls?.enabled||false))?'':'none';
   document.getElementById('bansButton').style.display = 'none';
