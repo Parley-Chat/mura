@@ -36,8 +36,6 @@ const InvalidSignature = Symbol('Invalid signature');
 const messageInput = document.getElementById('input');
 window.messageInput = messageInput;
 const messageSned = document.getElementById('sned');
-const fileButton = document.getElementById('addfilebutton');
-const fileInput = document.getElementById('addfile');
 const mentionMenu = document.getElementById('mentionmenu');
 const imageicon = '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 256 256"><path fill-rule="evenodd" clip-rule="evenodd" d="M0 40C0 28.9543 8.95431 20 20 20H236C247.046 20 256 28.9543 256 40V215C256 226.046 247.046 235 236 235H20C8.95431 235 0 226.046 0 215V40ZM78 68C78 81.8071 66.8071 93 53 93C39.1929 93 28 81.8071 28 68C28 54.1929 39.1929 43 53 43C66.8071 43 78 54.1929 78 68ZM150.135 91.8679C153.266 86.7107 160.734 86.7107 163.865 91.8679L234.817 208.76C238.075 214.127 234.22 221 227.952 221H142.029H86.048H26.9705C20.3787 221 16.6463 213.367 20.6525 208.08L78.1821 132.152C81.3664 127.949 87.6335 127.949 90.8179 132.152L110.176 157.7L150.135 91.8679Z"/></svg>';
 window.messages = {};
@@ -232,6 +230,9 @@ messageInput.onkeydown = function(event) {
 messageInput.onkeyup = handleMentionMenu;
 messageInput.onmouseup = handleMentionMenu;
 messageSned.onclick = MessageSend;
+// Files
+const attachAdd = document.getElementById('addattachmentbutton');
+const fileInput = document.getElementById('addfile');
 function elemfilepreview(file) {
   let url = URL.createObjectURL(file);
   let type = file.type.split('/')[0];
@@ -256,9 +257,6 @@ function filePreview() {
 </div>`)
     .join('');
 }
-fileButton.onclick = ()=>{
-  fileInput.click();
-};
 function addFiles(fils) {
   files = files.concat(fils);
   files = files.filter(file=>{
@@ -278,6 +276,111 @@ fileInput.onchange = (event)=>{
   addFiles(Array.from(event.target.files));
   fileInput.value = '';
 };
+const recorderModal = document.getElementById('recorder');
+let mediaRecorder;
+let audioChunks = [];
+
+recorderModal.querySelector('.toggle').onclick = async () => {
+  if (mediaRecorder) {
+    mediaRecorder.stop();
+    recorderModal.querySelector('.toggle').setAttribute('tlang', 'message.voice.record');
+    return;
+  }
+  recorderModal.querySelector('span').innerText = '';
+  recorderModal.querySelector('.send').disabled = true;
+  recorderModal.querySelector('.send').onclick = ()=>{};
+  recorderModal.querySelector('.toggle').setAttribute('tlang', 'message.voice.stop');
+
+  let canvas = recorderModal.querySelector('canvas');
+  let ctx = canvas.getContext('2d');
+
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  // View
+  let audioContext = new AudioContext();
+  let source = audioContext.createMediaStreamSource(stream);
+  let analyser = audioContext.createAnalyser();
+  analyser.fftSize = 2048;
+  let dataArray = new Uint8Array(analyser.fftSize);
+  source.connect(analyser);
+
+  let volumes = Array.from({ length: 30 }, _=>0.01);
+  let wait = 0;
+  function getVolume() {
+    if (!mediaRecorder) {
+      audioContext.close();
+      analyser.disconnect();
+      return;
+    }
+    if (wait<2) {
+      wait++;
+      requestAnimationFrame(getVolume);
+      return;
+    }
+    wait = 0;
+
+    analyser.getByteTimeDomainData(dataArray);
+    let rms = 0;
+    for (let i = 0; i < dataArray.length; i++) {
+      const value = Math.min((dataArray[i]-128)/64, 1);
+      rms += value * value;
+    }
+    rms = Math.max(Math.sqrt(rms/dataArray.length), 0.01);
+    volumes.push(rms);
+    if (volumes.length>30) volumes.shift();
+
+    ctx.clearRect(0, 0, 300, 100);
+    volumes.forEach((val,idx)=>{
+      ctx.fillStyle = 'hsl('+val*160+', 50%, 50%)';
+      ctx.beginPath();
+      ctx.roundRect(10*idx+1, 100-val*100, 8, val*100, 10);
+      ctx.fill();
+    });
+    requestAnimationFrame(getVolume);
+  }
+  // Record
+  mediaRecorder = new MediaRecorder(stream);
+  mediaRecorder.start();
+  mediaRecorder.ondataavailable = (evt)=>{
+    audioChunks.push(evt.data);
+  };
+  mediaRecorder.onstop = async()=>{
+    let blob = new Blob(audioChunks, { type: 'audio/webm' });
+    let arrayBuffer = await blob.arrayBuffer();
+    let audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    recorderModal.querySelector('span').innerText = formatDuration(audioBuffer.duration);
+    audioChunks = [];
+    mediaRecorder = null;
+    stream.getTracks().forEach(track=>track.stop());
+    recorderModal.querySelector('.send').disabled = false;
+    recorderModal.querySelector('.send').onclick = ()=>{
+      addFiles([new File([blob], 'voice.webm', { type: 'audio/webm' })]);
+      recorderModal.close();
+    };
+  };
+
+  getVolume();
+};
+tippy(attachAdd, {
+  allowHTML: true,
+  content: `<button tlang="message.file"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M156.333 15.0465C156.333 11.4829 160.642 9.69822 163.162 12.2181L216.505 65.5612C219.025 68.0811 217.24 72.3896 213.677 72.3896H166.333C160.811 72.3896 156.333 67.9125 156.333 62.3896V15.0465Z"/><path d="M52.2895 5C41.6362 5 33 13.6362 33 24.2895V232.616C33 243.269 41.6362 251.905 52.2895 251.905H204.033C214.687 251.905 223.323 243.269 223.323 232.616V94.1579C223.323 87.5305 217.95 82.1579 211.323 82.1579H165.454C154.801 82.1579 146.165 73.5217 146.165 62.8684V17C146.165 10.3726 140.792 5 134.165 5H52.2895Z"/></svg> <span tlang="message.file">File</span></button>
+<button tlang="message.voice"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><rect x="83" width="90" height="150" rx="45"/><path d="M53 95V105C53 146.421 86.5786 180 128 180C169.421 180 203 146.421 203 105V95" stroke-width="30" stroke-linecap="round" fill="none"/><path d="M128 180V240" stroke-width="30" stroke-linecap="round" fill="none"/><path d="M153 241H103" stroke-width="30" stroke-linecap="round" fill="none"/></svg> <span tlang="message.voice">Voice message</span></button>`,
+  interactive: true,
+  trigger: 'click',
+  placement: 'top-start',
+  onShow: (instance)=>{
+    instance.popper.querySelector('[tlang="message.file"]').onclick = ()=>{
+      instance.hide();
+      fileInput.click();
+    };
+    instance.popper.querySelector('[tlang="message.voice"]').onclick = ()=>{
+      instance.hide();
+      if (mediaRecorder) mediaRecorder.stop();
+      audioChunks = [];
+      mediaRecorder = null;
+      recorderModal.showModal();
+    };
+  }
+});
 messageInput.onpaste = (event)=>{
   let items = (event.clipboardData??event.originalEvent.clipboardData).items;
   items = Array.from(items).filter(item=>item.kind==='file').map(item=>item.getAsFile());

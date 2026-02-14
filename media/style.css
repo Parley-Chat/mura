@@ -81,7 +81,6 @@ button:hover {
 button:has(svg) {
   display: flex;
   align-items: center;
-  justify-content: center;
   padding: 0px;
 }
 button:disabled {
@@ -214,6 +213,13 @@ dialog {
   flex-direction: column;
   align-items: center;
   overflow: visible;
+}
+
+#recorder div {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  justify-content: center;
 }
 
 side {

@@ -77,10 +77,10 @@ function sanitizeMinimChars(text) {
   return text.replaceAll(/[^a-zA-Z0-9_\-]/g,'');
 }
 function sanitizeAttr(inp) {
-  return inp.replaceAll('\\', '\\\\').replaceAll('¬', '¬|').replaceAll('"', "¬@").replaceAll(/\r?\n/g, '\\n');
+  return inp.replaceAll('\\', '\\\\').replaceAll('¬', '¬|').replaceAll('"', '¬@').replaceAll(/\r?\n/g, '\\n');
 }
 function desanitizeAttr(inp) {
-  return inp.replaceAll("¬@", '"').replaceAll('¬|', '¬');
+  return inp.replaceAll('¬@', '"').replaceAll('¬|', '¬');
 }
 
 function bufferToBase64(buf) {
@@ -212,8 +212,8 @@ function formatTime(date) {
 
   let prefix = '';
   if (Math.abs(diff)<=1) {
-    prefix = new Intl.RelativeTimeFormat(locale, { numeric: "auto" })
-      .format(diff, "day");
+    prefix = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' })
+      .format(diff, 'day');
   } else {
     prefix = new Intl.DateTimeFormat(locale, {
       year: 'numeric',
@@ -233,6 +233,9 @@ function formatHour(date) {
     minute: '2-digit',
     hour12: false
   }).format(date);
+}
+function formatDuration(time) {
+  return `${time>3599?`${Math.floor(time/3600)}h `:''}${time>59?`${Math.floor(time/60)}m `:''}${Math.floor(time)%60}s`
 }
 
 const DefaultPFPRadix = 12;
@@ -286,7 +289,7 @@ async function OAEPtoPSS(key, private=false) {
   return imported;
 }
 async function getRSAKeyFromPublic64(public) {
-  return await window.crypto.subtle.importKey("spki",
+  return await window.crypto.subtle.importKey('spki',
     base64ToBuffer(public),
     {
       name: 'RSA-OAEP',
