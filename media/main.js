@@ -486,8 +486,8 @@ window.editMessage = (msg, key, elem, cont)=>{
       CryptEditMessage(window.currentChannel, msg, textarea.value, key);
     }
   };
-  elem.querySelector('button.cancel').onclick = ()=>{
-    showMessages(window.messages[window.currentChannel]);
+  elem.querySelector('button.cancel').onclick = async()=>{
+    elem.parentElement.outerHTML = await displayMessage(window.messages[window.currentChannel].find(m=>m.id===msg), window.channels.find(ch=>ch.id===window.currentChannel));
   };
 };
 window.deleteMessage = (msg)=>{
@@ -497,6 +497,7 @@ window.deleteMessage = (msg)=>{
 };
 window.previewMessage = (msg)=>{
   let m = document.getElementById(`m-${msg}`);
+  if (!m) return;
   m.scrollIntoView({ behavior: 'smooth' });
   m.classList.add('highlight');
   setTimeout(()=>{
@@ -614,7 +615,7 @@ async function displayMessage(msg, ch, limited=0) {
   // Replies
   if (msg.replied_to) {
     let reply = window.messages[ch.id].find(mes=>mes.id===msg.replied_to);
-    msg.reply = reply.iv?Object.fromEntries(Object.entries(reply).concat([['content','...']])):reply;
+    msg.reply = (!reply||reply.iv)?Object.fromEntries(Object.entries(reply??{}).concat([['content','...']])):reply;
   }
   return `<div class="message${msg.ghost?' ghost-'+msg.ghost:''}${(new RegExp('@('+window.username+'|e)($|\\s|\\*|\\_|\\~|<|@)','im')).test(msg.content)||(msg.replied_to&&msg.reply?.user?.username===window.username)?' mention':''}${window.username===msg.user.username?' self':''}" id="m-${sanitizeMinimChars(msg.id)}">
   ${msg.user.hide?`<span class="time">${formatHour(msg.timestamp)}</span>`:`<div class="avatar"><img src="${msg.user.pfp?pfpById(msg.user.pfp):userToDefaultPfp(msg.user)}" width="42" height="42" aria-hidden="true"></div>`}
@@ -630,7 +631,7 @@ async function displayMessage(msg, ch, limited=0) {
       <button onclick="window.pinMessage('${sanitizeMinimChars(msg.id)}', false);window.pinsPanel()" aria-label="Unpin" tlang="message.unpin" style="color:var(--invalid)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M117.925 15.287C119.283 9.11438 126.925 6.88031 131.394 11.3495L244.087 124.041C248.556 128.51 246.321 136.153 240.148 137.511L201.418 146.029C199.553 146.439 197.845 147.375 196.495 148.724L177.921 167.299C176.97 168.249 176.222 169.382 175.719 170.629L152.677 227.748C149.996 234.394 141.4 236.146 136.332 231.078L97.7987 192.545L18.5585 245.401C16.1203 247.027 12.8731 246.706 10.8007 244.634C8.72831 242.561 8.40702 239.314 10.0331 236.876L62.8886 157.636L24.3564 119.103C19.2888 114.036 21.0402 105.44 27.6864 102.759L84.8066 79.7167C86.0533 79.2137 87.186 78.465 88.1366 77.5145L106.71 58.9403C108.06 57.5903 108.996 55.882 109.406 54.0174L117.925 15.287Z"/><path d="M20 20L236 236" stroke-width="40" stroke-linecap="round"/></svg></button>
       `:'')}
     </div>
-    ${msg.replied_to?`<span class="reply" onclick="previewMessage('${sanitizeMinimChars(msg.reply?.id??'')}')"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 256 256"><path d="M256 132C256 120.954 247.046 112 236 112H60V112C26.8629 112 0 138.863 0 172V172V236C0 247.046 8.95431 256 20 256V256C31.0457 256 40 247.046 40 236V172V172C40 160.954 48.9543 152 60 152V152H236C247.046 152 256 143.046 256 132V132Z"/></svg>${msg.reply?`${sanitizeHTML(msg.reply.user?.display??sanitizeMinimChars(msg.reply.user?.username))}: ${sanitizeHTML(msg.reply.content)||imageicon}`:'Cannot load message'}</span>`:''}
+    ${msg.replied_to?`<span class="reply" onclick="previewMessage('${sanitizeMinimChars(msg.reply?.id??'')}')"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 256 256"><path d="M256 132C256 120.954 247.046 112 236 112H60V112C26.8629 112 0 138.863 0 172V172V236C0 247.046 8.95431 256 20 256V256C31.0457 256 40 247.046 40 236V172V172C40 160.954 48.9543 152 60 152V152H236C247.046 152 256 143.046 256 132V132Z"/></svg>${msg.reply?`${sanitizeHTML((msg.reply.user?.display??sanitizeMinimChars(msg.reply.user?.username??''))||'...')}: ${sanitizeHTML(msg.reply.content)||imageicon}`:'Cannot load message'}</span>`:''}
     ${msg.user.hide?'':`<span class="topper"><span class="author">${sanitizeHTML(msg.user.display??sanitizeMinimChars(msg.user.username))}</span>${!msg.user.nockeck&&msg.signature!==ValidSignature?'<span style="display:inline-flex" aria-label="Could not verify the author of this message" title="Could not verify the author of this message" tlang="message.unverified"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 256 256"><path fill-rule="evenodd" clip-rule="evenodd" d="M148.419 20.5C139.566 5.16667 117.434 5.16667 108.581 20.5L6.8235 196.75C-2.02921 212.083 9.03666 231.25 26.7421 231.25H230.258C247.963 231.25 259.029 212.083 250.177 196.75L148.419 20.5ZM116 72C116 65.9249 120.925 61 127 61H130C136.075 61 141 65.9249 141 72V147C141 153.075 136.075 158 130 158H127C120.925 158 116 153.075 116 147V72ZM141 182.5C141 189.404 135.404 195 128.5 195C121.596 195 116 189.404 116 182.5C116 175.596 121.596 170 128.5 170C135.404 170 141 175.596 141 182.5Z"/></svg></span>':''}<span class="time">${formatTime(msg.timestamp)}</span></span>`}
     <span class="content${(/^(?::[a-zA-Z0-9_<!%&\?\*\+\.\- ]+?:){1,3}$/).test(msg.content)?' big-emoji':''}">${window.MDParse(msg.content, MDCustom)}${msg.edited_at?`<span class="edited" title="${formatTime(msg.edited_at)}" tlang="message.edited">(Edited)</span>`:''}</span>
     <div class="fileList">
@@ -713,6 +714,18 @@ async function showMessages(messages) {
 // Yes function keys go up to 24 and yes there a bunch of weird keys that exist
 const NonFocusKeys = 'Alt,AltGraph,AudioVolumeDown,AudioVolumeMute,AudioVolumeUp,BrowserBack,BrowserFavorites,BrowserForward,BrowserHome,BrowserRefresh,BrowserSearch,BrowserStop,CapsLock,Clear,ContextMenu,Control,End,Escape,F1,F10,F11,F12,F13,F14,F15,F16,F17,F18,F19,F2,F20,F21,F22,F23,F24,F3,F4,F5,F6,F7,F8,F9,Help,Home,Insert,LaunchApplication1,LaunchApplication2,LaunchCalculator,LaunchMail,LaunchMediaPlayer,MediaPlayPause,MediaTrackNext,MediaTrackPrevious,Meta,NumLock,OS,PageDown,PageUp,PrintScreen,ScrollLock,Shift,Tab,Unidentified'.split(',');
 window.onkeydown = (evt)=>{
+  // Arrow up for quick edit
+  if (evt.key==='ArrowUp'&&messageInput.value.length<1) {
+    let msg = window.messages[window.currentChannel].find(msg=>msg.user.username===window.username);
+    if (msg) {
+      evt.preventDefault();
+      let m = document.getElementById('m-'+msg.id);
+      m.scrollIntoView({ behavior: 'smooth' });
+      window.editMessage(sanitizeMinimChars(msg.id), sanitizeMinimChars(msg.key??''), m.querySelector('.inner'), sanitizeAttr(msg.content).replaceAll("'", "\\'"));
+      return;
+    }
+  }
+  // Focus
   if (['body'].includes(document.activeElement.tagName.toLowerCase())) {
     if (NonFocusKeys.includes(evt.key)) return;
     if (evt.ctrlKey) return;

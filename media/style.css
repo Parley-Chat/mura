@@ -129,7 +129,7 @@ dialog {
   padding: 0;
   border: none;
   background: none;
-  z-index: 6;
+  z-index: 11;
 }
 
 .gutter {
@@ -470,9 +470,6 @@ main {
 .message:hover, .message:focus-within {
   background-color: var(--bg-1);
 }
-.message:focus-within {
-  z-index: 8;
-}
 .message.ghost-1 {
   opacity: 0.7;
 }
@@ -528,6 +525,7 @@ emoji-picker {
   width: 42px;
   height: 42px;
   border-radius: calc(var(--roundness-2) * 1.5);
+  background-color: var(--bg-1);
 }
 .message .actions {
   position: absolute;
@@ -542,10 +540,13 @@ emoji-picker {
   background-color: var(--bg-accent);
   box-sizing: border-box;
   transition: opacity var(--time);
-  z-index: 8;
+  z-index: 7;
 }
 .message:hover .actions, .message:focus-within .actions {
   opacity: 1;
+}
+.message .actions:focus-within {
+  z-index: 8;
 }
 .message .actions:not(:has(button)) {
   display: none;
