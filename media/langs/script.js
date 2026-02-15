@@ -8,7 +8,8 @@ const languages = {
   'es-419': 'es-ES',
   'es': 'es-ES',
   'fa': 'fa',
-  'nl': 'nl',
+  'nl-NL': 'nl-NL',
+  'nl': 'nl-NL',
   'tok': 'tok'
 };
 
@@ -52,7 +53,7 @@ async function getTranslationFile(lang) {
   });
 
   const networkPromise = fetch(url, { signal: controller.signal })
-    .then(async (response) => {
+    .then(async(response)=>{
       if (response && response.ok) {
         const cache = await window.caches.open('lang-cache-'+lang);
         cache.put(url, response.clone());
