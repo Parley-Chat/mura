@@ -480,6 +480,7 @@ window.editMessage = (msg, key, elem, cont)=>{
   };
   textarea.oninput();
   elem.querySelector('button.save').onclick = ()=>{
+    textarea.value = textarea.value.trim();
     if (window.currentChannelType===3) {
       EditMessage(window.currentChannel, msg, textarea.value, textarea.value);
     } else {
@@ -488,6 +489,14 @@ window.editMessage = (msg, key, elem, cont)=>{
   };
   elem.querySelector('button.cancel').onclick = async()=>{
     elem.parentElement.outerHTML = await displayMessage(window.messages[window.currentChannel].find(m=>m.id===msg), window.channels.find(ch=>ch.id===window.currentChannel));
+  };
+  textarea.onkeydown = (evt)=>{
+    if (evt.key==='Enter'&&!evt.shiftKey) {
+      evt.preventDefault();
+      elem.querySelector('button.save').onclick();
+    } else if (evt.key==='Escape') {
+      elem.querySelector('button.cancel').onclick();
+    }
   };
 };
 window.deleteMessage = (msg)=>{
