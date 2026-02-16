@@ -1,3 +1,9 @@
 user-agent: *
+sitemap: https://parley-chat.site/sitemap.xml
 disallow: /
 allow: /$
+allow: /sitemap.xml
+allow: /sitemap-main.xml
+allow: /favicon.ico
+allow: /media/parley.png
+allow: /media/install.json
