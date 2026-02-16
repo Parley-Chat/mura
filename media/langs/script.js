@@ -10,7 +10,9 @@ const languages = {
   'fa': 'fa',
   'nl-NL': 'nl-NL',
   'nl': 'nl-NL',
-  'tok': 'tok'
+  'tok': 'tok',
+  'en-UWU': 'uwu',
+  'uwu': 'uwu'
 };
 
 // Try to get the user langs
