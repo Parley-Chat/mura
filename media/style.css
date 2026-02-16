@@ -757,7 +757,7 @@ emoji-picker {
 .bar textarea, .bar button {
   margin: 0px;
   border: none;
-  border-radius: 2rem;
+  border-radius: 1rem;
   background: none;
 }
 .bar textarea {
@@ -840,6 +840,10 @@ txt-loader {
   margin: 5px 0px;
   border-radius: 1rem;
   background-color: var(--bg-1);
+  transition: height var(--time);
+}
+div#call-display.big {
+  height: 65dvh;
 }
 #call-display .grid {
   flex: 1;
@@ -864,10 +868,15 @@ txt-loader {
   padding: 5px;
 }
 #call-display .expand {
-  display: none;
   position: absolute;
   right: 10px;
   bottom: 10px;
+  padding: 2px;
+  transition-property: background, transform;
+  transition-duration: var(--time);
+}
+#call-display.big .expand {
+  transform: rotateX(180deg);
 }
 
 /* Scrollbars */

@@ -153,6 +153,9 @@ export async function startCall(channel, ans=false) {
       body: JSON.stringify({ type: 'settings', data: { video: videoTrack.enabled } })
     });
   };
+  window.toggleSize = ()=>{
+    display.classList.toggle('big');
+  };
   // Join call
   await backendfetch(`/api/v1/channel/${channel}/call`, {
     method: 'POST'
@@ -204,7 +207,7 @@ async function handleSignal(data) {
       try {
         await peerConnection.setRemoteDescription(new RTCSessionDescription(data.data));
       } catch(err) {
-        // Ignore :3
+        if (window.debugCall) console.log(err);
       }
       break;
     case 'ice':
@@ -212,7 +215,7 @@ async function handleSignal(data) {
       try {
         await peerConnection.addIceCandidate(new RTCIceCandidate(data.data));
       } catch(err) {
-        // Ignore :3
+        if (window.debugCall) console.log(err);
       }
       break;
     case 'settings':

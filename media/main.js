@@ -411,6 +411,7 @@ emojiButton.onclick = ()=>{
   emojiPicker.style.display = emojiPicker.style.display===''?'none':'';
   let b = emojiButton.getBoundingClientRect();
   emojiPicker.style.right = window.innerWidth-b.right-(b.width/2)+'px';
+  emojiPicker.style.bottom = window.innerHeight-b.top+'px';
 };
 emojiPicker.addEventListener('emoji-click', (evt)=>{
   let emoji = `:${evt.detail.emoji.shortcodes.toSorted((a,b)=>a.length-b.length)[0]}:${evt.detail.skinTone!==0&&evt.detail.emoji.skins?`:tone${evt.detail.skinTone}:`:''}`;
