@@ -1,5 +1,5 @@
 user-agent: *
-sitemap: https://parley-chat.site/sitemap.xml
+sitemap: https://app.parley-chat.site/sitemap.xml
 disallow: /
 allow: /$
 allow: /sitemap.xml
