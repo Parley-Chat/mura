@@ -94,7 +94,8 @@
   "channel.call.micro.on": "Encender microfono",
   "channel.call.camera.off": "Apagar camara",
   "channel.call.camera.on": "Encender camara",
-  "channel.call.fullscreen": "Pantalla completa",
+  "channel.call.expand": "Expandir",
+  "channel.call.shrink": "Contraer",
 
   "member.message": "Mandar Mensaje",
   "member.block": "Bloquear",
@@ -123,6 +124,12 @@
 
   "message.addattachment": "Añadir adjunto",
   "message.file": "Archivo",
+  "message.file.encrypted": "Cifrado",
+  "message.file.unencrypted": "Sin cifrar",
+  "message.file.edit": "Editar",
+  "message.file.editmenu": "Editar nombre de archivo",
+  "message.file.editmenu.next": "Establecer",
+  "message.file.remove": "Quitar",
   "message.voice": "Mensaje de voz",
   "message.voice.record": "Grabar",
   "message.voice.stop": "Parar",

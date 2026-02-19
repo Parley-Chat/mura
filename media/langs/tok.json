@@ -94,7 +94,8 @@
   "channel.call.micro.on": "Open e toki uta",
   "channel.call.camera.off": "Pini e ilo lukin",
   "channel.call.camera.on": "Open e ilo lukin",
-  "channel.call.fullscreen": "Ilo pi lukin suli",
+  "channel.call.expand": "O suli",
+  "channel.call.shrink": "O lili",
 
   "member.message": "O toki",
   "member.block": "O weka",
@@ -123,6 +124,12 @@
 
   "message.addattachment": "O pana e ijo sin",
   "message.file": "Lipu",
+  "message.file.encrypted": "Ijo li awen len",
+  "message.file.unencrypted": "Ijo li awen len ala",
+  "message.file.edit": "O ante",
+  "message.file.editmenu": "O ante e nimi lipu",
+  "message.file.editmenu.next": "O pana",
+  "message.file.remove": "O weka",
   "message.voice": "Toki uta",
   "message.voice.record": "O toki",
   "message.voice.stop": "O pini",

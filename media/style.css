@@ -687,11 +687,20 @@ emoji-picker {
 #filepreview > div {
   position: relative;
 }
-#filepreview button {
+#filepreview .action {
+  display: flex;
   position: absolute;
   top: 0px;
   inset-inline-end: 0px;
+  border-radius: 0.5rem;
+  background-color: var(--bg-2);
   z-index: 9;
+}
+#filepreview .action button {
+  width: 24px;
+  height: 24px;
+  margin: 0px;
+  padding: 2px;
 }
 .fileList {
   display: flex;

@@ -116,6 +116,7 @@ export async function startCall(channel, ans=false) {
   camButton.setAttribute('tlang', 'channel.call.camera.on');
   camButton.innerHTML = camIcons[0];
   camButton.disabled = true;
+  let expandButton = display.querySelector('.expand');
   try {
     // Audio
     mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
@@ -155,6 +156,7 @@ export async function startCall(channel, ans=false) {
   };
   window.toggleSize = ()=>{
     display.classList.toggle('big');
+    expandButton.setAttribute('tlang', 'channel.call.'+(display.classList.contains('big')?'shrink':'expand'));
   };
   // Join call
   await backendfetch(`/api/v1/channel/${channel}/call`, {

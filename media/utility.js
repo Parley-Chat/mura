@@ -357,15 +357,13 @@ async function base64ToAESKey(key) {
     ['encrypt', 'decrypt']
   );
 }
-async function encryptAESString(string, key) {
-  const encoder = new TextEncoder();
-  let data = encoder.encode(string);
+async function encryptAES(data, key) {
+  if (typeof data==='string') data = (new TextEncoder()).encode(data);
   let iv = window.crypto.getRandomValues(new Uint8Array(12));
-  return { txt: bufferToBase64(await window.crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, data)), iv: bufferToBase64(iv) };
+  return { data: bufferToBase64(await window.crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, data)), iv: bufferToBase64(iv) };
 }
-async function decryptAESString(string, key, iv) {
-  const decoder = new TextDecoder();
-  return decoder.decode(await window.crypto.subtle.decrypt({ name: 'AES-GCM', iv: base64ToBuffer(iv) }, key, base64ToBuffer(string)));
+async function decryptAES(data, key, iv) {
+  return await window.crypto.subtle.decrypt({ name: 'AES-GCM', iv: base64ToBuffer(iv) }, key, base64ToBuffer(data));
 }
 
 async function backendfetch(url, opts={}) {

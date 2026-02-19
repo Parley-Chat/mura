@@ -54,7 +54,17 @@ async function BasicSend(msg, sign, channel, akey=null, iv=null) {
     formData.append('iv', iv);
   }
   if (reply) formData.append('replied_to', reply);
-  files.forEach(file=>formData.append('files', file, file.name));
+  files.forEach(file=>{
+    if (window.currentChannelType===3) {
+      file.encrypted = false;
+      file.iv = null;
+    }
+    formData.append('files', file.file, file.name);
+    formData.append('attachments_meta', JSON.stringify({
+      encrypted: file.encrypted,
+      iv: file.iv
+    }));
+  });
   // Signature
   let sdate = Math.ceil(Date.now()/1000);
   let signat = `${sign}:${channel}:${sdate}`;
@@ -77,8 +87,10 @@ async function BasicSend(msg, sign, channel, akey=null, iv=null) {
     attachments: files.map(f=>{return {
       id: '',
       filename: f.name,
-      size: f.size,
-      mimetype: f.type
+      size: f.file.size,
+      mimetype: f.file.type,
+      encrypted: f.encrypted,
+      iv: f.iv
     }}),
     key: null,
     iv: null,
@@ -124,54 +136,70 @@ async function BasicSend(msg, sign, channel, akey=null, iv=null) {
 }
 async function CryptSend(msg, channel) {
   getCurrentKeyChannel(channel, async()=>{
+    let nkey;
     let last = Object.keys(window.keys[channel]).reduce((a, b) => window.keys[channel][a]?.expires_at > window.keys[channel][b]?.expires_at ? a : b, '');
     if (!last || Date.now()>window.keys[channel][last].expires_at) {
-      backendfetch(`/api/v1/channel/${channel}/members?pb=true`)
-        .then(async(members)=>{
-          let nkey = await newAESKey();
-          let newKey = await AESKeyToBase64(nkey);
-          let body = {};
-          let discontinue = false;
-          for (let i=0; i<members.length; i++) {
-            let publicKey;
-            if (PKStore.has(members[i].username)) {
-              publicKey = PKStore.get(members[i].username);
-              if (publicKey!==members[i].public) {
-                let conf = await affirm('message.publicChange', members[i].username);
-                if (!discontinue) discontinue = !conf;
-                if (conf) {
-                  PKStore.set(members[i].username, members[i].public);
-                  publicKey = members[i].public;
+      await new Promise((resolve, reject)=>{
+        backendfetch(`/api/v1/channel/${channel}/members?pb=true`)
+          .then(async(members)=>{
+            nkey = await newAESKey();
+            let newKey = await AESKeyToBase64(nkey);
+            let body = {};
+            let discontinue = false;
+            for (let i=0; i<members.length; i++) {
+              let publicKey;
+              if (PKStore.has(members[i].username)) {
+                publicKey = PKStore.get(members[i].username);
+                if (publicKey!==members[i].public) {
+                  let conf = await affirm('message.publicChange', members[i].username);
+                  if (!discontinue) discontinue = !conf;
+                  if (conf) {
+                    PKStore.set(members[i].username, members[i].public);
+                    publicKey = members[i].public;
+                  }
                 }
+              } else {
+                publicKey = members[i].public;
+                PKStore.set(members[i].username, publicKey);
+                saveToDB();
               }
-            } else {
-              publicKey = members[i].public;
-              PKStore.set(members[i].username, publicKey);
-              saveToDB();
+              publicKey = await getRSAKeyFromPublic64(publicKey);
+              body[members[i].username] = await encryptRSAString(newKey, publicKey);
             }
-            publicKey = await getRSAKeyFromPublic64(publicKey);
-            body[members[i].username] = await encryptRSAString(newKey, publicKey);
-          }
-          if (discontinue) return;
-          backendfetch(`/api/v1/channel/${channel}/key`, {
-            method: 'POST',
-            headers: {
-              'content-type': 'application/json'
-            },
-            body: JSON.stringify(body)
-          })
-            .then(async(pkey)=>{
-              getKeyContents(channel, pkey.key_id);
-              let enc = await encryptAESString(msg, nkey);
-              BasicSend(enc.txt, msg, channel, pkey.key_id, enc.iv);
-            });
+            if (discontinue) reject();
+            backendfetch(`/api/v1/channel/${channel}/key`, {
+              method: 'POST',
+              headers: {
+                'content-type': 'application/json'
+              },
+              body: JSON.stringify(body)
+            })
+              .then(async(pkey)=>{
+                getKeyContents(channel, pkey.key_id);
+                last = pkey.key_id;
+                resolve();
+              });
         });
+      });
     } else {
       const privateKey = (await getRSAKeyPair()).privateKey;
-      let nkey = await base64ToAESKey(await decryptRSAString(window.keys[channel][last].key, privateKey));
-      let enc = await encryptAESString(msg, nkey);
-      BasicSend(enc.txt, msg, channel, last, enc.iv);
+      nkey = await base64ToAESKey(await decryptRSAString(window.keys[channel][last].key, privateKey));
     }
+    // Message
+    let enc = await encryptAES(msg, nkey);
+    // Files
+    for (let i=0; i<files.length; i++) {
+      if (!files[i].encrypted) continue;
+      let encfile = await encryptAES(await files[i].file.arrayBuffer(), nkey)
+      files[i].iv = encfile.iv;
+      files[i].file = new File(
+        [encfile.data],
+        files[i].name,
+        { type: files[i].file.type }
+      );
+    }
+    // Send
+    BasicSend(enc.data, msg, channel, last, enc.iv);
   });
 }
 async function MessageSend() {
@@ -245,22 +273,49 @@ function elemfilepreview(file) {
       return `<div class="file">${sanitizeHTML(file.name)} · ${formatBytes(file.size)}</div>`;
   }
 }
+const fileLockIcons = [
+  '<svg style="color:var(--invalid)" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256"><path d="M127.5 0C164.779 0 195 30.2208 195 67.5V100H203C214.046 100 223 108.954 223 120V236C223 247.046 214.046 256 203 256H53C41.9543 256 33 247.046 33 236V120C33 108.954 41.9543 100 53 100H171V67.5C171 43.4756 151.524 24 127.5 24C108.827 24 92.9035 35.7654 86.7354 52.2871C84.5438 58.1571 79.4669 62.9998 73.2012 63C66.1356 63 60.4424 56.9668 62.2549 50.1377C69.9161 21.2721 96.2235 0 127.5 0Z"/></svg>',
+  '<svg style="color:var(--valid)" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256"><path d="M127.5 0C164.779 0 195 30.2208 195 67.5V100H203C214.046 100 223 108.954 223 120V236C223 247.046 214.046 256 203 256H53C41.9543 256 33 247.046 33 236V120C33 108.954 41.9543 100 53 100H60V67.5C60 30.2208 90.2208 0 127.5 0ZM127.5 24C103.476 24 84 43.4756 84 67.5V100H171V67.5C171 43.4756 151.524 24 127.5 24Z"/></svg>'
+];
+window.encryptionfile = (i, _this)=>{
+  files[i].encrypted = !files[i].encrypted;
+  _this.innerHTML = fileLockIcons[Number(files[i].encrypted)];
+  _this.setAttribute('tlang', `message.file.${files[i].encrypted?'':'un'}encrypted`);
+};
+window.editfile = async(i)=>{
+  try {
+    files[i].name = await ask('message.file.editmenu', 1, 255, files[i].name);
+  } catch(_) {
+    // Ignore :3
+  }
+};
 window.removefile = (i)=>{
   files.splice(i, 1);
   filePreview();
 };
 function filePreview() {
   document.getElementById('filepreview').innerHTML = files
-    .map((fil,i)=>`<div>
-  <button onclick="window.removefile(${i})">x</button>
-  ${elemfilepreview(fil)}
+    .map((file,i)=>`<div>
+  <div class="action">
+    ${window.currentChannelType!==3?`<button onclick="window.encryptionfile(${i}, this)" tlang="message.file.${file.encrypted?'':'un'}encrypted">${fileLockIcons[Number(file.encrypted)]}</button>`:''}
+    <button onclick="window.editfile(${i})" tlang="message.file.edit"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256"><path d="M207.747 76.6945L78.6819 239.376L25.8919 255.811C23.8543 256.445 21.8251 254.809 22.012 252.684L26.844 197.709L154.989 35.1261L207.747 76.6945ZM181.174 1.90541C182.887 -0.267858 186.04 -0.637017 188.208 1.08216L233.106 36.6876C235.269 38.4035 235.633 41.5486 233.916 43.712L215.969 66.3331L163.157 24.7619L181.174 1.90541Z"/></svg></button>
+    <button onclick="window.removefile(${i})" tlang="message.file.remove"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256"><path d="M42.6776 7.32227C32.9145 -2.44063 17.0852 -2.44077 7.32214 7.32227C-2.44082 17.0853 -2.44069 32.9146 7.32214 42.6777L92.2616 127.617L7.32214 212.557C-2.44091 222.32 -2.44083 238.149 7.32214 247.912C17.0852 257.675 32.9145 257.675 42.6776 247.912L127.617 162.973L212.557 247.912C222.32 257.675 238.149 257.675 247.912 247.912C257.675 238.149 257.675 222.32 247.912 212.557L162.973 127.617L247.912 42.6777C257.675 32.9146 257.675 17.0853 247.912 7.32227C238.149 -2.44079 222.32 -2.44068 212.557 7.32227L127.617 92.2617L42.6776 7.32227Z"/></svg></button>
+  </div>
+  ${elemfilepreview(file.file)}
 </div>`)
     .join('');
+  window.translate();
 }
 function addFiles(fils) {
-  files = files.concat(fils);
+  files = files.concat(fils.map(file=>{
+    return {
+      file,
+      name: file.name,
+      encrypted: true
+    };
+  }));
   files = files.filter(file=>{
-    if (file.size>window.serverData[getCurrentServerUrl()].max_file_size.attachments) {
+    if (file.file.size>window.serverData[getCurrentServerUrl()].max_file_size.attachments) {
       notice('message.attachment.toobig', file.name);
       return false;
     }
@@ -445,8 +500,8 @@ function CryptEditMessage(channel, msg, content, key) {
   getKeyContents(channel, key, async()=>{
     const privateKey = (await getRSAKeyPair()).privateKey;
     let nkey = await base64ToAESKey(await decryptRSAString(window.keys[channel][key].key, privateKey));
-    let enc = await encryptAESString(content, nkey);
-    EditMessage(channel, msg, enc.txt, content, enc.iv);
+    let enc = await encryptAES(content, nkey);
+    EditMessage(channel, msg, enc.data, content, enc.iv);
   });
 }
 
@@ -530,26 +585,35 @@ class MediaCom extends HTMLElement {
       this.setAttribute('load',true);
     }
   }
-  attributeChangedCallback() {
-    this.outerHTML = `<${this.getAttribute('type')} src="${this.getAttribute('data-src')}" alt="Message attachment: ${this.getAttribute('data-name')}" controls loading="lazy"></${this.getAttribute('type')}>`.replace('</img>','');
-  }
-}
-class TxtLoader extends HTMLElement {
-  constructor() {
-    super();
-  }
-  connectedCallback() {
-    fetch(`${getCurrentServerUrl()}/attachment/${this.getAttribute('data-id')}`)
-      .then(res=>{
-        if (!res.ok) throw new Error('non ok');
-        return res.text();
-      })
-      .then(res=>this.innerHTML=sanitizeHTML(res))
-      .catch(()=>this.remove());
+  async attributeChangedCallback() {
+    let type = this.getAttribute('type');
+    let encrypted = this.getAttribute('data-encrypted')==='true';
+    let id = this.getAttribute('data-id');
+    let src = `${getCurrentServerUrl()}/attachment/${id}`;
+    let data;
+    if (type==='text'||encrypted) {
+      data = await fetch(src);
+      data = await data.text();
+    }
+    if (encrypted) {
+      const privateKey = (await getRSAKeyPair()).privateKey;
+      let nkey = await base64ToAESKey(await decryptRSAString(window.keys[window.currentChannel][this.getAttribute('data-key')].key, privateKey));
+      data = await decryptAES(data, nkey, this.getAttribute('data-iv'));
+    }
+    if (type==='text') {
+      if (data instanceof ArrayBuffer) data = (new TextDecoder()).decode(data);
+      let name = desanitizeAttr(this.getAttribute('data-name'));
+      this.innerHTML = `<div class="file">
+  <span>${sanitizeHTML(name)} · ${formatBytes(this.getAttribute('data-size'))} ${encrypted?'<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256"><path d="M127.5 0C164.779 0 195 30.2208 195 67.5V100H203C214.046 100 223 108.954 223 120V236C223 247.046 214.046 256 203 256H53C41.9543 256 33 247.046 33 236V120C33 108.954 41.9543 100 53 100H60V67.5C60 30.2208 90.2208 0 127.5 0ZM127.5 24C103.476 24 84 43.4756 84 67.5V100H171V67.5C171 43.4756 151.524 24 127.5 24Z"/></svg>':''}<div style="flex:1"></div><button onclick="window.downloadfile('${id}', '${sanitizeAttr(name).replaceAll("'", "\\'")}')" aria-label="Download" tlang="message.download"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M128 190V20" stroke-width="40" stroke-linecap="round" fill="none"/><path d="M127.861 212.999C131.746 213.035 135.642 211.571 138.606 208.607L209.317 137.896C212.291 134.922 213.753 131.011 213.708 127.114C213.708 127.076 213.71 127.038 213.71 127C213.71 118.716 206.994 112 198.71 112H57C48.7157 112 42 118.716 42 127C42 127.045 42.0006 127.089 42.001 127.134C41.961 131.024 43.4252 134.927 46.3936 137.896L117.104 208.607L117.381 208.876C120.312 211.662 124.092 213.037 127.861 212.999Z"/><rect y="226" width="256" height="30" rx="15"/></svg></button></span>
+  ${sanitizeHTML(data)}
+</div>`;
+    } else {
+      if (data) src = URL.createObjectURL(new Blob([data], { type: this.getAttribute('data-fulltype') }));
+      this.outerHTML = `<${type} src="${src}" alt="Message attachment: ${this.getAttribute('data-name')}" controls loading="lazy"></${type}>`.replace('</img>','');
+    }
   }
 }
 customElements.define('media-com', MediaCom);
-customElements.define('txt-loader', TxtLoader);
 
 window.downloadfile = (id, name)=>{
   fetch(`${getCurrentServerUrl()}/attachment/${id}`)
@@ -577,19 +641,15 @@ let MDCustom = (txt)=>{
 };
 
 const textdisplay = ['text/plain','text/html','text/css','text/csv','text/tab-separated-values','text/markdown','text/x-markdown','text/xml','application/xhtml+xml','text/javascript','text/ecmascript','text/x-python','text/x-c','text/x-c++','text/x-java','text/x-java-source','text/x-rustsrc','text/x-go','text/x-php','text/x-perl','text/x-ruby','text/x-lua','text/vcard','text/vcalendar','text/calendar','text/x-vcard','text/x-vcalendar','application/json','application/ld+json','application/xml','application/javascript','application/ecmascript','application/x-www-form-urlencoded','application/yaml','application/x-yaml','text/x-yaml','application/graphql','application/sql','application/toml','application/x-toml','text/x-toml','application/ini','text/x-ini','application/x-sh','application/x-httpd-php']
-function attachToElem(att) {
-  if (textdisplay.includes(att.mimetype)) {
-    return `<div class="file">
-  <span>${sanitizeHTML(att.filename)} · ${formatBytes(att.size)} <button onclick="window.downloadfile('${sanitizeMinimChars(att.id)}', '${sanitizeAttr(att.filename).replaceAll("'", "\\'")}')" aria-label="Download" tlang="message.download"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M128 190V20" stroke-width="40" stroke-linecap="round" fill="none"/><path d="M127.861 212.999C131.746 213.035 135.642 211.571 138.606 208.607L209.317 137.896C212.291 134.922 213.753 131.011 213.708 127.114C213.708 127.076 213.71 127.038 213.71 127C213.71 118.716 206.994 112 198.71 112H57C48.7157 112 42 118.716 42 127C42 127.045 42.0006 127.089 42.001 127.134C41.961 131.024 43.4252 134.927 46.3936 137.896L117.104 208.607L117.381 208.876C120.312 211.662 124.092 213.037 127.861 212.999Z"/><rect y="226" width="256" height="30" rx="15"/></svg></button></span>
-  <txt-loader data-id="${sanitizeMinimChars(att.id)}">...</txt-loader>
-</div>`;
-  }
+function attachToElem(att, key) {
+  let data = ` data-fulltype="${sanitizeHTML(att.mimetype)}" data-id="${sanitizeMinimChars(att.id)}" data-name="${sanitizeAttr(att.filename)}" data-size="${sanitizeMinimChars(att.size.toString())}" data-encrypted="${sanitizeMinimChars(att.encrypted.toString())}"${att.encrypted?` data-iv="${(att.iv??'').replaceAll(/[^a-zA-Z0-9\+\/\=]/g,'')}" data-key="${sanitizeMinimChars(key??'')}"`:''}`;
+  if (textdisplay.includes(att.mimetype)) return `<media-com type="text"${data}></media-com>`;
   let type = att.mimetype.split('/')[0];
   switch(type) {
     case 'image':
     case 'video':
     case 'audio':
-      return `<media-com type="${type.replace('age','g')}" data-src="${getCurrentServerUrl()}/attachment/${sanitizeMinimChars(att.id)}" data-name="${sanitizeAttr(att.filename)}" data-size="${sanitizeMinimChars(att.size.toString())}"></media-com>`;
+      return `<media-com type="${type.replace('age','g')}"${data}></media-com>`;
     default:
       return `<div class="file"><span>${sanitizeHTML(att.filename)} · ${formatBytes(att.size)} <button onclick="window.downloadfile('${sanitizeMinimChars(att.id)}', '${sanitizeAttr(att.filename).replaceAll("'", "\\'")}')" aria-label="Download" tlang="message.download"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M128 190V20" stroke-width="40" stroke-linecap="round" fill="none"/><path d="M127.861 212.999C131.746 213.035 135.642 211.571 138.606 208.607L209.317 137.896C212.291 134.922 213.753 131.011 213.708 127.114C213.708 127.076 213.71 127.038 213.71 127C213.71 118.716 206.994 112 198.71 112H57C48.7157 112 42 118.716 42 127C42 127.045 42.0006 127.089 42.001 127.134C41.961 131.024 43.4252 134.927 46.3936 137.896L117.104 208.607L117.381 208.876C120.312 211.662 124.092 213.037 127.861 212.999Z"/><rect y="226" width="256" height="30" rx="15"/></svg></button></span></div>`;
   }
@@ -600,7 +660,7 @@ function decodeMessage(msg, ch=window.currentChannel) {
       try {
         const privateKey = (await getRSAKeyPair()).privateKey;
         let nkey = await base64ToAESKey(await decryptRSAString(window.keys[ch][msg.key].key, privateKey));
-        let dec = await decryptAESString(msg.content, nkey, msg.iv);
+        let dec = (new TextDecoder()).decode(await decryptAES(msg.content, nkey, msg.iv));
         resolve(dec);
       } catch(err) {
         reject(err);
@@ -645,7 +705,7 @@ async function displayMessage(msg, ch, limited=0) {
     ${msg.user.hide?'':`<span class="topper"><span class="author">${sanitizeHTML(msg.user.display??sanitizeMinimChars(msg.user.username))}</span>${!msg.user.nockeck&&msg.signature!==ValidSignature?'<span style="display:inline-flex" aria-label="Could not verify the author of this message" title="Could not verify the author of this message" tlang="message.unverified"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 256 256"><path fill-rule="evenodd" clip-rule="evenodd" d="M148.419 20.5C139.566 5.16667 117.434 5.16667 108.581 20.5L6.8235 196.75C-2.02921 212.083 9.03666 231.25 26.7421 231.25H230.258C247.963 231.25 259.029 212.083 250.177 196.75L148.419 20.5ZM116 72C116 65.9249 120.925 61 127 61H130C136.075 61 141 65.9249 141 72V147C141 153.075 136.075 158 130 158H127C120.925 158 116 153.075 116 147V72ZM141 182.5C141 189.404 135.404 195 128.5 195C121.596 195 116 189.404 116 182.5C116 175.596 121.596 170 128.5 170C135.404 170 141 175.596 141 182.5Z"/></svg></span>':''}<span class="time">${formatTime(msg.timestamp)}</span></span>`}
     <span class="content${(/^(?::[a-zA-Z0-9_<!%&\?\*\+\.\- ]+?:){1,3}$/).test(msg.content)?' big-emoji':''}">${window.MDParse(msg.content, MDCustom)}${msg.edited_at?`<span class="edited" title="${formatTime(msg.edited_at)}" tlang="message.edited">(Edited)</span>`:''}</span>
     <div class="fileList">
-      ${msg.attachments.map(att=>attachToElem(att)).join('')}
+      ${msg.attachments.map(att=>attachToElem(att, msg.key??'')).join('')}
     </div>
   </div>
 </div>`;
@@ -994,6 +1054,7 @@ function loadChannel(id) {
   let canSendMsgs = hasPerm(ch.permission,Permissions.SEND_MESSAGES);
   document.querySelector('.bar').style.display = canSendMsgs?'':'none';
   document.querySelector('.bar.fake').style.display = canSendMsgs?'none':'';
+  filePreview();
   if (window.messages[id]) {
     showMessages(window.messages[id]);
   } else {

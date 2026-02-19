@@ -94,7 +94,8 @@
   "channel.call.micro.on": "Unmute microphone",
   "channel.call.camera.off": "Turn off camera",
   "channel.call.camera.on": "Turn on camera",
-  "channel.call.fullscreen": "Fullscreen",
+  "channel.call.expand": "Expand",
+  "channel.call.shrink": "Shrink",
 
   "member.message": "Message",
   "member.block": "Block",
@@ -123,6 +124,12 @@
 
   "message.addattachment": "Add attachment",
   "message.file": "File",
+  "message.file.encrypted": "Encrypted",
+  "message.file.unencrypted": "Unencrypted",
+  "message.file.edit": "Edit",
+  "message.file.editmenu": "Edit file name",
+  "message.file.editmenu.next": "Set",
+  "message.file.remove": "Remove",
   "message.voice": "Voice message",
   "message.voice.record": "Record",
   "message.voice.stop": "Stop",

@@ -94,7 +94,8 @@
   "channel.call.micro.on": "وصل کردن میکروفون",
   "channel.call.camera.off": "خاموش کردن دوربین",
   "channel.call.camera.on": "روشن کردن دوربین",
-  "channel.call.fullscreen": "تمام‌صفحه",
+  "channel.call.expand":  "گسترش",
+  "channel.call.shrink": "کوچک‌کردن",
 
   "member.message": "پیام",
   "member.block": "مسدود کردن",
@@ -123,6 +124,12 @@
 
   "message.addattachment": "افزودن پیوست",
   "message.file": "فایل",
+  "message.file.encrypted": "رمزگذاری‌شده",
+  "message.file.unencrypted": "رمزگذاری‌نشده",
+  "message.file.edit": "ویرایش",
+  "message.file.editmenu": "ویرایش نام فایل",
+  "message.file.editmenu.next": "تنظیم",
+  "message.file.remove": "حذف",
   "message.voice": "پیام صوتی",
   "message.voice.record": "ضبط",
   "message.voice.stop": "توقف",

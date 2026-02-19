@@ -94,7 +94,8 @@
   "channel.call.micro.on": "Unmute micwophone",
   "channel.call.camera.off": "Tuwn off camewa",
   "channel.call.camera.on": "Tuwn on camewa",
-  "channel.call.fullscreen": "Fuwwscween",
+  "channel.call.expand": "Expand",
+  "channel.call.shrink": "Shwink",
 
   "member.message": "Message",
   "member.block": "Bwock",
@@ -123,6 +124,12 @@
 
   "message.addattachment": "Add attachment",
   "message.file": "Fiwe",
+  "message.file.encrypted": "Encwypted",
+  "message.file.unencrypted": "Unencwypted",
+  "message.file.edit": "Edit",
+  "message.file.editmenu": "Edit fiwe name",
+  "message.file.editmenu.next": "Set",
+  "message.file.remove": "Wemuv",
   "message.voice": "Voice message",
   "message.voice.record": "Wecowd",
   "message.voice.stop": "Stop",
