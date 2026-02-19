@@ -1,12 +1,15 @@
 # Parley Frontend (Mura)
+
 A frontend for the Parley chat platform.
 
 ## Customization
-`/static/langs` - Add languages
-`/static/langs/script.js` - Reflect language changes
+
+For language related stuff, refer to [the docs](https://docs.parley-chat.site/mura/languages/).\
+`/static/langs` - Add languages\
 `/static/style.css` - Edit visuals
 
 ## Translation
-- en-US, es-ES, tok - Inventionpro
+
+- en-US, es-ES, tok, uwu - Inventionpro
 - fa - FrenchToblerone54
-- nl - MrLarso2002
+- nl-NL - MrLarso2002
