@@ -493,8 +493,7 @@ async function EditMessage(channel, msg, content, sign, iv=null) {
   backendfetch(`/api/v1/channel/${channel}/message/${msg}`, {
     method: 'PATCH',
     body: formData
-  })
-    .then(()=>{showMessages(window.messages[channel])});
+  });
 }
 function CryptEditMessage(channel, msg, content, key) {
   getKeyContents(channel, key, async()=>{
@@ -521,6 +520,10 @@ window.pinMessage = (msg, state=true)=>{
   });
 };
 window.editMessage = (msg, key, elem, cont)=>{
+  if (elem.querySelector('.save')) {
+    elem.querySelector('textarea').focus();
+    return;
+  }
   elem.querySelector('.content').outerHTML = `<textarea name="message" class="content" maxlength="${window.serverData[getCurrentServerUrl()]?.messages?.max_message_length??2000}"></textarea>
 <div>
   <button class="save" tlang="message.edit.save">Save</button>
@@ -785,7 +788,7 @@ async function showMessages(messages) {
 const NonFocusKeys = 'Alt,AltGraph,AudioVolumeDown,AudioVolumeMute,AudioVolumeUp,BrowserBack,BrowserFavorites,BrowserForward,BrowserHome,BrowserRefresh,BrowserSearch,BrowserStop,CapsLock,Clear,ContextMenu,Control,End,Escape,F1,F10,F11,F12,F13,F14,F15,F16,F17,F18,F19,F2,F20,F21,F22,F23,F24,F3,F4,F5,F6,F7,F8,F9,Help,Home,Insert,LaunchApplication1,LaunchApplication2,LaunchCalculator,LaunchMail,LaunchMediaPlayer,MediaPlayPause,MediaTrackNext,MediaTrackPrevious,Meta,NumLock,OS,PageDown,PageUp,PrintScreen,ScrollLock,Shift,Tab,Unidentified'.split(',');
 window.onkeydown = (evt)=>{
   // Arrow up for quick edit
-  if (evt.key==='ArrowUp'&&messageInput.value.length<1) {
+  if (evt.key==='ArrowUp'&&(['body'].includes(document.activeElement.tagName.toLowerCase())||(document.activeElement===messageInput&&messageInput.value.length<1))) {
     let msg = window.messages[window.currentChannel].find(msg=>msg.user.username===window.username);
     if (msg) {
       evt.preventDefault();
@@ -1443,7 +1446,7 @@ function startStream() {
     };
     showChannels(window.channels);
   });
-  window.stream.addEventListener('message_edited', (event)=>{
+  window.stream.addEventListener('message_edited', async(event)=>{
     let data = JSON.parse(event.data);
     let idxc = window.channels.findIndex(ch=>ch.id===data.channel_id);
     if (window.channels[idxc].last_message?.id===data.message.id) {
@@ -1457,7 +1460,7 @@ function startStream() {
     window.messages[data.channel_id][idx].key = data.message.key;
     window.messages[data.channel_id][idx].iv = data.message.iv;
     window.messages[data.channel_id][idx].edited_at = data.message.edited_at;
-    if (window.currentChannel===data.channel_id) showMessages(window.messages[data.channel_id]);
+    if (window.currentChannel===data.channel_id) document.getElementById('m-'+data.message.id).outerHTML = await displayMessage(window.messages[data.channel_id][idx], window.channels[idxc]);
   });
   window.stream.addEventListener('message_deleted', (event)=>{
     let data = JSON.parse(event.data);
@@ -1468,7 +1471,7 @@ function startStream() {
     }
     if (!window.messages[data.channel_id]) return;
     window.messages[data.channel_id] = window.messages[data.channel_id].filter(msg=>msg.id!==data.message_id);
-    if (window.currentChannel===data.channel_id) showMessages(window.messages[data.channel_id]);
+    if (window.currentChannel===data.channel_id) document.getElementById('m-'+data.message_id).remove();
   });
   window.stream.addEventListener('call_start', (event)=>{
     calls.event('start', JSON.parse(event.data));
