@@ -54,14 +54,19 @@ async function getTranslationFile(lang) {
     return null;
   });
 
-  const networkPromise = fetch(url, { signal: controller.signal })
-    .then(async(response)=>{
-      if (response && response.ok) {
-        const cache = await window.caches.open('lang-cache-'+lang);
-        cache.put(url, response.clone());
-      }
-      return response.json();
-    });
+  let networkPromise;
+  try {
+    networkPromise = fetch(url, { signal: controller.signal })
+      .then(async(response)=>{
+        if (response && response.ok) {
+          const cache = await window.caches.open('lang-cache-'+lang);
+          cache.put(url, response.clone());
+        }
+        return response.json();
+      });
+  } catch(err) {
+    // Ignore :3
+  }
 
   const cacheResult = await cachePromise;
   if (cacheResult) {

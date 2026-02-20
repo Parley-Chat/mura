@@ -71,16 +71,19 @@ function hasPerm(bitfield, perm) {
 }
 
 function sanitizeHTML(html) {
-  return html.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"', '&quot;');
+  return html.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&apos;');
+}
+function desanitizeHTML(html) {
+  return html.replaceAll('&apos;', "'").replaceAll('&quot;', '"').replaceAll('&gt;', '>').replaceAll('&lt;', '<').replaceAll('&amp;', '&');
 }
 function sanitizeMinimChars(text) {
   return text.replaceAll(/[^a-zA-Z0-9_\-]/g,'');
 }
 function sanitizeAttr(inp) {
-  return inp.replaceAll('\\', '\\\\').replaceAll('¬', '¬|').replaceAll('"', '¬@').replaceAll(/\r?\n/g, '\\n');
+  return sanitizeHTML(inp).replaceAll('\\', '\\\\').replaceAll(/\r?\n/g, '\\n');
 }
 function desanitizeAttr(inp) {
-  return inp.replaceAll('¬@', '"').replaceAll('¬|', '¬');
+  return desanitizeHTML(inp).replaceAll(/([^\\])\\n/g, '$1\n').replaceAll('\\\\','\\');
 }
 
 function bufferToBase64(buf) {
