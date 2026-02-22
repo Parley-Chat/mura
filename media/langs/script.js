@@ -21,20 +21,28 @@ function getUserLang() {
 }
 
 // Fallback if no caches support
-if (!window.caches) {
+window.cache = window.caches;
+let patchCache = ()=>{
   window._caches = {};
-  window.caches = {
+  window.cache = {
     open: async(id)=>{
       if (!window._caches[id]) window._caches[id] = {};
       return {
-        match: async(di)=>{return window._caches[id][di]},
+        match: async(di)=>window._caches[id][di],
         put: async(di,req)=>{window._caches[id][di]=req}
       };
     },
-    delete: (id)=>{
-      delete window._caches[id];
-    }
+    delete: (id)=>{delete window._caches[id]}
   };
+};
+if (!window.cache) {
+  patchCache();
+} else {
+  try {
+    window.cache.open('lang-cache-'+default_lang);
+  } catch(err) {
+    if (err.msg.includes('operation is insecure')) patchCache();
+  }
 }
 
 // Fetch the translation file
@@ -45,7 +53,7 @@ async function getTranslationFile(lang) {
   const controller = new AbortController();
   const url = `./media/langs/${lang}.json`;
 
-  const cachePromise = window.caches.open('lang-cache-'+lang).then(async(cache) => {
+  const cachePromise = window.cache.open('lang-cache-'+lang).then(async(cache) => {
     const cachedResponse = await cache.match(url);
     if (cachedResponse) {
       controller.abort('Cache first');
@@ -59,7 +67,7 @@ async function getTranslationFile(lang) {
     networkPromise = fetch(url, { signal: controller.signal })
       .then(async(response)=>{
         if (response && response.ok) {
-          const cache = await window.caches.open('lang-cache-'+lang);
+          const cache = await window.cache.open('lang-cache-'+lang);
           cache.put(url, response.clone());
         }
         return response.json();
@@ -88,7 +96,7 @@ function translate(attempt=0) {
         if (trans===undefined) {
           console.log('Missing translation for '+elem.getAttribute('tlang'), elem);
           if (attempt<2) translate(attempt+1);
-          window.caches.delete('lang-cache-'+locale);
+          window.cache.delete('lang-cache-'+locale);
           delete mcache[locale];
           return;
         }

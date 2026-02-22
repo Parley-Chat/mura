@@ -87,7 +87,12 @@ function desanitizeAttr(inp) {
 }
 
 function bufferToBase64(buf) {
-  return btoa(String.fromCharCode(...new Uint8Array(buf)));
+  let bytes = new Uint8Array(buf);
+  let chunklen = 0x10000; // 64KB
+  let str = '';
+  // String.fromCharCode faster than String.fromCodePoint and we don't need the surrogates
+  for (let i=0; i<bytes.length; i+=chunklen) str += String.fromCharCode(...bytes.subarray(i,i+chunklen));
+  return btoa(str);
 }
 function base64ToBuffer(base64) {
   const binary = atob(base64);
