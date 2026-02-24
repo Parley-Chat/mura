@@ -248,7 +248,7 @@ function formatDuration(time) {
 
 const DefaultPFPRadix = 12;
 function userToDefaultPfp(user) {
-  user = (user.display??user.username??user.name).toLowerCase().replaceAll(/[^a-zA-Z0-9]/g,'');
+  user = (user.display??user.name??user.username).toLowerCase().replaceAll(/[^a-zA-Z0-9]/g,'');
   return 'data:image/svg+xml,'+encodeURIComponent(window.defaultpfp
     .replace('PFP',user.slice(0,1))
     .replace('074104',(parseInt(user, 36)%(DefaultPFPRadix**6)).toString(DefaultPFPRadix).padStart(6, '0')));
