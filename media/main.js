@@ -4,16 +4,18 @@ import * as calls from './calls.js';
 // Stores
 const UserStore = new Map();
 const MemberStore = new Map();
+const FileStore = new Map();
 window.UserStore = UserStore;
 window.MemberStore = MemberStore;
+window.FileStore = FileStore;
 
 let ChannelNotifStore = new Map();
-window.ChannelNotifStore = ChannelNotifStore;
 let PinnedChannelsStore = new Map();
-window.PinnedChannelsStore = PinnedChannelsStore;
 let PKStore = new Map();
-window.PKStore = PKStore;
 const PKChannels = [];
+window.ChannelNotifStore = ChannelNotifStore;
+window.PinnedChannelsStore = PinnedChannelsStore;
+window.PKStore = PKStore;
 
 async function saveToDB() {
   let tx = db.transaction(['servers'], 'readwrite');
@@ -84,13 +86,14 @@ async function BasicSend(msg, sign, channel, akey=null, iv=null) {
     signature,
     signed_timestamp: sdate,
     user: UserStore.get(window.username),
-    attachments: files.map(f=>{return {
+    attachments: files.map(file=>{return {
       id: '',
-      filename: f.name,
-      size: f.file.size,
-      mimetype: f.file.type,
-      encrypted: f.encrypted,
-      iv: f.iv
+      filename: file.name,
+      size: file.file.size,
+      mimetype: file.file.type,
+      encrypted: file.encrypted,
+      iv: file.iv,
+      previewUrl: FileStore.get(file.file)
     }}),
     key: null,
     iv: null,
@@ -262,13 +265,13 @@ messageSned.onclick = MessageSend;
 const attachAdd = document.getElementById('addattachmentbutton');
 const fileInput = document.getElementById('addfile');
 function elemfilepreview(file) {
-  let url = URL.createObjectURL(file);
+  if (!FileStore.has(file)) FileStore.set(file, URL.createObjectURL(file));
   let type = file.type.split('/')[0];
   switch(type) {
     case 'image':
     case 'video':
     case 'audio':
-      return `<${type.replace('age','g')} src="${url}" alt="File preview: ${sanitizeAttr(file.name)}" controls loading="lazy"></${type.replace('age','g')}>`;
+      return `<${type.replace('age','g')} src="${FileStore.get(file)}" alt="File preview: ${sanitizeAttr(file.name)}" controls loading="lazy"></${type.replace('age','g')}>`;
     default:
       return `<div class="file">${sanitizeHTML(file.name)} · ${formatBytes(file.size)}</div>`;
   }
@@ -579,7 +582,8 @@ class MediaCom extends HTMLElement {
   }
   static observedAttributes = ['load'];
   connectedCallback() {
-    if (saveData()) {
+    let preview = this.getAttribute('data-previewurl');
+    if (!preview&&saveData()) {
       this.innerHTML = `<div class="file">
   <span>${sanitizeHTML(desanitizeAttr(this.getAttribute('data-name')))} · ${formatBytes(this.getAttribute('data-size'))}</span>
   <button onclick="this.parentElement.parentElement.setAttribute('load',true)" tlang="message.download" style="margin-top:10px;padding:5px;background-color:var(--bg-2);">Download</button>
@@ -592,13 +596,14 @@ class MediaCom extends HTMLElement {
     let type = this.getAttribute('type');
     let encrypted = this.getAttribute('data-encrypted')==='true';
     let id = this.getAttribute('data-id');
-    let src = `${getCurrentServerUrl()}/attachment/${id}`;
+    let preview = this.getAttribute('data-previewurl')||FileStore.get(id);
+    let src = preview??`${getCurrentServerUrl()}/attachment/${id}`;
     let data;
-    if (type==='text'||encrypted) {
+    if (type==='text'||(encrypted&&!preview)) {
       data = await fetch(src);
       data = await data.text();
     }
-    if (encrypted) {
+    if (encrypted&&!preview) {
       const privateKey = (await getRSAKeyPair()).privateKey;
       let nkey = await base64ToAESKey(await decryptRSAString(window.keys[window.currentChannel][this.getAttribute('data-key')].key, privateKey));
       data = await decryptAES(data, nkey, this.getAttribute('data-iv'));
@@ -611,8 +616,8 @@ class MediaCom extends HTMLElement {
   ${sanitizeHTML(data)}
 </div>`;
     } else {
-      if (data) src = URL.createObjectURL(new Blob([data], { type: this.getAttribute('data-fulltype') }));
-      this.outerHTML = `<${type} src="${src}" alt="Message attachment: ${this.getAttribute('data-name')}" controls loading="lazy"></${type}>`.replace('</img>','');
+      if (!FileStore.has(id)&&data) FileStore.set(id, URL.createObjectURL(new Blob([data], { type: this.getAttribute('data-fulltype') })));
+      this.outerHTML = `<${type} src="${FileStore.get(id)??src}" alt="Message attachment: ${this.getAttribute('data-name')}" controls loading="lazy"></${type}>`.replace('</img>','');
     }
   }
 }
@@ -643,9 +648,9 @@ let MDCustom = (txt)=>{
   return txt;
 };
 
-const textdisplay = ['text/plain','text/html','text/css','text/csv','text/tab-separated-values','text/markdown','text/x-markdown','text/xml','application/xhtml+xml','text/javascript','text/ecmascript','text/x-python','text/x-c','text/x-c++','text/x-java','text/x-java-source','text/x-rustsrc','text/x-go','text/x-php','text/x-perl','text/x-ruby','text/x-lua','text/vcard','text/vcalendar','text/calendar','text/x-vcard','text/x-vcalendar','application/json','application/ld+json','application/xml','application/javascript','application/ecmascript','application/x-www-form-urlencoded','application/yaml','application/x-yaml','text/x-yaml','application/graphql','application/sql','application/toml','application/x-toml','text/x-toml','application/ini','text/x-ini','application/x-sh','application/x-httpd-php']
+const textdisplay = ['text/plain','text/html','text/css','text/csv','text/tab-separated-values','text/markdown','text/x-markdown','text/xml','application/xhtml+xml','text/javascript','text/ecmascript','text/x-python','text/x-c','text/x-c++','text/x-java','text/x-java-source','text/x-rustsrc','text/x-go','text/x-php','text/x-perl','text/x-ruby','text/x-lua','text/vcard','text/vcalendar','text/calendar','text/x-vcard','text/x-vcalendar','application/json','application/ld+json','application/xml','application/javascript','application/ecmascript','application/x-www-form-urlencoded','application/yaml','application/x-yaml','text/x-yaml','application/graphql','application/sql','application/toml','application/x-toml','text/x-toml','application/ini','text/x-ini','application/x-sh','application/x-httpd-php'];
 function attachToElem(att, key) {
-  let data = ` data-fulltype="${sanitizeHTML(att.mimetype)}" data-id="${sanitizeMinimChars(att.id)}" data-name="${sanitizeAttr(att.filename)}" data-size="${sanitizeMinimChars(att.size.toString())}" data-encrypted="${sanitizeMinimChars(att.encrypted.toString())}"${att.encrypted?` data-iv="${(att.iv??'').replaceAll(/[^a-zA-Z0-9\+\/\=]/g,'')}" data-key="${sanitizeMinimChars(key??'')}"`:''}`;
+  let data = ` data-fulltype="${sanitizeHTML(att.mimetype)}" data-id="${sanitizeMinimChars(att.id)}" data-name="${sanitizeAttr(att.filename)}" data-size="${sanitizeMinimChars(att.size.toString())}" data-encrypted="${sanitizeMinimChars(att.encrypted.toString())}"${att.encrypted?` data-iv="${(att.iv??'').replaceAll(/[^a-zA-Z0-9\+\/\=]/g,'')}" data-key="${sanitizeMinimChars(key??'')}"`:''}${att.previewUrl?` data-previewurl="${att.previewUrl}"`:''}`;
   if (textdisplay.includes(att.mimetype)) return `<media-com type="text"${data}></media-com>`;
   let type = att.mimetype.split('/')[0];
   switch(type) {

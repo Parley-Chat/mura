@@ -710,6 +710,13 @@ emoji-picker {
 .fileList > * {
   max-width: 45vw;
   max-height: 35dvh;
+  transition: filter var(--time);
+}
+.message.ghost-1 .fileList > *:not(:hover) {
+  filter: grayscale(0.75);
+}
+.message.ghost-2 .fileList > *:not(:hover) {
+  filter: sepia(0.75) hue-rotate(-50deg);
 }
 
 #mentionmenu {
