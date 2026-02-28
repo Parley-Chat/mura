@@ -43,7 +43,7 @@ const imageicon = '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15
 window.messages = {};
 let files = [];
 let reply = null;
-messageInput.oninput = messageInput.onchange = function() {
+messageInput.oninput = messageInput.onchange = ()=>{
   messageInput.style.height = 'auto';
   messageInput.style.height = Math.min(messageInput.scrollHeight-4, 16 * 10) + 'px';
 };
@@ -252,9 +252,9 @@ function handleMentionMenu() {
     if (mentionMenu.innerHTML.length<3) mentionMenu.style.display = 'none';
   }
 }
-messageInput.onkeydown = function(event) {
-  if (event.key!=='Enter'||event.shiftKey) return;
-  event.preventDefault();
+messageInput.onkeydown = (evt)=>{
+  if (evt.key!=='Enter'||evt.shiftKey) return;
+  evt.preventDefault();
   mentionMenu.style.display = 'none';
   MessageSend();
 };
@@ -330,8 +330,8 @@ function addFiles(fils) {
   }
   filePreview();
 }
-fileInput.onchange = (event)=>{
-  addFiles(Array.from(event.target.files));
+fileInput.onchange = (evt)=>{
+  addFiles(Array.from(evt.target.files));
   fileInput.value = '';
 };
 const recorderModal = document.getElementById('recorder');
@@ -439,8 +439,8 @@ tippy(attachAdd, {
     };
   }
 });
-messageInput.onpaste = (event)=>{
-  let items = (event.clipboardData??event.originalEvent.clipboardData).items;
+messageInput.onpaste = (evt)=>{
+  let items = (evt.clipboardData??evt.originalEvent.clipboardData).items;
   items = Array.from(items).filter(item=>item.kind==='file').map(item=>item.getAsFile());
   if (items.length<1) return;
   addFiles(items);
@@ -640,7 +640,7 @@ window.downloadfile = (id, name)=>{
 let MDCustom = (txt)=>{
   // User mentions
   txt = txt
-    .replaceAll(/@([a-zA-Z0-9_\-]{3,20}?|e)(?=$|\s|\*|\_|\~|<|@)/gi, function(match){return `<span class="mention">${match}</span>`});
+    .replaceAll(/@([a-zA-Z0-9_\-]{3,20}?|e)(?=$|\s|\*|\_|\~|<|@)/gi, (match)=>`<span class="mention">${match}</span>`);
   // Emoji
   txt = txt
     .replaceAll(/:([a-zA-Z0-9_<!%&\?\*\+\.\- ]+?):/g, (match,g1)=>window.emojiShort[g1.toLowerCase()]??match);
@@ -932,7 +932,7 @@ window.unblockmember = (id)=>{
   backendfetch('/api/v1/me/block/'+id, {
     method: 'DELETE'
   })
-    .then(()=>{window.viewblocks()});
+    .then(document.querySelector('#edit-user button[tlang="user.blocks"]').onclick);
 };
 window.permmember = (id)=>{
   let perm = Number(MemberStore.get(window.currentChannel).find(mem=>mem.username===id).permissions)??0;
@@ -954,7 +954,7 @@ window.permmember = (id)=>{
         permissions: Array.from(modal.querySelectorAll('input')).map(i=>i.checked?Number(i.getAttribute('data-weight')):0).reduce((a, b)=>a+b,0)
       })
     })
-      .then(()=>{modal.close()});
+      .then(modal.close);
   };
   modal.querySelector('button.sync').style.display = '';
   modal.querySelector('button.sync').onclick = ()=>{
@@ -965,7 +965,7 @@ window.permmember = (id)=>{
       },
       body: JSON.stringify({ permissions: null })
     })
-      .then(()=>{modal.close()});
+      .then(modal.close);
   };
 };
 window.kickmember = (id)=>{
@@ -991,7 +991,7 @@ window.unbanmember = async(id)=>{
   backendfetch(`/api/v1/channel/${window.currentChannel}/bans/${id}`, {
     method: 'DELETE'
   })
-    .then(()=>{window.bansPanel()});
+    .then(window.bansPanel);
 };
 function getMembers(id, page=1) {
   if (!MemberStore.has(id)) MemberStore.set(id, []);
@@ -1101,7 +1101,7 @@ function permchannel(id) {
       method: 'PATCH',
       body: formData
     })
-      .then(()=>{modal.close()});
+      .then(modal.close);
   };
   modal.querySelector('button.sync').style.display = 'none';
 }
@@ -1114,7 +1114,7 @@ function changeChannel(id) {
   document.getElementById('ce-name').value = channel.name;
   modal.querySelector('.img').src = channel.pfp?pfpById(channel.pfp):userToDefaultPfp(channel);
 
-  document.getElementById('cec-name').onclick = function(){
+  document.getElementById('cec-name').onclick = ()=>{
     let formData = new FormData();
     formData.append('name', document.getElementById('ce-name').value);
     backendfetch('/api/v1/channel/'+id, {
@@ -1141,16 +1141,16 @@ function changeChannel(id) {
         modal.querySelector('.img').src = res.updated_channel.pfp?pfpById(res.updated_channel.pfp):userToDefaultPfp(res.updated_channel);
       });
   }
-  document.getElementById('cec-img').onclick = function(){
+  document.getElementById('cec-img').onclick = ()=>{
     document.getElementById('ce-imginp').click();
   };
-  document.getElementById('cec-copyid').onclick = function(){
+  document.getElementById('cec-copyid').onclick = ()=>{
     navigator.clipboard.writeText(id);
   }
-  document.getElementById('cec-editperms').onclick = function(){
+  document.getElementById('cec-editperms').onclick = ()=>{
     permchannel(id);
   }
-  document.getElementById('cec-delete').onclick = function(){
+  document.getElementById('cec-delete').onclick = ()=>{
     window.leaveChannel(id, true);
     modal.close();
   }
@@ -1207,7 +1207,7 @@ async function joinChannel() {
 }
 window.joinChannel = joinChannel;
 let last = '';
-document.getElementById('search').onkeyup = function(evt) {
+document.getElementById('search').onkeyup = (evt)=>{
   let query = evt.target.value.toLowerCase();
   if (last===query) return;
   last = query;
@@ -1231,7 +1231,7 @@ window.bansPanel = ()=>{
   <img src="${ban.pfp?pfpById(ban.pfp):userToDefaultPfp(ban)}" width="30" height="30" aria-hidden="true" loading="lazy">
   <span>
     <b>${sanitizeHTML(ban.display??sanitizeMinimChars(ban.username))}</b>
-    <span class="by">by: ${sanitizeHTML(ban.banned_by_display??sanitizeMinimChars(ban.banned_by_username))}</span>
+    <span class="small">by: ${sanitizeHTML(ban.banned_by_display??sanitizeMinimChars(ban.banned_by_username))}</span>
     <span>${sanitizeHTML(ban.reason??'')}</span>
   </span>
   <button onclick="window.unbanmember('${sanitizeMinimChars(ban.username)}')">x</button>
@@ -1249,13 +1249,13 @@ window.invitePanel = ()=>{
     backendfetch(`/api/v1/channel/${window.currentChannel}/invite`, {
       method: 'POST'
     })
-      .then(()=>window.invitePanel());
+      .then(window.invitePanel);
   };
   document.querySelector('#inviteModal .rem').onclick = ()=>{
     backendfetch(`/api/v1/channel/${window.currentChannel}/invite`, {
       method: 'DELETE'
     })
-      .then(()=>window.invitePanel());
+      .then(window.invitePanel);
   };
   document.querySelector('#inviteModal .set').onclick = ()=>{
     let formData = new FormData();
@@ -1265,7 +1265,7 @@ window.invitePanel = ()=>{
       method: 'POST',
       body: formData
     })
-      .then(()=>window.invitePanel());
+      .then(window.invitePanel);
   };
 };
 window.notifPanel = ()=>{
@@ -1499,68 +1499,21 @@ window.deletesession = (id)=>{
   backendfetch('/api/v1/me/session/'+id, {
     method: 'DELETE'
   })
-    .then(()=>window.viewsessions());
-};
-window.viewsessions = ()=>{
-  let modal = document.getElementById('sessions');
-  modal.showModal();
-  backendfetch('/api/v1/me/sessions')
-    .then(async(res)=>{
-      let key = (await getRSAKeyPair()).privateKey;
-      res.sort((a,b)=>b.logged_in_at-a.logged_in_at);
-      for (let i = 0; i<res.length; i++) {
-        res[i].browser = await decryptRSAString(res[i].browser, key);
-        res[i].device = await decryptRSAString(res[i].device, key);
-      }
-      modal.querySelector('div').innerHTML = res
-        .map(ses=>`<div class="session">
-  <span>
-    <span>${ses.browser} · ${ses.device}</span>
-    <span class="small">${formatTime(Math.floor(ses.logged_in_at*1000))}</span>
-  </span>
-  ${ses.current?'<span tlang="user.currentsession">(current)</span>':`<button onclick="window.deletesession('${sanitizeMinimChars(ses.id)}')">x</button>`}
-</div>`)
-        .join('');
-      window.translate();
-    });
-};
-window.viewblocks = ()=>{
-  let modal = document.getElementById('blocks');
-  modal.showModal();
-  backendfetch('/api/v1/me/blocks')
-    .then(res=>{
-      modal.querySelector('div').innerHTML = res
-        .map(usr=>`<div class="block">
-  <img src="${usr.pfp?pfpById(usr.pfp):userToDefaultPfp(usr)}" width="30" height="30" aria-hidden="true" loading="lazy">
-  <span>
-    <span>${sanitizeHTML(usr.display??sanitizeMinimChars(usr.username))}</span>
-    <span class="small">${formatTime(Math.floor(usr.blocked_at*1000))}</span>
-  </span>
-  <button onclick="window.unblockmember('${sanitizeMinimChars(usr.username)}')">x</button>
-</div>`)
-        .join('')||'<span tlang="user.noblocks">No blocked users</span>';
-      window.translate();
-    });
-  modal.querySelector('button.add').onclick = async()=>{
-    let mem = await ask('user.blockask', 3);
-    if (!mem) return;
-    window.blockmember(mem);
-    setTimeout(()=>{window.viewblocks()}, 100);
-  };
+    .then(document.querySelector('#edit-user button[tlang="user.sessions"]').onclick);
 };
 window.useredit = ()=>{
   let modal = document.getElementById('edit-user');
   modal.showModal();
   backendfetch('/api/v1/me', { passstatus: true })
-    .then(me=>{showuserdata(me)});
-  document.getElementById('uec-display').onclick = ()=>{
+    .then(showuserdata);
+  document.getElementById('ue-display').onchange = ()=>{
     let formData = new FormData();
     formData.append('display', document.getElementById('ue-display').value);
     backendfetch('/api/v1/me', {
       method: 'PATCH',
       body: formData
     })
-      .then(()=>{window.useredit()});
+      .then(window.useredit);
   };
   document.getElementById('ue-imginp').onchange = async(evt)=>{
     if (!evt.target.files[0]) return;
@@ -1572,10 +1525,62 @@ window.useredit = ()=>{
       method: 'PATCH',
       body: formData
     })
-      .then(()=>{window.useredit()});
+      .then(window.useredit);
   }
-  document.getElementById('ue-img').onclick = function(){
+  document.getElementById('ue-img').onclick = ()=>{
     document.getElementById('ue-imginp').click();
+  };
+  let blockspage = modal.querySelector('button[tlang="user.blocks"]');
+  let sessionspage = modal.querySelector('button[tlang="user.sessions"]');
+  let addbtn = modal.querySelector('button[tlang="user.addblock"]');
+  let dangerbtn = modal.querySelector('button[tlang="user.logoutall"]');
+  blockspage.onclick = ()=>{
+    addbtn.style.display = '';
+    dangerbtn.style.display = 'none';
+    backendfetch('/api/v1/me/blocks')
+      .then(res=>{
+        modal.querySelector('.list').innerHTML = res
+          .map(usr=>`<div class="block">
+  <img src="${usr.pfp?pfpById(usr.pfp):userToDefaultPfp(usr)}" width="30" height="30" aria-hidden="true" loading="lazy">
+  <span>
+    <span>${sanitizeHTML(usr.display??sanitizeMinimChars(usr.username))}</span>
+    <span class="small">${formatTime(Math.floor(usr.blocked_at*1000))}</span>
+  </span>
+  <button onclick="window.unblockmember('${sanitizeMinimChars(usr.username)}')">x</button>
+</div>`)
+          .join('')||'<span tlang="user.noblocks">No blocked users</span>';
+        window.translate();
+      });
+    addbtn.onclick = async()=>{
+      let mem = await ask('user.blockask', 3);
+      if (!mem) return;
+      window.blockmember(mem);
+      setTimeout(blockspage.onclick, 100);
+    };
+  };
+  sessionspage.onclick = ()=>{
+    addbtn.style.display = 'none';
+    dangerbtn.style.display = '';
+    backendfetch('/api/v1/me/sessions')
+      .then(async(res)=>{
+        let key = (await getRSAKeyPair()).privateKey;
+        res.sort((a,b)=>b.logged_in_at-a.logged_in_at);
+        for (let i = 0; i<res.length; i++) {
+          res[i].browser = await decryptRSAString(res[i].browser, key);
+          res[i].device = await decryptRSAString(res[i].device, key);
+        }
+        modal.querySelector('.list').innerHTML = res
+          .map(ses=>`<div class="session">
+  <span>
+    <span>${ses.browser} · ${ses.device}</span>
+    <span class="small">${formatTime(Math.floor(ses.logged_in_at*1000))}</span>
+  </span>
+  ${ses.current?'<span tlang="user.currentsession">(current)</span>':`<button onclick="window.deletesession('${sanitizeMinimChars(ses.id)}')">x</button>`}
+</div>`)
+          .join('');
+        window.translate();
+      });
+    dangerbtn.onclick = logoutall;
   };
 };
 window.showuserdata = (me)=>{
@@ -1594,6 +1599,7 @@ window.showuserdata = (me)=>{
     document.querySelector('#user img').setAttribute('title', me.username);
     document.getElementById('ue-display').value = me.display??'';
     document.getElementById('ue-display').placeholder = me.username??'';
+    document.getElementById('ue-orig').innerText = me.username??'';
     document.querySelector('#edit-user img').src = me.pfp?pfpById(me.pfp):userToDefaultPfp(me);
     PKStore.set(window.username, localStorage.getItem(window.currentServer+'-publicKey'));
   }
@@ -1667,7 +1673,7 @@ tippy([document.getElementById('btn-languages'),document.getElementById('srv-btn
 function postLogin() {
   // DB
   let dbRequest = indexedDB.open('data', 2);
-  dbRequest.onupgradeneeded = function(e) {
+  dbRequest.onupgradeneeded = (e)=>{
     let db = e.target.result;
     if (!db.objectStoreNames.contains('servers')) {
       db.createObjectStore('servers');
@@ -1696,8 +1702,6 @@ function postLogin() {
   tippy(document.getElementById('user'), {
     allowHTML: true,
     content: `<button onclick="window.useredit()" tlang="user.edit">Edit</button>
-<button onclick="window.viewblocks()" tlang="user.blocks">Blocks</button>
-<button onclick="window.viewsessions()" tlang="user.sessions">Sessions</button>
 <button onclick="localStorage.removeItem('pls');location.reload()" tlang="user.changeserver">Change server</button>
 <button onclick="logout()" tlang="user.logout" style="color:var(--invalid)">Log out</button>`,
     interactive: true,

@@ -109,6 +109,10 @@ svg {
   fill: currentColor;
   stroke: currentColor;
 }
+hr {
+  color: var(--text-2);
+  border-style: solid;
+}
 dialog {
   padding: 10px;
   color: var(--text-1);
@@ -130,6 +134,10 @@ dialog {
   border: none;
   background: none;
   z-index: 11;
+}
+.small {
+  color: var(--text-2);
+  font-size: 80%;
 }
 
 .gutter {
@@ -371,6 +379,16 @@ footer .tippy-content span {
   align-items: center;
 }
 
+.view {
+  display: flex;
+  align-items: center;
+}
+.view > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .block, .session {
   display: flex;
   gap: 5px;
@@ -383,10 +401,6 @@ footer .tippy-content span {
   flex: 1;
   display: flex;
   flex-direction: column;
-}
-.block span.small, .session span.small {
-  color: var(--text-2);
-  font-size: 80%;
 }
 
 .ban {
@@ -401,10 +415,6 @@ footer .tippy-content span {
   flex: 1;
   display: flex;
   flex-direction: column;
-}
-.ban .by {
-  font-size: 75%;
-  color: var(--text-2);
 }
 
 #permModal input {
@@ -744,10 +754,6 @@ emoji-picker {
 #mentionmenu > div > div {
   display: flex;
   flex-direction: column;
-}
-#mentionmenu .small {
-  color: var(--text-2);
-  font-size: 75%;
 }
 
 #pinsModal, #notifModal {

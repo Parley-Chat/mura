@@ -130,30 +130,28 @@
     <dialog id="edit-user">
       <button onclick="this.parentElement.close()" class="modal-close">x</button>
       <h2 tlang="user.editing">Editing your profile</h2>
-      <label for="ue-display" tlang="user.edit.display">Display:</label>
-      <input id="ue-display" minlength="1" maxlength="25">
-      <button id="uec-display" tlang="user.edit.change">Change</button>
-      <br>
-      <span tlang="user.edit.pfp">Profile Picture:</span>
-      <button id="ue-img" tlang="user.edit.change">Change</button>
-      <input id="ue-imginp" type="file" accept="image/*" style="display:none">
-      <br>
-      <img alt="Profile Picture" tlang="user.pfpalt">
-      <br>
+      <div class="view">
+        <div>
+          <span tlang="user.edit.pfp">Profile Picture:</span>
+          <button id="ue-img" tlang="user.edit.change"><img alt="Profile Picture" tlang="user.pfpalt" width="80" height="80"></button>
+          <input id="ue-imginp" type="file" accept="image/*" style="display:none">
+        </div>
+        <div>
+          <div>
+            <label for="ue-display" tlang="user.edit.display">Display:</label>
+            <input id="ue-display" minlength="1" maxlength="25">
+          </div>
+          <span id="ue-orig" class="small" style="width:100%">Username</span>
+        </div>
+      </div>
       <button onclick="downloadKeys()" tlang="user.downloadkeys">Download keys</button>
       <button onclick="backendfetch('/api/v1/me',{method:'DELETE'}).then(()=>{logout()})" class="danger" tlang="user.delete">Delete Account</button>
-    </dialog>
-    <dialog id="blocks">
-      <button onclick="this.parentElement.close()" class="modal-close">x</button>
-      <h2 tlang="user.blocks">Blocks</h2>
-      <div></div>
-      <button class="add" tlang="user.addblock">Add user</button>
-    </dialog>
-    <dialog id="sessions">
-      <button onclick="this.parentElement.close()" class="modal-close">x</button>
-      <h2 tlang="user.sessions">Sessions</h2>
-      <div></div>
-      <button onclick="logoutall()" class="danger" tlang="user.logoutall">Log out all sessions</button>
+      <hr>
+      <button tlang="user.blocks">Blocks</button>
+      <button tlang="user.sessions">Sessions</button>
+      <div class="list" style="overflow-y:auto;max-height:42dvh;"></div>
+      <button style="display:none" tlang="user.addblock">Add user</button>
+      <button class="danger" style="display:none" tlang="user.logoutall">Log out all sessions</button>
     </dialog>
     <dialog id="edit-channel">
       <button onclick="this.parentElement.close()" class="modal-close">x</button>
