@@ -38,7 +38,7 @@
     <script src="./external/tippy.js" integrity="sha384-Ex/maivNgbNC5oCY7IoOEm1CnA5wOx/NxMhrbCcaABO5rOlIFVMIaPWL/FgQqME5" crossorigin="anonymous"></script>
     <script src="./external/mdparse.js" crossorigin="anonymous"></script>
     <script src="./external/twemoji.js" integrity="sha384-32KMvAMS4DUBcQtHG6fzADguo/tpN1Nh6BAJa2QqZc6/i0K+YPQE+bWiqBRAWuFs" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js" type="module"></script>
+    <script src="./external/picker.js" type="module"></script>
     <script>
       // From emoji-picker-element-data
       fetch('./external/emoji.json')
@@ -257,7 +257,6 @@
           <button onclick="window.toggleSize()" class="expand" tlang="channel.call.expand"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M128.256 192.256C128.298 192.255 128.339 192.254 128.381 192.253C128.459 192.251 128.537 192.249 128.615 192.246C128.725 192.242 128.834 192.237 128.944 192.231C128.954 192.231 128.964 192.231 128.975 192.23C129.093 192.224 129.211 192.216 129.328 192.207C129.359 192.204 129.39 192.202 129.421 192.2C131.204 192.056 132.973 191.639 134.662 190.943C134.679 190.936 134.695 190.929 134.711 190.923C134.825 190.875 134.939 190.827 135.052 190.777C135.071 190.769 135.091 190.76 135.111 190.752C135.204 190.71 135.297 190.668 135.39 190.625C135.445 190.599 135.499 190.574 135.554 190.548C135.626 190.513 135.698 190.478 135.77 190.442C135.839 190.408 135.908 190.372 135.978 190.337C136.017 190.316 136.057 190.296 136.097 190.275C137.309 189.643 138.458 188.863 139.518 187.934L249.861 93.8152C257.214 87.5432 258.09 76.4976 251.819 69.1443C245.546 61.791 234.5 60.9141 227.147 67.1863L128 151.757L28.8576 67.1863C21.5044 60.914 10.4581 61.7901 4.18574 69.1433C-2.08583 76.4965 -1.21001 87.5421 6.14277 93.8142L116.516 187.965C117.459 188.786 118.472 189.492 119.537 190.08C119.557 190.091 119.577 190.1 119.596 190.111C119.655 190.143 119.714 190.176 119.774 190.208L119.941 190.296C119.973 190.312 120.005 190.328 120.037 190.344C120.104 190.379 120.171 190.413 120.238 190.446C120.315 190.484 120.391 190.522 120.468 190.558C120.508 190.577 120.547 190.595 120.587 190.614C120.683 190.659 120.779 190.703 120.875 190.746C120.901 190.757 120.927 190.769 120.952 190.78C123.027 191.694 125.233 192.18 127.444 192.249C127.453 192.249 127.462 192.249 127.472 192.25C127.733 192.257 127.995 192.26 128.256 192.256Z"></path></svg></button>
         </div>
         <div id="messages"></div>
-        <emoji-picker data-source='./external/emoji.json' style="display:none"></emoji-picker>
         <div id="mentionmenu" style="display:none"></div>
         <div id="replypreview" style="display:none">
           <span tlang="message.replying">Replying to</span>
@@ -274,6 +273,7 @@
         </div>
         <div class="bar fake" tlang="message.cant" style="display:none">You can't send messages here</div>
       </main>
+      <emoji-picker data-source='./external/emoji.json' style="display:none"></emoji-picker>
     </div>
     <div class="lateral" style="display:none"></div>
     <!-- Scripts -->
