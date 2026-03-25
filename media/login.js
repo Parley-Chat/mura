@@ -156,7 +156,8 @@ document.getElementById('login-btn').onclick = async()=>{
             privateKey: localStorage.getItem(window.currentServer+'-privateKey')
           })], { type: 'text/plain' });
           document.getElementById('s-download').href = URL.createObjectURL(blob);
-          document.getElementById('s-download').download = document.getElementById('l-username').value+'.keys';
+          let instanceFileName = sanitizeMinimChars(getCurrentServerUrl().split('://')[1].split('/')[0].split(':')[0].replaceAll('.','-'));
+          document.getElementById('s-download').download = document.getElementById('l-username').value+'.'+instanceFileName+'.keys';
           let modal = document.getElementById('signup-modal');
           modal.showModal();
           let doneBtn = document.getElementById('s-done');

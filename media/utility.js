@@ -542,12 +542,23 @@ function notify(type, data, context=null) {
       if (data.user.pfp) base.icon = '/pfp/'+data.user.pfp;
       let att = data.attachments.filter(att=>att.mimetype.startsWith('image/'));
       if (att[0]) base.image = '/attachment/'+att[0].id;
-      new Notification(data.user.display??data.user.username, base);
+      let notif = new Notification(data.user.display??data.user.username, base);
+      notif.onclick = (evt)=>{
+        evt.preventDefault();
+        window.focus();
+        if (window.currentChannel!==context) loadChannel(context);
+      };
       break;
     case 'call_start':
       base.timestamp = Date.now();
       getTranslation('channel.callincoming')
-        .then(t=>new Notification(t.replace('{}',data.started_by), base));
+        .then(t=>{
+          let notif = new Notification(t.replace('{}',data.started_by), base);
+          notif.onclick = (evt)=>{
+            evt.preventDefault();
+            window.focus();
+          };
+        });
       break;
   }
 }

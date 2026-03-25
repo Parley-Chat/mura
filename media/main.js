@@ -388,7 +388,7 @@ recorderModal.querySelector('.toggle').onclick = async () => {
 
     ctx.clearRect(0, 0, 300, 100);
     volumes.forEach((val,idx)=>{
-      ctx.fillStyle = 'hsl('+val*160+', 50%, 50%)';
+      ctx.fillStyle = `hsl(${val*160}, 50%, 50%)`;
       ctx.beginPath();
       ctx.roundRect(10*idx+1, 100-val*100, 8, val*100, 10);
       ctx.fill();
@@ -417,6 +417,10 @@ recorderModal.querySelector('.toggle').onclick = async () => {
   };
 
   getVolume();
+};
+recorderModal.onclose = ()=>{
+  mediaRecorder.stop();
+  recorderModal.querySelector('.toggle').setAttribute('tlang', 'message.voice.record');
 };
 tippy(attachAdd, {
   allowHTML: true,
@@ -1834,3 +1838,27 @@ function postLogin() {
     });
 }
 window.postLogin = postLogin;
+
+/*
+document.body.insertAdjacentHTML('beforeend',`<style>
+side {
+  position: relative;
+  padding: 8px;
+  border-radius: var(--roundness-2);
+  background-color: var(--bg-2);
+  box-sizing: border-box;
+}
+side button, side input {
+  border: 2px var(--bg-1) solid;
+  background-color: var(--bg-1);
+}
+footer button {
+  border: 2px var(--bg-2) solid;
+  background-color: var(--bg-2);
+}
+#channels button.other {
+  border-width: 0;
+  transition-property: width, border-width, opacity, background-color;
+}
+</style>`);
+*/
