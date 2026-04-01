@@ -751,10 +751,12 @@ async function showMessages(messages) {
   }
   messagesContainer.innerHTML = message;
   Array.from(document.querySelectorAll('.message .more')).forEach(btn=>{
+    let id = btn.getAttribute('data-id');
     tippy(btn, {
       allowHTML: true,
       content: (window.username!==btn.getAttribute('username')?`<button onclick="window.blockmember('${btn.getAttribute('username')}')" class="danger" tlang="member.block">Block</button>`:'')+
-`<button onclick="navigator.clipboard.writeText('${btn.getAttribute('data-id')}')" tlang="settings.copyid">Copy id</button>`,
+`<button onclick="navigator.clipboard.writeText(desanitizeAttr('${sanitizeAttr(messages.find(msg=>msg.id===id).content)}'))" tlang="message.copy">Copy Contents</button>
+<button onclick="navigator.clipboard.writeText('${id}')" tlang="settings.copyid">Copy id</button>`,
       interactive: true,
       trigger: 'click',
       placement: 'bottom-end',
