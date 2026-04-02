@@ -98,10 +98,10 @@ async function BasicSend(msg, sign, channel, akey=null, iv=null) {
     key: null,
     iv: null,
     edited_at: null,
-    replied_to: null,
+    replied_to: reply
   });
   window.messages[channel][0].user.hide = shouldHideUser(window.messages[channel], 0);
-  messagesContainer.insertAdjacentHTML('afterbegin', await displayMessage(window.messages[channel][0], channel, 2));
+  messagesContainer.insertAdjacentHTML('afterbegin', await displayMessage(window.messages[channel][0], window.channels.find(ch=>ch.id===channel), 2));
   // Cleanup
   messageInput.value = '';
   messageInput.oninput();
