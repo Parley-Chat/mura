@@ -547,6 +547,10 @@ window.editMessage = (msg, key, elem, cont)=>{
   textarea.oninput();
   elem.querySelector('button.save').onclick = ()=>{
     textarea.value = textarea.value.trim();
+    if (textarea.value===desanitizeAttr(cont)) {
+      elem.querySelector('button.cancel').onclick();
+      return;
+    }
     if (window.currentChannelType===3) {
       EditMessage(window.currentChannel, msg, textarea.value, textarea.value);
     } else {
@@ -1446,7 +1450,19 @@ function startStream() {
     }
     // Show
     window.messages[data.channel_id][0].user.hide = shouldHideUser(window.messages[data.channel_id], 0);
-    if (window.currentChannel===data.channel_id) messagesContainer.insertAdjacentHTML('afterbegin', await displayMessage(window.messages[data.channel_id][0], window.channels[0]));
+    if (window.currentChannel===data.channel_id) {
+      messagesContainer.insertAdjacentHTML('afterbegin', await displayMessage(window.messages[data.channel_id][0], window.channels[0]));
+      tippy(document.querySelector('.message .more'), {
+        allowHTML: true,
+        content: (window.username!==window.messages[data.channel_id][0].user.username?`<button onclick="window.blockmember('${sanitizeMinimChars(window.messages[data.channel_id][0].user.username)}')" class="danger" tlang="member.block">Block</button>`:'')+
+  `<button onclick="navigator.clipboard.writeText(desanitizeAttr('${sanitizeAttr(window.messages[data.channel_id][0].content)}'))" tlang="message.copy">Copy Contents</button>
+  <button onclick="navigator.clipboard.writeText('${sanitizeMinimChars(window.messages[data.channel_id][0].id)}')" tlang="settings.copyid">Copy id</button>`,
+        interactive: true,
+        trigger: 'click',
+        placement: 'bottom-end',
+        sticky: true
+      });
+    }
     // Save last
     window.channels[0].last_message = {
       id: sanitizeMinimChars(data.message.id),
@@ -1471,7 +1487,19 @@ function startStream() {
     window.messages[data.channel_id][idx].key = data.message.key;
     window.messages[data.channel_id][idx].iv = data.message.iv;
     window.messages[data.channel_id][idx].edited_at = data.message.edited_at;
-    if (window.currentChannel===data.channel_id) document.getElementById('m-'+data.message.id).outerHTML = await displayMessage(window.messages[data.channel_id][idx], window.channels[idxc]);
+    if (window.currentChannel===data.channel_id) {
+      document.getElementById('m-'+data.message.id).outerHTML = await displayMessage(window.messages[data.channel_id][idx], window.channels[idxc]);
+      tippy(document.getElementById('m-'+data.message.id).querySelector('.more'), {
+        allowHTML: true,
+        content: (window.username!==data.message.user.username?`<button onclick="window.blockmember('${sanitizeMinimChars(data.message.user.username)}')" class="danger" tlang="member.block">Block</button>`:'')+
+`<button onclick="navigator.clipboard.writeText(desanitizeAttr('${sanitizeAttr(window.messages[data.channel_id].find(msg=>msg.id===data.message.id).content)}'))" tlang="message.copy">Copy Contents</button>
+<button onclick="navigator.clipboard.writeText('${data.message.id}')" tlang="settings.copyid">Copy id</button>`,
+        interactive: true,
+        trigger: 'click',
+        placement: 'bottom-end',
+        sticky: true
+      });
+    }
   });
   window.stream.addEventListener('message_deleted', (event)=>{
     let data = JSON.parse(event.data);
