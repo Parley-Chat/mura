@@ -193,6 +193,7 @@ async function CryptSend(msg, channel) {
     // Files
     for (let i=0; i<files.length; i++) {
       if (!files[i].encrypted) continue;
+      let orig = files[i].file;
       let encfile = await encryptAES(await files[i].file.arrayBuffer(), nkey)
       files[i].iv = encfile.iv;
       files[i].file = new File(
@@ -200,6 +201,7 @@ async function CryptSend(msg, channel) {
         files[i].name,
         { type: files[i].file.type }
       );
+      FileStore.set(files[i].file, FileStore.get(orig));
     }
     // Send
     BasicSend(enc.data, msg, channel, last, enc.iv);
@@ -584,6 +586,70 @@ window.previewMessage = (msg)=>{
   }, 500);
 };
 
+window.expandMedia = (url)=>{
+  let modal = document.getElementById('expandedmedia');
+  let img = modal.querySelector('img');
+  modal.showModal();
+  // Image handeling
+  img.src = url;
+  let x = 0;
+  let y = 0;
+  let scale = 1;
+  let prevDist = 1;
+  let pointers = new Map();
+  let setStyle = ()=>{
+    scale = Math.max(Math.min(scale, 10), 0.25);
+    img.style.transform = `translate(${x}px, ${y}px) scale(${scale*scale})`;
+  };
+  setStyle();
+  modal.onwheel = (evt)=>{
+    scale -= evt.deltaY/1000;
+    setStyle();
+  };
+  modal.querySelector('.minus').onclick = ()=>{
+    scale -= 0.5;
+    setStyle();
+  }
+  modal.querySelector('.plus').onclick = ()=>{
+    scale += 0.5;
+    setStyle();
+  }
+  modal.onpointerdown = (evt)=>{
+    modal.setPointerCapture(evt.pointerId);
+    pointers.set(evt.pointerId, { x: evt.clientX, y: evt.clientY });
+    if (pointers.size === 2) {
+      const [p1, p2] = Array.from(pointers.values());
+      prevDist = Math.hypot(p1.x-p2.x, p1.y-p2.y);
+    }
+  };
+  modal.onpointermove = (evt)=>{
+    if (!pointers.has(evt.pointerId)) return;
+    if (pointers.size===2) {
+      pointers.set(evt.pointerId, { x: evt.clientX, y: evt.clientY });
+      const [p1, p2] = Array.from(pointers.values());
+      let dist = Math.hypot(p1.x-p2.x, p1.y-p2.y);
+      scale *= dist / prevDist;
+      prevDist = dist;
+    } else {
+      let dat = pointers.get(evt.pointerId);
+      x += evt.clientX-dat.x;
+      y += evt.clientY-dat.y;
+      pointers.set(evt.pointerId, { x: evt.clientX, y: evt.clientY });
+    }
+    setStyle();
+  };
+  modal.onpointerup = modal.onpointercancel = (evt)=>{
+    if (!pointers.has(evt.pointerId)) return;
+    modal.releasePointerCapture(evt.pointerId);
+    pointers.delete(evt.pointerId);
+  };
+  // Cleanup and clear image
+  modal.onclose = ()=>{
+    pointers = null;
+    img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+  };
+};
+
 class MediaCom extends HTMLElement {
   constructor() {
     super();
@@ -625,7 +691,8 @@ class MediaCom extends HTMLElement {
 </div>`;
     } else {
       if (!FileStore.has(id)&&data) FileStore.set(id, URL.createObjectURL(new Blob([data], { type: this.getAttribute('data-fulltype') })));
-      this.outerHTML = `<${type} src="${FileStore.get(id)??src}" alt="Message attachment: ${this.getAttribute('data-name')}" controls loading="lazy"></${type}>`.replace('</img>','');
+      this.outerHTML = `<${type} src="${FileStore.get(id)??src}" alt="Message attachment: ${this.getAttribute('data-name')}" controls draggable="false" loading="lazy"${type==='img'?` role="button" tabindex="0" aria-haspopup="dialog" onclick="window.expandMedia('${FileStore.get(id)??src}')" onkeydown="if([' ','Enter'].includes(event.key))window.expandMedia('${FileStore.get(id)??src}');" tlang="message.expandmedia"`:''}></${type}>`.replace('</img>','');
+      window.translate();
     }
   }
 }

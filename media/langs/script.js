@@ -101,15 +101,14 @@ function translate(attempt=0) {
           return;
         }
         if (['input','textarea'].includes(elem.tagName.toLowerCase())) {
-          let p = 'placeholder';
-          if (elem.getAttribute(p)===trans) return;
-          elem.setAttribute(p, trans);
+          if (elem.getAttribute('placeholder')===trans) return;
+          elem.setAttribute('placeholder', trans);
           return;
         }
         if (elem.tagName.toLowerCase()==='img') {
-          let p = 'alt';
-          if (elem.getAttribute(p)===trans) return;
-          elem.setAttribute(p, trans);
+          if (elem.getAttribute('alt')===trans) return;
+          elem.setAttribute('alt', trans);
+          elem.setAttribute('title', trans);
           return;
         }
         if (['button','span'].includes(elem.tagName.toLowerCase())&&elem.querySelector('svg,img')) {

@@ -152,6 +152,8 @@
   "message.cant": "Je kunt hier geen berichten versturen",
   "message.download": "Downloaden",
   "message.expandmedia": "Media uitvouwen",
+  "message.expandmedia.zoomout": "Uitzoomen",
+  "message.expandmedia.zoomin": "Inzoomen",
   "message.new": "Nieuw",
   "message.attachment.toobig": "{} is te groot",
   "message.attachment.toomany": "Kan niet meer dan {} bijlagen verzenden",

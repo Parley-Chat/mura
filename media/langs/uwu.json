@@ -152,6 +152,8 @@
   "message.cant": "You can't send messages hewe",
   "message.download": "Downwoad",
   "message.expandmedia": "Expand media",
+  "message.expandmedia.zoomout": "Zoom out",
+  "message.expandmedia.zoomin": "Zoom in",
   "message.new": "New",
   "message.attachment.toobig": "{} is too big",
   "message.attachment.toomany": "Cannot have mowe dan {} attachments",

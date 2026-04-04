@@ -152,6 +152,8 @@
   "message.cant": "Sina ken ala toki",
   "message.download": "O awen jo",
   "message.expandmedia": "O suli e sitelen",
+  "message.expandmedia.zoomout": "O lili",
+  "message.expandmedia.zoomin": "O suli",
   "message.new": "Sin",
   "message.attachment.toobig": "{} li suli ike",
   "message.attachment.toomany": "Toki li ken ala jo e lipu pi {} mute",

@@ -152,6 +152,8 @@
   "message.cant": "شما نمی‌توانید پیام‌ها را در اینجا ارسال کنید",
   "message.download": "دانلود",
   "message.expandmedia": "گسترش رسانه",
+  "message.expandmedia.zoomout": "کوچکنمایی",
+  "message.expandmedia.zoomin": "بزرگنمایی",
   "message.new": "جدید",
   "message.attachment.toobig": "{} خیلی بزرگ است",
   "message.attachment.toomany": "نمی‌توان بیش از {} پیوست داشت",

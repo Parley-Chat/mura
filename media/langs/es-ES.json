@@ -152,6 +152,8 @@
   "message.cant": "No puedes enviar mensajes aquí",
   "message.download": "Descargar",
   "message.expandmedia": "Expandir adjunto",
+  "message.expandmedia.zoomout": "Alejar",
+  "message.expandmedia.zoomin": "Acercar",
   "message.new": "Nuevo",
   "message.attachment.toobig": "{} es demasiado grande",
   "message.attachment.toomany": "No se pueden tener mas de {} archivos",
