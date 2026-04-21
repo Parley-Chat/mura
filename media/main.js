@@ -244,7 +244,7 @@ function handleMentionMenu() {
       .filter(usr=>usr.sim>(usr.username.length/3))
       .toSorted((a,b)=>b.sim-a.sim)
       .map(usr=>`<div tabindex="0" role="button" onclick="let k=messageInput.value.slice(0,messageInput.selectionStart).split('@').slice(0,-1).join('@').length+1;messageInput.value=messageInput.value.slice(0,k)+'${sanitizeMinimChars(usr.username)} '+messageInput.value.slice(k+${content.length});messageInput.focus();messageInput.setSelectionRange(k+${sanitizeMinimChars(usr.username).length+1},k+${sanitizeMinimChars(usr.username).length+1});messageInput.onkeyup();">
-  <img src="${usr.pfp?pfpById(usr.pfp):userToDefaultPfp(usr)}" width="42" height="42" aria-hidden="true" loading="lazy" alt="User pfp">
+  <img src="${usr.pfp?pfpById(usr.pfp):userToDefaultPfp(usr)}" width="42" height="42" aria-hidden="true" loading="lazy" onerror="this.src='${userToDefaultPfp(ch)}'">
   <div>
     <span>${sanitizeHTML(usr.display??sanitizeMinimChars(usr.username))}</span>
     <span class="small">@${sanitizeMinimChars(usr.username)}</span>
@@ -771,7 +771,7 @@ async function displayMessage(msg, ch, limited=0) {
     msg.reply = (!reply||reply.iv)?Object.fromEntries(Object.entries(reply??{}).concat([['content','...']])):reply;
   }
   return `<div class="message${msg.ghost?' ghost-'+msg.ghost:''}${(new RegExp('@('+window.username+'|e)($|\\s|\\*|\\_|\\~|<|@)','im')).test(msg.content)||(msg.replied_to&&msg.reply?.user?.username===window.username)?' mention':''}${window.username===msg.user.username?' self':''}" id="m-${sanitizeMinimChars(msg.id)}">
-  ${msg.user.hide?`<span class="time">${formatHour(msg.timestamp)}</span>`:`<div class="avatar"><img src="${msg.user.pfp?pfpById(msg.user.pfp):userToDefaultPfp(msg.user)}" width="42" height="42" aria-hidden="true"></div>`}
+  ${msg.user.hide?`<span class="time">${formatHour(msg.timestamp)}</span>`:`<div class="avatar"><img src="${msg.user.pfp?pfpById(msg.user.pfp):userToDefaultPfp(msg.user)}" width="42" height="42" aria-hidden="true" onerror="this.src='${userToDefaultPfp(msg.user)}'"></div>`}
   <div class="inner">
     <div class="actions">
       ${limited===0?`
@@ -907,7 +907,7 @@ function displayChannel(ch) {
   return `<span>
   ${isPinned?'<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 256 256" class="pin-indicator"><path d="M117.4 6.28699C118.758 0.114336 126.401 -2.11969 130.87 2.34949L253.649 125.126C258.118 129.595 255.883 137.239 249.71 138.597L206.755 148.044C204.89 148.454 203.182 149.39 201.832 150.74L181.588 170.983C180.637 171.934 179.889 173.067 179.386 174.313L154.115 236.957C151.434 243.603 142.838 245.354 137.771 240.287L95.5138 198.03L10.2823 254.884C7.65962 256.633 4.16588 256.288 1.93663 254.058C-0.292345 251.829 -0.63778 248.336 1.11143 245.714L57.964 160.48L15.7091 118.225C10.642 113.158 12.3932 104.562 19.0392 101.881L81.6827 76.6112C82.9295 76.1083 84.0621 75.3587 85.0128 74.4081L105.257 54.1649C106.607 52.8149 107.542 51.1066 107.952 49.2421L117.4 6.28699Z"/></svg>':''}
   <button onclick="window.loadChannel('${ch.id}')">
-    <img src="${ch.pfp?pfpById(ch.pfp):userToDefaultPfp(ch)}" width="30" height="30" aria-hidden="true" loading="lazy">
+    <img src="${ch.pfp?pfpById(ch.pfp):userToDefaultPfp(ch)}" width="30" height="30" aria-hidden="true" loading="lazy" onerror="this.src='${userToDefaultPfp(ch)}'">
     <span class="div">
       <span class="name"${ch.name.length>7||(ch.type===1&&ch.username)?` title="${sanitizeHTML(ch.username??ch.name)}"`:''}>${sanitizeHTML(ch.name)}</span>
       ${ch.last_message?`<span class="msg">${ch.last_message.author.length?ch.last_message.author+': ':''}${lstmsgcnt.replaceAll(/:([a-zA-Z0-9_<!%&\?\*\+\.\- ]+?):/g,(match,g1)=>window.emojiShort[g1.toLowerCase()]??match)}</span>`:''}
@@ -980,7 +980,7 @@ function showMembers(id) {
       if ((a.display??a.username)!==(b.display??b.username)) return (a.display??a.username).localeCompare(b.display??b.username);
       return b.joined_at - a.joined_at;
     })
-    .map(mem=>`<button username="${sanitizeMinimChars(mem.username)}"><img src="${mem.pfp?pfpById(mem.pfp):userToDefaultPfp(mem)}" width="30" height="30" aria-hidden="true" loading="lazy"><span title="${sanitizeMinimChars(mem.username)}">${sanitizeHTML(mem.display??mem.username)}</span></button>`)
+    .map(mem=>`<button username="${sanitizeMinimChars(mem.username)}"><img src="${mem.pfp?pfpById(mem.pfp):userToDefaultPfp(mem)}" width="30" height="30" aria-hidden="true" loading="lazy" onerror="this.src='${userToDefaultPfp(mem)}'"><span title="${sanitizeMinimChars(mem.username)}">${sanitizeHTML(mem.display??mem.username)}</span></button>`)
     .join('');
   document.querySelectorAll('.lateral button:not(.mobile)').forEach(btn=>{
     tippy(btn, {
@@ -1190,6 +1190,7 @@ function changeChannel(id) {
   modal.querySelector('.name').setAttribute('title', channel.name);
   document.getElementById('ce-name').value = channel.name;
   modal.querySelector('.img').src = channel.pfp?pfpById(channel.pfp):userToDefaultPfp(channel);
+  modal.querySelector('.img').onerror = (evt)=>evt.target.src=userToDefaultPfp(channel);
 
   document.getElementById('cec-name').onclick = ()=>{
     let formData = new FormData();
@@ -1201,6 +1202,7 @@ function changeChannel(id) {
       .then(res=>{
         modal.querySelector('.name').innerText = res.updated_channel.name;
         modal.querySelector('.img').src = res.updated_channel.pfp?pfpById(res.updated_channel.pfp):userToDefaultPfp(res.updated_channel);
+        modal.querySelector('.img').onerror = (evt)=>evt.target.src=userToDefaultPfp(res.updated_channel);
       });
   };
   document.getElementById('ce-imginp').onchange = async(evt)=>{
@@ -1216,6 +1218,7 @@ function changeChannel(id) {
       .then(res=>{
         modal.querySelector('.name').innerText = res.updated_channel.name;
         modal.querySelector('.img').src = res.updated_channel.pfp?pfpById(res.updated_channel.pfp):userToDefaultPfp(res.updated_channel);
+        modal.querySelector('.img').onerror = (evt)=>evt.target.src=userToDefaultPfp(res.updated_channel);
       });
   }
   document.getElementById('cec-img').onclick = ()=>{
@@ -1305,7 +1308,7 @@ window.bansPanel = ()=>{
     .then(res=>{
       document.querySelector('#bansModal div').innerHTML = res
         .map(ban=>`<div class="ban">
-  <img src="${ban.pfp?pfpById(ban.pfp):userToDefaultPfp(ban)}" width="30" height="30" aria-hidden="true" loading="lazy">
+  <img src="${ban.pfp?pfpById(ban.pfp):userToDefaultPfp(ban)}" width="30" height="30" aria-hidden="true" loading="lazy" onerror="this.src='${userToDefaultPfp(ban)}'">
   <span>
     <b>${sanitizeHTML(ban.display??sanitizeMinimChars(ban.username))}</b>
     <span class="small">by: ${sanitizeHTML(ban.banned_by_display??sanitizeMinimChars(ban.banned_by_username))}</span>
@@ -1642,7 +1645,7 @@ window.useredit = ()=>{
       .then(res=>{
         modal.querySelector('.list').innerHTML = res
           .map(usr=>`<div class="block">
-  <img src="${usr.pfp?pfpById(usr.pfp):userToDefaultPfp(usr)}" width="30" height="30" aria-hidden="true" loading="lazy">
+  <img src="${usr.pfp?pfpById(usr.pfp):userToDefaultPfp(usr)}" width="30" height="30" aria-hidden="true" loading="lazy" onerror="this.src='${userToDefaultPfp(usr)}'">
   <span>
     <span>${sanitizeHTML(usr.display??sanitizeMinimChars(usr.username))}</span>
     <span class="small">${formatTime(Math.floor(usr.blocked_at*1000))}</span>
@@ -1697,11 +1700,13 @@ window.showuserdata = (me)=>{
     window.servers[window.servers.findIndex(srv=>srv.id===window.currentServer)].name = me.username;
     localStorage.setItem('servers', JSON.stringify(window.servers));
     document.querySelector('#user img').src = me.pfp?pfpById(me.pfp):userToDefaultPfp(me);
+    document.querySelector('#user img').onerror = (evt)=>evt.target.src=userToDefaultPfp(me);
     document.querySelector('#user img').setAttribute('title', me.username);
     document.getElementById('ue-display').value = me.display??'';
     document.getElementById('ue-display').placeholder = me.username??'';
     document.getElementById('ue-orig').innerText = me.username??'';
     document.querySelector('#edit-user img').src = me.pfp?pfpById(me.pfp):userToDefaultPfp(me);
+    document.querySelector('#edit-user img').onerror = (evt)=>evt.target.src=userToDefaultPfp(me);
     PKStore.set(window.username, localStorage.getItem(window.currentServer+'-publicKey'));
   }
   getChannels();
