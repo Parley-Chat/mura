@@ -609,12 +609,13 @@ window.expandMedia = (url)=>{
   modal.querySelector('.minus').onclick = ()=>{
     scale -= 0.5;
     setStyle();
-  }
+  };
   modal.querySelector('.plus').onclick = ()=>{
     scale += 0.5;
     setStyle();
-  }
+  };
   modal.onpointerdown = (evt)=>{
+    if (!['DIALOG','IMG'].includes(evt.target.tagName)) return;
     modal.setPointerCapture(evt.pointerId);
     pointers.set(evt.pointerId, { x: evt.clientX, y: evt.clientY });
     if (pointers.size === 2) {
@@ -1302,6 +1303,7 @@ window.startCall = ()=>{
 window.endCall = ()=>{
   calls.leaveCall();
 }
+window.integratePanel = ()=>{};
 window.bansPanel = ()=>{
   document.getElementById('bansModal').showModal();
   backendfetch(`/api/v1/channel/${window.currentChannel}/bans`)
