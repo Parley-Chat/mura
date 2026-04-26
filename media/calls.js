@@ -30,17 +30,19 @@ function showConnections() {
 
 async function connect(min=false) {
   if (peerConnection) return;
+  let callData = window.serverData[getCurrentServerUrl()].calls
   // Connect
-  let servers = [{urls: window.serverData[getCurrentServerUrl()].calls.stun_servers}];
-  if (window.serverData[getCurrentServerUrl()].calls.turn_servers.length) servers.push({
-    urls: window.serverData[getCurrentServerUrl()].calls.turn_servers,
-    username: window.serverData[getCurrentServerUrl()].calls.turn_username,
-    credential: window.serverData[getCurrentServerUrl()].calls.turn_password
+  let servers = [];
+  if (callData.stun_servers.length) servers.push({ urls: callData.stun_servers });
+  if (callData.turn_servers.length) servers.push({
+    urls: callData.turn_servers,
+    username: callData.turn_username,
+    credential: callData.turn_password
   });
   peerConnection = new RTCPeerConnection({
     iceCandidatePoolSize: 8,
     iceServers: servers,
-    iceTransportPolicy: 'all'
+    iceTransportPolicy: (window.debugCall&&window.forceTurn)?'relay':'all'
   });
   if (window.debugCall) console.log(peerConnection);
 
@@ -72,10 +74,12 @@ async function connect(min=false) {
   peerConnection.onconnectionstatechange = ()=>{
     if (window.debugCall) console.log(peerConnection.connectionState);
     switch (peerConnection.connectionState) {
-      case 'disconnected':
-      case 'failed':
       case 'closed':
+      case 'disconnected':
         leaveCall();
+        break;
+      case 'failed':
+        peerConnection.restartIce();
         break;
     }
   };
