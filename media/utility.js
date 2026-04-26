@@ -168,7 +168,7 @@ function notice(title, rep='', bypass=false) {
   let h = NoticeModal.querySelector('h3');
   h.setAttribute('tlang', title);
   window.translate();
-  setTimeout(()=>{
+  if (rep.length) setTimeout(()=>{
     h.innerText = h.innerText.replace('{}',rep);
   },0);
   NoticeModal.onclose = ()=>{

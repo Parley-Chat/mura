@@ -109,6 +109,9 @@ svg {
   fill: currentColor;
   stroke: currentColor;
 }
+:dir(rtl) svg {
+  transform: rotateY(180deg);
+}
 hr {
   color: var(--text-2);
   border-style: solid;
@@ -167,7 +170,7 @@ dialog {
 
 #server-list {
   position: relative;
-  padding-left: 8px;
+  padding-inline-start: 8px;
   overflow: visible auto;
 }
 #server-list > span {
@@ -388,7 +391,7 @@ nav button img {
 #channels .pin-indicator {
   position: absolute;
   top: 5px;
-  left: 5px;
+  inset-inline-start: 5px;
   fill: var(--text-2);
   pointer-events: none;
 }
@@ -704,7 +707,7 @@ emoji-picker {
   align-items: center;
   width: 42px;
   opacity: 0;
-  padding-left: 0px;
+  padding-inline-start: 0px;
   transition: opacity var(--time);
 }
 .message:hover > .time {
@@ -809,6 +812,9 @@ emoji-picker {
   margin: 0px;
   box-sizing: border-box;
 }
+:dir(rtl) #pinsModal, :dir(rtl) #notifModal {
+  right: calc(100dvw - max(25dvw, 250px) - var(--left) + 20px);
+}
 #pinsModal > div {
   max-height: 65vh;
   padding-top: 10px;
@@ -842,7 +848,7 @@ emoji-picker {
   display: flex;
   flex-direction: column;
   width: 12dvw;
-  padding-left: 10px;
+  padding-inline-start: 10px;
   overflow-y: auto;
 }
 .lateral button:not(.mobile) {
@@ -868,7 +874,7 @@ blockquote {
   position: relative;
   display: inline;
   margin: 0px;
-  margin-left: 8px;
+  margin-inline-start: 8px;
 }
 blockquote::before {
   content: "";
@@ -922,7 +928,7 @@ div#call-display.big {
 }
 #call-display .grid img {
   flex: 1;
-  border-radius: 10rem;
+  border-radius: 20rem;
 }
 #call-display .controls {
   flex-shrink: 0;
@@ -937,7 +943,7 @@ div#call-display.big {
 }
 #call-display .expand {
   position: absolute;
-  right: 10px;
+  inset-inline-end: 10px;
   bottom: 10px;
   padding: 2px;
   transition-property: background, transform;
