@@ -776,11 +776,11 @@ async function displayMessage(msg, ch, limited=0) {
   <div class="inner">
     <div class="actions">
       ${limited===0?`
-      ${sendm?`<button onclick="window.replyMessage('${sanitizeMinimChars(msg.id)}', '${sanitizeHTML(msg.user.display??sanitizeMinimChars(msg.user.username))}')" aria-label="Reply" tlang="message.reply"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M42 108H196V108C229.137 108 256 134.863 256 168V168V199.85C256 210.896 247.046 219.85 236 219.85V219.85C224.954 219.85 216 210.896 216 199.85V168V168C216 156.954 207.046 148 196 148V148H42V108Z"/><path d="M79.746 41.1778C83.0613 37.8625 87.5578 36 92.2464 36V36C107.996 36 115.883 55.0415 104.747 66.1782L47.2462 123.681C44.9032 126.024 44.9032 129.823 47.2462 132.166L104.747 189.67C115.883 200.806 107.996 219.848 92.2464 219.848V219.848C87.5579 219.848 83.0614 217.985 79.7461 214.67L5.72793 140.652C-1.30151 133.622 -1.30151 122.225 5.72793 115.196L79.746 41.1778Z"/></svg></button>`:''}
+      ${sendm?`<button onclick="window.replyMessage('${sanitizeMinimChars(msg.id)}', '${sanitizeHTML(msg.user.display??sanitizeMinimChars(msg.user.username??''))}')" aria-label="Reply" tlang="message.reply"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M42 108H196V108C229.137 108 256 134.863 256 168V168V199.85C256 210.896 247.046 219.85 236 219.85V219.85C224.954 219.85 216 210.896 216 199.85V168V168C216 156.954 207.046 148 196 148V148H42V108Z"/><path d="M79.746 41.1778C83.0613 37.8625 87.5578 36 92.2464 36V36C107.996 36 115.883 55.0415 104.747 66.1782L47.2462 123.681C44.9032 126.024 44.9032 129.823 47.2462 132.166L104.747 189.67C115.883 200.806 107.996 219.848 92.2464 219.848V219.848C87.5579 219.848 83.0614 217.985 79.7461 214.67L5.72793 140.652C-1.30151 133.622 -1.30151 122.225 5.72793 115.196L79.746 41.1778Z"/></svg></button>`:''}
       ${msg.user.username===window.username?`<button onclick="window.editMessage('${sanitizeMinimChars(msg.id)}', '${sanitizeMinimChars(msg.key??'')}', this.parentElement.parentElement, '${sanitizeAttr(msg.content).replaceAll("'", "\\'")}')" aria-label="Edit" tlang="message.edit"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M36 198L87 239L213.98 78.9249L162.073 38.0226L36 198ZM170.11 27.8251L222.067 68.7297L239.674 46.5333C241.391 44.3698 241.028 41.2246 238.864 39.5086L194.819 4.5744C192.651 2.85464 189.498 3.22334 187.785 5.397L170.11 27.8251Z M35.1323 255.15C33.0948 255.784 31.0651 254.148 31.252 252.023L36 198L87.0001 239L35.1323 255.15Z"/></svg></button>`:''}
       ${ch.type===1||mangm?`<button onclick="window.pinMessage('${sanitizeMinimChars(msg.id)}', true)" aria-label="Pin" tlang="message.pin"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M117.4 6.28699C118.758 0.114336 126.401 -2.11969 130.87 2.34949L253.649 125.126C258.118 129.595 255.883 137.239 249.71 138.597L206.755 148.044C204.89 148.454 203.182 149.39 201.832 150.74L181.588 170.983C180.637 171.934 179.889 173.067 179.386 174.313L154.115 236.957C151.434 243.603 142.838 245.354 137.771 240.287L95.5138 198.03L10.2823 254.884C7.65962 256.633 4.16588 256.288 1.93663 254.058C-0.292345 251.829 -0.63778 248.336 1.11143 245.714L57.964 160.48L15.7091 118.225C10.642 113.158 12.3932 104.562 19.0392 101.881L81.6827 76.6112C82.9295 76.1083 84.0621 75.3587 85.0128 74.4081L105.257 54.1649C106.607 52.8149 107.542 51.1066 107.952 49.2421L117.4 6.28699Z"/></svg></button>`:''}
       ${msg.user.username===window.username||mangm?`<button onclick="window.deleteMessage('${sanitizeMinimChars(msg.id)}')" aria-label="Delete" tlang="message.delete" style="color:var(--invalid)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M77.0892 18.9306C79.4013 18.9306 81.5077 17.6021 82.5038 15.5156L88.281 3.41493C89.2771 1.32846 91.3835 0 93.6956 0H162.304C164.617 0 166.723 1.32847 167.719 3.41494L173.496 15.5156C174.492 17.6021 176.599 18.9306 178.911 18.9306H222C226.418 18.9306 230 22.5123 230 26.9306V39C230 43.4183 226.418 47 222 47H34C29.5817 47 26 43.4183 26 39V26.9306C26 22.5123 29.5817 18.9306 34 18.9306H77.0892Z"/><path fill-rule="evenodd" clip-rule="evenodd" d="M42.4949 62.0605C39.7335 62.0605 37.4949 64.2991 37.4949 67.0605V241C37.4949 249.284 44.2106 256 52.4949 256H203.505C211.789 256 218.505 249.284 218.505 241V67.0605C218.505 64.2991 216.266 62.0605 213.505 62.0605H42.4949ZM78.8686 87.9194C71.728 87.9194 65.9393 93.708 65.9393 100.849V215.919C65.9393 223.06 71.728 228.849 78.8686 228.849C86.0093 228.849 91.7979 223.06 91.7979 215.919V100.849C91.7979 93.708 86.0093 87.9194 78.8686 87.9194ZM128 87.9194C120.859 87.9194 115.071 93.708 115.071 100.849V215.919C115.071 223.06 120.859 228.849 128 228.849C135.141 228.849 140.929 223.06 140.929 215.919V100.849C140.929 93.708 135.141 87.9194 128 87.9194ZM164.202 100.849C164.202 93.708 169.991 87.9194 177.131 87.9194C184.272 87.9194 190.061 93.708 190.061 100.849V215.919C190.061 223.06 184.272 228.849 177.131 228.849C169.991 228.849 164.202 223.06 164.202 215.919V100.849Z"/></svg></button>`:''}
-      <button class="more" username="${sanitizeMinimChars(msg.user.username)}" data-id="${sanitizeMinimChars(msg.id)}" aria-label="More" tlang="message.more"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill-rule="evenodd" clip-rule="evenodd" d="M128 158C111.431 158 98 144.569 98 128C98 111.431 111.431 98 128 98C144.569 98 158 111.431 158 128C158 144.569 144.569 158 128 158ZM128 60C111.432 60 98.0001 46.5685 98.0001 30C98.0001 13.4315 111.432 -5.87112e-07 128 -1.31135e-06C144.569 -2.03558e-06 158 13.4315 158 30C158 46.5685 144.569 60 128 60ZM98 226C98 242.569 111.431 256 128 256C144.569 256 158 242.569 158 226C158 209.431 144.569 196 128 196C111.431 196 98 209.431 98 226Z"/></svg></button>
+      <button class="more" username="${sanitizeMinimChars(msg.user.username??'')}" data-id="${sanitizeMinimChars(msg.id)}" aria-label="More" tlang="message.more"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill-rule="evenodd" clip-rule="evenodd" d="M128 158C111.431 158 98 144.569 98 128C98 111.431 111.431 98 128 98C144.569 98 158 111.431 158 128C158 144.569 144.569 158 128 158ZM128 60C111.432 60 98.0001 46.5685 98.0001 30C98.0001 13.4315 111.432 -5.87112e-07 128 -1.31135e-06C144.569 -2.03558e-06 158 13.4315 158 30C158 46.5685 144.569 60 128 60ZM98 226C98 242.569 111.431 256 128 256C144.569 256 158 242.569 158 226C158 209.431 144.569 196 128 196C111.431 196 98 209.431 98 226Z"/></svg></button>
       `:(limited===1&&(ch.type===1||mangm)?`
       <button onclick="window.pinMessage('${sanitizeMinimChars(msg.id)}', false);window.pinsPanel()" aria-label="Unpin" tlang="message.unpin" style="color:var(--invalid)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M117.925 15.287C119.283 9.11438 126.925 6.88031 131.394 11.3495L244.087 124.041C248.556 128.51 246.321 136.153 240.148 137.511L201.418 146.029C199.553 146.439 197.845 147.375 196.495 148.724L177.921 167.299C176.97 168.249 176.222 169.382 175.719 170.629L152.677 227.748C149.996 234.394 141.4 236.146 136.332 231.078L97.7987 192.545L18.5585 245.401C16.1203 247.027 12.8731 246.706 10.8007 244.634C8.72831 242.561 8.40702 239.314 10.0331 236.876L62.8886 157.636L24.3564 119.103C19.2888 114.036 21.0402 105.44 27.6864 102.759L84.8066 79.7167C86.0533 79.2137 87.186 78.465 88.1366 77.5145L106.71 58.9403C108.06 57.5903 108.996 55.882 109.406 54.0174L117.925 15.287Z"/><path d="M20 20L236 236" stroke-width="40" stroke-linecap="round"/></svg></button>
       `:'')}
@@ -826,7 +826,7 @@ async function showMessages(messages) {
     let id = btn.getAttribute('data-id');
     tippy(btn, {
       allowHTML: true,
-      content: (window.username!==btn.getAttribute('username')?`<button onclick="window.blockmember('${btn.getAttribute('username')}')" class="danger" tlang="member.block">Block</button>`:'')+
+      content: (window.username!==btn.getAttribute('username')&&btn.getAttribute('username').length!==0?`<button onclick="window.blockmember('${btn.getAttribute('username')}')" class="danger" tlang="member.block">Block</button>`:'')+
 `<button onclick="navigator.clipboard.writeText(desanitizeAttr('${sanitizeAttr(messages.find(msg=>msg.id===id).content)}'))" tlang="message.copy">Copy Contents</button>
 <button onclick="navigator.clipboard.writeText('${id}')" tlang="settings.copyid">Copy id</button>`,
       interactive: true,
@@ -1108,6 +1108,7 @@ function loadChannel(id) {
   document.querySelector('.top .name').innerText = ch.name+(ch.type===1&&ch.username?` (${ch.username})`:'');
   document.querySelector('.top .type').outerHTML = TypeIcons[ch.type];
   document.getElementById('callsButton').style.display = (ch.type===1&&(window.serverData[getCurrentServerUrl()]?.calls?.enabled||false))?'':'none';
+  document.getElementById('integrateButton').style.display = 'none';
   document.getElementById('bansButton').style.display = 'none';
   document.getElementById('inviteButton').style.display = 'none';
   document.getElementById('notifButton').style.display = localStorage.getItem('pnotif')==='true'?'':'none';
@@ -1121,7 +1122,10 @@ function loadChannel(id) {
     showMembers(id);
     getMembers(id);
     if (hasPerm(ch.permission,Permissions.MANAGE_MEMBERS)) document.getElementById('bansButton').style.display = '';
-    if (hasPerm(ch.permission,Permissions.MANAGE_CHANNEL)) document.getElementById('inviteButton').style.display = '';
+    if (hasPerm(ch.permission,Permissions.MANAGE_CHANNEL)) {
+      if (ch.type===3&&(window.serverData[getCurrentServerUrl()]?.webhooks?.enabled||false)) document.getElementById('integrateButton').style.display = '';
+      document.getElementById('inviteButton').style.display = '';
+    }
   }
   // Get public keys
   if (!PKChannels.includes(id)) {
@@ -1281,7 +1285,7 @@ async function joinChannel() {
     passstatus: true
   });
   if (req.status===403) {
-    document.getElementById('bannedfrom').showModal();
+    notice('channel.banned');
     return null;
   }
   return req.channel_id;
@@ -1303,7 +1307,50 @@ window.startCall = ()=>{
 window.endCall = ()=>{
   calls.leaveCall();
 }
-window.integratePanel = ()=>{};
+window.integratePanel = ()=>{
+  let modal = document.getElementById('integrateModal');
+  modal.showModal();
+  function show() {
+    backendfetch(`/api/v1/channel/${window.currentChannel}/webhooks`)
+      .then(res=>{
+        let list = modal.querySelector('.list');
+        list.innerHTML = res.length<1?
+        '<p tlang="channel.webhooks.empty">No webhooks, create one!</p>':
+        res.toReversed().map(webhook=>`<div>
+  ${webhook.name}
+  <div style="flex:1"></div>
+  <button tlang="channel.webhooks.copy" onclick="navigator.clipboard.writeText('${webhook.url}?token=${sanitizeMinimChars(webhook.token)}')"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M163.964 45.2633C184.843 24.3845 218.694 24.3846 239.573 45.2633C260.452 66.1422 260.451 99.9932 239.573 120.872L180.935 179.51C160.056 200.389 126.205 200.389 105.326 179.511C84.4472 158.632 84.4471 124.78 105.326 103.901L107.73 101.497C112.417 96.8107 120.015 96.8107 124.701 101.497V101.497C129.387 106.183 129.387 113.781 124.701 118.468L122.296 120.872C110.79 132.378 110.79 151.034 122.296 162.54C133.803 174.046 152.458 174.046 163.964 162.539L222.602 103.901C234.108 92.3952 234.109 73.7401 222.603 62.2339C211.096 50.7278 192.441 50.7277 180.935 62.2339L175.179 67.9895C170.493 72.6758 162.895 72.6758 158.208 67.9895V67.9895C153.522 63.3032 153.522 55.7052 158.208 51.0189L163.964 45.2633Z"/><path d="M74.331 76.2582C95.2098 55.3794 129.062 55.3794 149.94 76.2582C170.819 97.137 170.818 130.988 149.94 151.867L147.535 154.271C142.849 158.958 135.251 158.958 130.565 154.271V154.271C125.878 149.585 125.878 141.987 130.565 137.301L132.969 134.896C144.475 123.39 144.476 104.735 132.97 93.2288C121.464 81.7226 102.808 81.7225 91.3016 93.2288L32.6635 151.867C21.1574 163.373 21.1574 182.029 32.6635 193.535C44.1697 205.041 62.8248 205.04 74.331 193.534L80.0866 187.779C84.7729 183.092 92.3709 183.092 97.0572 187.779V187.779C101.743 192.465 101.743 200.063 97.0572 204.749L91.3016 210.505C70.4228 231.384 36.5717 231.384 15.6929 210.506C-5.18579 189.627 -5.18573 155.775 15.6929 134.896L74.331 76.2582Z"/></svg></button>
+  <button tlang="channel.webhooks.delete" class="delete" data-id="${sanitizeMinimChars(webhook.id)}" data-token="${sanitizeMinimChars(webhook.token)}"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M42.6776 7.32227C32.9145 -2.44063 17.0852 -2.44077 7.32214 7.32227C-2.44082 17.0853 -2.44069 32.9146 7.32214 42.6777L92.2616 127.617L7.32214 212.557C-2.44091 222.32 -2.44083 238.149 7.32214 247.912C17.0852 257.675 32.9145 257.675 42.6776 247.912L127.617 162.973L212.557 247.912C222.32 257.675 238.149 257.675 247.912 247.912C257.675 238.149 257.675 222.32 247.912 212.557L162.973 127.617L247.912 42.6777C257.675 32.9146 257.675 17.0853 247.912 7.32227C238.149 -2.44079 222.32 -2.44068 212.557 7.32227L127.617 92.2617L42.6776 7.32227Z"/></svg></button>
+</div>
+<span class="small">
+  ${webhook.last_used_at?`<span tlang="channel.webhooks.used">Used:</span> ${formatTime(webhook.last_used_at)} | `:''}
+  <span tlang="channel.webhooks.created">Created:</span> ${formatTime(webhook.created_at)} <span tlang="channel.webhooks.by">by</span> ${sanitizeHTML(webhook.created_by_display??sanitizeMinimChars(webhook.created_by_username??''))}
+</span>`).join('');
+        window.translate();
+        list.querySelectorAll('.delete').forEach(btn=>{
+          btn.onclick = ()=>{
+            backendfetch(`/api/v1/channel/${window.currentChannel}/webhooks/${btn.getAttribute('data-id')}?token=${btn.getAttribute('data-token')}`, { method: 'DELETE' })
+              .then(show);
+          };
+        });
+      });
+  }
+  modal.querySelector('.create').onclick = async()=>{
+    let name;
+    try {
+      name = await ask('channel.webhooks.create', 1, 50, 'Webhook');
+    } catch(_) {
+      return;
+    }
+    backendfetch( `/api/v1/channel/${window.currentChannel}/webhooks`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name })
+    })
+      .then(show);
+  };
+  show();
+};
 window.bansPanel = ()=>{
   document.getElementById('bansModal').showModal();
   backendfetch(`/api/v1/channel/${window.currentChannel}/bans`)
@@ -1526,7 +1573,7 @@ function startStream() {
       messagesContainer.insertAdjacentHTML('afterbegin', await displayMessage(window.messages[data.channel_id][0], window.channels[0]));
       tippy(document.querySelector('.message .more'), {
         allowHTML: true,
-        content: (window.username!==window.messages[data.channel_id][0].user.username?`<button onclick="window.blockmember('${sanitizeMinimChars(window.messages[data.channel_id][0].user.username)}')" class="danger" tlang="member.block">Block</button>`:'')+
+        content: (window.username!==window.messages[data.channel_id][0].user.username&&window.messages[data.channel_id][0].user.username!==null?`<button onclick="window.blockmember('${sanitizeMinimChars(window.messages[data.channel_id][0].user.username)}')" class="danger" tlang="member.block">Block</button>`:'')+
   `<button onclick="navigator.clipboard.writeText(desanitizeAttr('${sanitizeAttr(window.messages[data.channel_id][0].content)}'))" tlang="message.copy">Copy Contents</button>
   <button onclick="navigator.clipboard.writeText('${sanitizeMinimChars(window.messages[data.channel_id][0].id)}')" tlang="settings.copyid">Copy id</button>`,
         interactive: true,
@@ -1563,7 +1610,7 @@ function startStream() {
       document.getElementById('m-'+data.message.id).outerHTML = await displayMessage(window.messages[data.channel_id][idx], window.channels[idxc]);
       tippy(document.getElementById('m-'+data.message.id).querySelector('.more'), {
         allowHTML: true,
-        content: (window.username!==data.message.user.username?`<button onclick="window.blockmember('${sanitizeMinimChars(data.message.user.username)}')" class="danger" tlang="member.block">Block</button>`:'')+
+        content: (window.username!==data.message.user.username&&data.message.user.username!==null?`<button onclick="window.blockmember('${sanitizeMinimChars(data.message.user.username)}')" class="danger" tlang="member.block">Block</button>`:'')+
 `<button onclick="navigator.clipboard.writeText(desanitizeAttr('${sanitizeAttr(window.messages[data.channel_id].find(msg=>msg.id===data.message.id).content)}'))" tlang="message.copy">Copy Contents</button>
 <button onclick="navigator.clipboard.writeText('${data.message.id}')" tlang="settings.copyid">Copy id</button>`,
         interactive: true,

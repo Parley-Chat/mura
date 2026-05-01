@@ -805,6 +805,23 @@ emoji-picker {
   flex-direction: column;
 }
 
+#integrateModal div:has(b) {
+  display: flex;
+  align-items: center;
+  padding-inline-end: 10px;
+}
+#integrateModal button {
+  margin: 2px 0px;
+}
+#integrateModal b {
+  flex: 1;
+}
+#integrateModal .list > div {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
 #pinsModal, #notifModal {
   left: calc(var(--left) - max(25dvw, 250px));
   width: 25vw;
