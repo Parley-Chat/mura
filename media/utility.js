@@ -19,6 +19,12 @@ const twemojiConfig = {
   ext: '.svg',
   base: 'https://raw.githubusercontent.com/twitter/twemoji/refs/heads/master/assets/'
 };
+const TypeIcons = [
+  '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" class="type"><rect x="103" width="50" height="256" rx="25"/><rect y="103" width="256" height="50" rx="25"/></svg>',
+  '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" class="type"><path fill-rule="evenodd" clip-rule="evenodd" d="M128 128C163.346 128 192 99.3462 192 64C192 28.6538 163.346 0 128 0C92.6538 0 64 28.6538 64 64C64 99.3462 92.6538 128 128 128ZM151 146H148H108H105C49.7715 146 5 190.772 5 246V256H108H148H251V246C251 190.772 206.228 146 151 146Z"/></svg>',
+  '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" class="type"><circle cx="60" cy="102" r="34" filter="brightness(0.75)"/><path d="M0 196C0 177.222 15.2223 162 34 162V162H102V162C120.778 162 136 177.222 136 196V196.467V256H0V196.467V196Z" filter="brightness(0.75)"/><circle cx="169" cy="50" r="50"/><path d="M81 180C81 155.838 100.588 136 124.75 136H212.25C236.412 136 256 155.838 256 180V256H81V180Z"/></svg>',
+  '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" class="type"><rect x="7" y="76" width="25" height="104" rx="12.5"/><path d="M160 207C160 232.405 139.853 253 115 253C90.1472 253 70 232.405 70 207C70 181.595 90.1472 161 115 161C139.853 161 160 181.595 160 207ZM88 207C88 222.243 100.088 234.6 115 234.6C129.912 234.6 142 222.243 142 207C142 191.757 129.912 179.4 115 179.4C100.088 179.4 88 191.757 88 207Z"/><path d="M219 12C219 5.37258 224.373 0 231 0H239C245.627 0 251 5.37258 251 12V244C251 250.627 245.627 256 239 256H231C224.373 256 219 250.627 219 244V12Z"/><path d="M41 90.9502C41 82.374 46.4679 74.7524 54.592 72.0045L232 12V244L54.592 183.995C46.4679 181.248 41 173.626 41 165.05V90.9502Z"/></svg>'
+];
 
 Object.prototype.merge = (a,b)=>{
   a ??= {};
