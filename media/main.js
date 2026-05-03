@@ -1812,7 +1812,8 @@ tippy([document.getElementById('btn-languages'),document.getElementById('srv-btn
   allowHTML: true,
   content: '<span tlang="lang.change">Change language</span>'+Array.from(new Set(Object.values(languages)))
     .map(lang=>`<button onclick="localStorage.setItem('language','${lang}');window.translate()">${getLanguageName(lang)}</button>`)
-    .join('')+'<span><label tlang="lang.timeuilang" for="timeuilang">Time uses ui locale</label><input id="timeuilang" type="checkbox" onchange="localStorage.setItem(`timeUILang`,this.checked)"></span>',
+    .join('')+`<span><label for="s-rtl" tlang="settings.rtl">RTL:</label><input id="s-rtl" type="checkbox" onchange="document.querySelector('body').style.setProperty('direction',this.checked?'rtl':'');localStorage.setItem('prtl',this.checked)"${localStorage.getItem('prtl')==='true'?' checked':''}></span>
+<span><label tlang="lang.timeuilang" for="timeuilang">Time uses ui locale</label><input id="timeuilang" type="checkbox" onchange="localStorage.setItem('timeUILang',this.checked)"></span>`,
   interactive: true,
   trigger: 'click',
   placement: 'top-end',
@@ -1884,10 +1885,6 @@ function postLogin() {
     <option value="dyslexic">Open Dyslexic</option>
     <option value="system">System</option>
   </select>
-</span>
-<span>
-  <label for="s-rtl" tlang="settings.rtl">RTL:</label>
-  <input id="s-rtl" type="checkbox" onchange="document.querySelector('body').style.setProperty('direction',this.checked?'rtl':'');localStorage.setItem('prtl',this.checked)"${localStorage.getItem('prtl')==='true'?' checked':''}>
 </span>
 <b tlang="settings.messages">Messages</b>
 <span>

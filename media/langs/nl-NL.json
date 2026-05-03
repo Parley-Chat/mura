@@ -198,7 +198,7 @@
 
   "lang.settings": "Taal Instellingen",
   "lang.change": "Taal wijzigen",
-  "lang.timeuilang": "Tijd gebruikt ui-locale",
+  "lang.timeuilang": "Tijd gebruikt ui-locale:",
 
   "400.title": "400 Ongeldig verzoek",
   "404.title": "404 Pagina niet gevonden",

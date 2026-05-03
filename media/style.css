@@ -315,7 +315,7 @@ nav button img {
   height: 100%;
 }
 nav .tippy-content button span {
-  padding-left: 5px;
+  padding-inline-start: 5px;
 }
 #channels {
   flex: 1;

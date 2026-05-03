@@ -198,7 +198,7 @@
 
   "lang.settings": "Language settings",
   "lang.change": "Change language",
-  "lang.timeuilang": "Time uses ui locale",
+  "lang.timeuilang": "Time uses ui locale:",
 
   "400.title": "400 Invalid request",
   "404.title": "404 Page not found",
