@@ -811,7 +811,7 @@ async function showMessages(messages) {
         };
       }
     } else {
-      messages[i].user = Object.merge(messages[i].user, UserStore.get(messages[i].user.username));
+      if (messages[i].user.username!==null) messages[i].user = Object.merge(messages[i].user, UserStore.get(messages[i].user.username));
     }
     // Hide author?
     messages[i].user.hide = shouldHideUser(messages, i);

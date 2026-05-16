@@ -260,6 +260,7 @@ function userToDefaultPfp(user) {
     .replace('074104',(parseInt(user, 36)%(DefaultPFPRadix**6)).toString(DefaultPFPRadix).padStart(6, '0')));
 }
 function pfpById(id) {
+  if ((/^data:[\w\/+.-]+;\w+,.*$/).test(id)) return id;
   return getCurrentServerUrl()+'/pfp/'+sanitizeMinimChars(id);
 }
 
@@ -268,7 +269,7 @@ function getNotifStateChannel(id, type) {
 }
 const MessageTimeSeparation = 10 * 60 * 1000; // 10 mins
 function shouldHideUser(messages, i) {
-  if (!messages[i].replied_to && messages[i+1] && messages[i+1]?.user?.username===messages[i].user.username) {
+  if (!messages[i].replied_to && messages[i+1] && messages[i+1]?.user?.username===messages[i].user.username && (messages[i].user.username!==null||(messages[i].user.username===null&&messages[i+1].user?.display===messages[i].user.display))) {
     return (messages[i].timestamp-messages[i+1].timestamp)<MessageTimeSeparation; // Only hide is smaller than time separation
   }
   return false;
