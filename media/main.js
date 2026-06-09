@@ -247,7 +247,7 @@ function handleMentionMenu() {
       .filter(usr=>usr.sim>(usr.username.length/3))
       .toSorted((a,b)=>b.sim-a.sim)
       .map(usr=>`<div tabindex="0" role="button" onclick="let k=messageInput.value.slice(0,messageInput.selectionStart).split('@').slice(0,-1).join('@').length+1;messageInput.value=messageInput.value.slice(0,k)+'${sanitizeMinimChars(usr.username)} '+messageInput.value.slice(k+${content.length});messageInput.focus();messageInput.setSelectionRange(k+${sanitizeMinimChars(usr.username).length+1},k+${sanitizeMinimChars(usr.username).length+1});messageInput.onkeyup();">
-  <img src="${usr.pfp?pfpById(usr.pfp):userToDefaultPfp(usr)}" width="42" height="42" aria-hidden="true" loading="lazy" onerror="this.src='${userToDefaultPfp(ch)}'">
+  <img src="${usr.pfp?pfpById(usr.pfp):userToDefaultPfp(usr)}" width="42" height="42" aria-hidden="true" loading="lazy" onerror="this.src='${userToDefaultPfp(usr)}'">
   <div>
     <span>${sanitizeHTML(usr.display??sanitizeMinimChars(usr.username))}</span>
     <span class="small">@${sanitizeMinimChars(usr.username)}</span>
