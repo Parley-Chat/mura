@@ -169,7 +169,10 @@ async function CryptSend(msg, channel) {
               publicKey = await getRSAKeyFromPublic64(publicKey);
               body[members[i].username] = await encryptRSAString(newKey, publicKey);
             }
-            if (discontinue) reject();
+            if (discontinue) {
+              reject();
+              return;
+            }
             backendfetch(`/api/v1/channel/${channel}/key`, {
               method: 'POST',
               headers: {
@@ -421,7 +424,7 @@ recorderModal.querySelector('.toggle').onclick = async () => {
   getVolume();
 };
 recorderModal.onclose = ()=>{
-  mediaRecorder.stop();
+  if (mediaRecorder) mediaRecorder.stop();
   recorderModal.querySelector('.toggle').setAttribute('tlang', 'message.voice.record');
 };
 tippy(attachAdd, {
@@ -685,14 +688,14 @@ class MediaCom extends HTMLElement {
     }
     if (type==='text') {
       if (data instanceof ArrayBuffer) data = (new TextDecoder()).decode(data);
-      let name = desanitizeAttr(this.getAttribute('data-name'));
+      let name = sanitizeHTML(desanitizeAttr(this.getAttribute('data-name')));
       this.innerHTML = `<div class="file">
-  <span>${sanitizeHTML(name)} · ${formatBytes(this.getAttribute('data-size'))} ${encrypted?'<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256"><path d="M127.5 0C164.779 0 195 30.2208 195 67.5V100H203C214.046 100 223 108.954 223 120V236C223 247.046 214.046 256 203 256H53C41.9543 256 33 247.046 33 236V120C33 108.954 41.9543 100 53 100H60V67.5C60 30.2208 90.2208 0 127.5 0ZM127.5 24C103.476 24 84 43.4756 84 67.5V100H171V67.5C171 43.4756 151.524 24 127.5 24Z"/></svg>':''}<div style="flex:1"></div><button onclick="window.downloadfile('${id}', '${sanitizeAttr(name).replaceAll("'", "\\'")}')" aria-label="Download" tlang="message.download"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M128 190V20" stroke-width="40" stroke-linecap="round" fill="none"/><path d="M127.861 212.999C131.746 213.035 135.642 211.571 138.606 208.607L209.317 137.896C212.291 134.922 213.753 131.011 213.708 127.114C213.708 127.076 213.71 127.038 213.71 127C213.71 118.716 206.994 112 198.71 112H57C48.7157 112 42 118.716 42 127C42 127.045 42.0006 127.089 42.001 127.134C41.961 131.024 43.4252 134.927 46.3936 137.896L117.104 208.607L117.381 208.876C120.312 211.662 124.092 213.037 127.861 212.999Z"/><rect y="226" width="256" height="30" rx="15"/></svg></button></span>
+  <span>${name} · ${formatBytes(this.getAttribute('data-size'))} ${encrypted?'<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256"><path d="M127.5 0C164.779 0 195 30.2208 195 67.5V100H203C214.046 100 223 108.954 223 120V236C223 247.046 214.046 256 203 256H53C41.9543 256 33 247.046 33 236V120C33 108.954 41.9543 100 53 100H60V67.5C60 30.2208 90.2208 0 127.5 0ZM127.5 24C103.476 24 84 43.4756 84 67.5V100H171V67.5C171 43.4756 151.524 24 127.5 24Z"/></svg>':''}<div style="flex:1"></div><button onclick="window.downloadfile('${id}', '${sanitizeAttr(name).replaceAll("'", "\\'")}')" aria-label="Download" tlang="message.download"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M128 190V20" stroke-width="40" stroke-linecap="round" fill="none"/><path d="M127.861 212.999C131.746 213.035 135.642 211.571 138.606 208.607L209.317 137.896C212.291 134.922 213.753 131.011 213.708 127.114C213.708 127.076 213.71 127.038 213.71 127C213.71 118.716 206.994 112 198.71 112H57C48.7157 112 42 118.716 42 127C42 127.045 42.0006 127.089 42.001 127.134C41.961 131.024 43.4252 134.927 46.3936 137.896L117.104 208.607L117.381 208.876C120.312 211.662 124.092 213.037 127.861 212.999Z"/><rect y="226" width="256" height="30" rx="15"/></svg></button></span>
   ${sanitizeHTML(data)}
 </div>`;
     } else {
       if (!FileStore.has(id)&&data) FileStore.set(id, URL.createObjectURL(new Blob([data], { type: this.getAttribute('data-fulltype') })));
-      this.outerHTML = `<${type} src="${FileStore.get(id)??src}" alt="Message attachment: ${this.getAttribute('data-name')}" controls draggable="false" loading="lazy"${type==='img'?` role="button" tabindex="0" aria-haspopup="dialog" onclick="window.expandMedia('${FileStore.get(id)??src}')" onkeydown="if([' ','Enter'].includes(event.key))window.expandMedia('${FileStore.get(id)??src}');" tlang="message.expandmedia"`:''}></${type}>`.replace('</img>','');
+      this.outerHTML = `<${type} src="${FileStore.get(id)??src}" alt="Message attachment: ${sanitizeHTML(this.getAttribute('data-name'))}" controls draggable="false" loading="lazy"${type==='img'?` role="button" tabindex="0" aria-haspopup="dialog" onclick="window.expandMedia('${FileStore.get(id)??src}')" onkeydown="if([' ','Enter'].includes(event.key))window.expandMedia('${FileStore.get(id)??src}');" tlang="message.expandmedia"`:''}></${type}>`.replace('</img>','');
       window.translate();
     }
   }
@@ -949,8 +952,8 @@ async function getChannels() {
       pfp: ch.pfp?sanitizeMinimChars(ch.pfp):null,
       permission: perm,
       base_permissions: chperm,
-      unread_count: Number(ch.unread_count)??0,
-      member_count: Number(ch.member_count)??1,
+      unread_count: Number(ch.unread_count)||0,
+      member_count: Number(ch.member_count)||1,
       last_message: ch.last_message?{
         id: sanitizeMinimChars(ch.last_message?.id||''),
         content: sanitizeHTML(ch.last_message?.content||'')||imageicon,
@@ -1311,7 +1314,7 @@ window.integratePanel = ()=>{
         list.innerHTML = res.length<1?
         '<p tlang="channel.webhooks.empty">No webhooks, create one!</p>':
         res.toReversed().map(webhook=>`<div>
-  ${webhook.name}
+  ${sanitizeHTML(webhook.name)}
   <div style="flex:1"></div>
   <button tlang="channel.webhooks.copy" onclick="navigator.clipboard.writeText('${webhook.url}?token=${sanitizeMinimChars(webhook.token)}')"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M163.964 45.2633C184.843 24.3845 218.694 24.3846 239.573 45.2633C260.452 66.1422 260.451 99.9932 239.573 120.872L180.935 179.51C160.056 200.389 126.205 200.389 105.326 179.511C84.4472 158.632 84.4471 124.78 105.326 103.901L107.73 101.497C112.417 96.8107 120.015 96.8107 124.701 101.497V101.497C129.387 106.183 129.387 113.781 124.701 118.468L122.296 120.872C110.79 132.378 110.79 151.034 122.296 162.54C133.803 174.046 152.458 174.046 163.964 162.539L222.602 103.901C234.108 92.3952 234.109 73.7401 222.603 62.2339C211.096 50.7278 192.441 50.7277 180.935 62.2339L175.179 67.9895C170.493 72.6758 162.895 72.6758 158.208 67.9895V67.9895C153.522 63.3032 153.522 55.7052 158.208 51.0189L163.964 45.2633Z"/><path d="M74.331 76.2582C95.2098 55.3794 129.062 55.3794 149.94 76.2582C170.819 97.137 170.818 130.988 149.94 151.867L147.535 154.271C142.849 158.958 135.251 158.958 130.565 154.271V154.271C125.878 149.585 125.878 141.987 130.565 137.301L132.969 134.896C144.475 123.39 144.476 104.735 132.97 93.2288C121.464 81.7226 102.808 81.7225 91.3016 93.2288L32.6635 151.867C21.1574 163.373 21.1574 182.029 32.6635 193.535C44.1697 205.041 62.8248 205.04 74.331 193.534L80.0866 187.779C84.7729 183.092 92.3709 183.092 97.0572 187.779V187.779C101.743 192.465 101.743 200.063 97.0572 204.749L91.3016 210.505C70.4228 231.384 36.5717 231.384 15.6929 210.506C-5.18579 189.627 -5.18573 155.775 15.6929 134.896L74.331 76.2582Z"/></svg></button>
   <button tlang="channel.webhooks.delete" class="delete" data-id="${sanitizeMinimChars(webhook.id)}" data-token="${sanitizeMinimChars(webhook.token)}"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path d="M42.6776 7.32227C32.9145 -2.44063 17.0852 -2.44077 7.32214 7.32227C-2.44082 17.0853 -2.44069 32.9146 7.32214 42.6777L92.2616 127.617L7.32214 212.557C-2.44091 222.32 -2.44083 238.149 7.32214 247.912C17.0852 257.675 32.9145 257.675 42.6776 247.912L127.617 162.973L212.557 247.912C222.32 257.675 238.149 257.675 247.912 247.912C257.675 238.149 257.675 222.32 247.912 212.557L162.973 127.617L247.912 42.6777C257.675 32.9146 257.675 17.0853 247.912 7.32227C238.149 -2.44079 222.32 -2.44068 212.557 7.32227L127.617 92.2617L42.6776 7.32227Z"/></svg></button>
@@ -1524,7 +1527,7 @@ function startStream() {
       showChannels(window.channels);
       return;
     }
-    if (window.keys[window.currentChannel]) {
+    if (window.keys[data.channel_id]) {
       let last = Object.keys(window.keys[data.channel_id]).reduce((a, b) => window.keys[data.channel_id][a]?.expires_at > window.keys[data.channel_id][b]?.expires_at ? a : b, '');
       if (last) window.keys[data.channel_id][last].expires_at = Date.now();
     }
@@ -1719,7 +1722,7 @@ window.useredit = ()=>{
         modal.querySelector('.list').innerHTML = res
           .map(ses=>`<div class="session">
   <span>
-    <span>${ses.browser} · ${ses.device}</span>
+    <span>${sanitizeHTML(ses.browser)} · ${sanitizeHTML(ses.device)}</span>
     <span class="small">${formatTime(Math.floor(ses.logged_in_at*1000))}</span>
   </span>
   ${ses.current?'<span tlang="user.currentsession">(current)</span>':`<button onclick="window.deletesession('${sanitizeMinimChars(ses.id)}')">x</button>`}

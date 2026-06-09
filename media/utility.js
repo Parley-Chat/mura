@@ -240,7 +240,7 @@ function formatTime(date) {
 }
 function formatHour(date) {
   date = new Date(date);
-  let locale = localStorage.getItem('timeUILang')?localStorage.getItem('language'):navigator.language;
+  let locale = localStorage.getItem('timeUILang')==='true'?localStorage.getItem('language'):navigator.language;
 
   return new Intl.DateTimeFormat(locale, {
     hour: '2-digit',
