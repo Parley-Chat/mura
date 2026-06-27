@@ -20,7 +20,7 @@ body {
   --accent: #211;
   --roundness-1: 0.5rem;
   --roundness-2: 1rem;
-  --time: 250ms;
+  --time: 400ms;
 
   --text-1: #ddd;
   --text-2: #b0b0b0;
@@ -30,8 +30,9 @@ body {
   --mention: color-mix(in oklab, #505050 50%, var(--accent) 50%);
   --tippy: color-mix(in oklab, #383838 80%, var(--accent) 20%);
   --bg-accent: color-mix(in oklab, #303030 70%, var(--accent) 30%);
-  --valid: color-mix(in oklab, #0b0 50%, var(--text-1) 50%);
-  --invalid: color-mix(in oklab, #b00 50%, var(--text-1) 50%);
+  --green: #60d357;
+  --yellow: #e4b425;
+  --red: #f64026;
 
   display: flex;
   width: 100dvw;
@@ -91,19 +92,18 @@ input[type="color"] {
   padding: 0px;
   border-radius: 5px;
 }
-form input:valid {
-  border-color: var(--valid);
-}
-form input:invalid, form input[invalid] {
-  border-color: var(--invalid);
-}
 form {
   width: fit-content;
   max-width: 100%;
-  overflow: auto;
+}
+form input:valid {
+  border-color: var(--green);
+}
+form input:invalid, form input[invalid] {
+  border-color: var(--red);
 }
 .invalid-text, .danger {
-  color: var(--invalid);
+  color: var(--red);
 }
 svg {
   fill: currentColor;
@@ -117,11 +117,11 @@ hr {
   border-style: solid;
 }
 dialog {
-  padding: 10px;
+  padding: 10px 15px;
   color: var(--text-1);
   border-radius: var(--roundness-1);
   background-color: var(--bg-1);
-  border: 2px currentColor solid;
+  border: 2px var(--bg-3) solid;
   z-index: 12;
 }
 ::backdrop {
@@ -168,42 +168,83 @@ dialog {
   overflow: auto;
 }
 
+#server-modal[open], #login-modal[open], #signup-modal[open] {
+  display: flex;
+  gap: 10px;
+  flex-direction: column;
+  align-items: center;
+  overflow: visible;
+}
+#server-modal::backdrop, #login-modal::backdrop, #signup-modal::backdrop {
+  background-color: color(from var(--bg-1) srgb r g b / 0.75);
+  backdrop-filter: blur(10px);
+}
+
+#server-modal .inline {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+#server-modal form {
+  display: flex;
+  gap: 5px;
+  width: 80%;
+}
+#server-modal form input {
+  flex: 1;
+  width: 0px;
+  margin: 0px;
+  padding: 2px 4px;
+}
+#server-modal form button {
+  flex-shrink: 0;
+  padding: 5px;
+  margin: 0px;
+}
 #server-list {
   position: relative;
-  padding-inline-start: 8px;
+  display: flex;
+  gap: 5px;
+  flex-direction: column;
+  min-width: 80%;
+  padding-inline: 15px;
   overflow: visible auto;
 }
 #server-list > span {
   position: relative;
   display: flex;
   align-items: center;
-  --status: var(--invalid);
+  padding: 2px;
+  border: 2px var(--bg-2) solid;
+  border-radius: var(--roundness-1);
+  background-color: var(--bg-2);
+  transition: border var(--time);
+  --status: var(--red);
+}
+#server-list > span[online] {
+  --status: var(--green);
+}
+#server-list > span[selected] {
+  border-color: var(--bg-3);
 }
 #server-list > span::before {
   content: "";
   position: absolute;
-  inset-inline-start: -8px;
+  inset-inline-start: -15px;
   top: 25%;
   display: block;
-  width: 6px;
+  width: 8px;
   height: 50%;
   border-radius: var(--roundness-2);
   background-color: var(--status);
-}
-#server-list > span[online] {
-  --status: var(--valid);
-}
-#server-list > span[selected] > button:not(.del) {
-  border-color: var(--text-2);
+  transition: background var(--time);
 }
 #server-list button {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: 5px;
-  border-color: var(--bg-1);
+  padding: 2px;
   background-color: var(--bg-2);
-  outline: none;
 }
 #server-list button:not(.del) {
   flex: 1;
@@ -213,18 +254,17 @@ dialog {
   gap: 2px;
   align-items: center;
 }
-
 #srv-btn-languages {
   position: absolute;
-  inset-inline-start: 5px;
-  bottom: 5px;
+  inset-inline-start: 10px;
+  bottom: 10px;
 }
 
-#login-modal[open], #server-modal[open], #signup-modal[open] {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  overflow: visible;
+#signup-modal p[tlang="signup.save"] {
+  color: var(--yellow);
+  padding: 5px;
+  border-radius: var(--roundness-1);
+  background-color: color-mix(in oklab, var(--yellow) 25%, #0000 75%);
 }
 
 #recorder div {
@@ -534,7 +574,7 @@ main {
   opacity: 0.7;
 }
 .message.ghost-2 {
-  color: var(--invalid);
+  color: var(--red);
 }
 .message.self {
   direction: var(--sbp);
