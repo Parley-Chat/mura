@@ -11,13 +11,17 @@ const languages = {
   'nl-NL': 'nl-NL',
   'nl': 'nl-NL',
   'tok': 'tok',
-  'en-UWU': 'uwu',
   'uwu': 'uwu'
 };
 
 // Try to get the user langs
 function getUserLang() {
-  return languages[localStorage.getItem('language')]??languages[navigator.language]??languages[navigator.language.split('-')[0]]??default_lang;
+  if (languages[localStorage.getItem('language')]) return languages[localStorage.getItem('language')];
+  navigator.languages.forEach(lang=>{
+    if (languages[lang]) return languages[lang];
+    if (languages[lang.split('-')[0]]) return languages[lang.split('-')[0]];
+  });
+  return default_lang;
 }
 
 // Fallback if no caches support
@@ -91,7 +95,7 @@ function translate(attempt=0) {
   document.querySelector('html').lang = locale.replace('tok','art-x-tokipona'); // Lang attribute doesn't support 3 letter variant so use longhand
   getTranslationFile(locale)
     .then(file=>{
-      document.querySelectorAll('*:not(html)[tlang]').forEach(elem=>{
+      document.querySelectorAll('[tlang]').forEach(elem=>{
         let trans = file[elem.getAttribute('tlang')];
         if (trans===undefined) {
           console.log('Missing translation for '+elem.getAttribute('tlang'), elem);
@@ -100,18 +104,20 @@ function translate(attempt=0) {
           delete mcache[locale];
           return;
         }
-        if (['input','textarea'].includes(elem.tagName.toLowerCase())) {
+        if (trans.includes('{}')&&elem.getAttribute('tlang-curly')) trans = trans.replace('{}', elem.getAttribute('tlang-curly'));
+        let tagname = elem.tagName.toLowerCase();
+        if (['input','textarea'].includes(tagname)) {
           if (elem.getAttribute('placeholder')===trans) return;
           elem.setAttribute('placeholder', trans);
           return;
         }
-        if (elem.tagName.toLowerCase()==='img') {
+        if (tagname==='img') {
           if (elem.getAttribute('alt')===trans) return;
           elem.setAttribute('alt', trans);
           elem.setAttribute('title', trans);
           return;
         }
-        if (['button','span'].includes(elem.tagName.toLowerCase())&&elem.querySelector('svg,img')) {
+        if (['button','span'].includes(tagname)&&elem.querySelector('svg,img')) {
           if (elem.getAttribute('aria-label')===trans) return;
           elem.setAttribute('aria-label', trans);
           elem.setAttribute('title', trans);

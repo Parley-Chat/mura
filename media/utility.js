@@ -142,14 +142,12 @@ function affirm(title, rep='') {
   let body = AffirmModal.querySelector('p');
   AffirmModal.showModal();
   h.setAttribute('tlang', title);
+  h.setAttribute('tlang-curly', rep);
   body.setAttribute('tlang', title+'.body');
+  body.setAttribute('tlang-curly', rep);
   buttony.setAttribute('tlang', title+'.yes');
   buttonn.setAttribute('tlang', title+'.no');
   window.translate();
-  setTimeout(()=>{
-    h.innerText = h.innerText.replace('{}', rep);
-    body.innerText = body.innerText.replace('{}', rep);
-  },0);
   return new Promise((resolve, reject)=>{
     AffirmModal.onclose = ()=>{resolve(false)};
     buttonn.onclick = ()=>{
@@ -173,10 +171,8 @@ function notice(title, rep='', bypass=false) {
   NoticeModal.showModal();
   let h = NoticeModal.querySelector('h3');
   h.setAttribute('tlang', title);
+  h.setAttribute('tlang-curly', rep);
   window.translate();
-  if (rep.length) setTimeout(()=>{
-    h.innerText = h.innerText.replace('{}',rep);
-  },0);
   NoticeModal.onclose = ()=>{
     NoticeBacklog.shift();
     if (NoticeBacklog.length>0) {

@@ -838,7 +838,15 @@ async function showMessages(messages) {
       sticky: true
     });
   });
-  showChannels(window.channels);
+  // Show last message
+  let lastmsgchannel = document.querySelector(`#channels [data-id="${window.currentChannel}"] .msg`);
+  if (messages[0]) {
+    if (lastmsgchannel) {
+      lastmsgchannel.innerHTML = displayLastMessage(window.currentChannel, messages[0]);
+    } else {
+      document.querySelector(`#channels [data-id="${window.currentChannel}"] span.div`).insertAdjacentHTML('beforeend', `<span class="msg">${displayLastMessage(window.currentChannel, messages[0])}</span>`);
+    }
+  }
   // Load more listener
   let more = false;
   function setList() {
@@ -865,7 +873,7 @@ async function showMessages(messages) {
   let idx = window.channels.findIndex(ch=>ch.id===window.currentChannel);
   if (messages.length>0&&window.channels[idx].unread_count>0) {
     window.channels[idx].unread_count = 0;
-    showChannels(window.channels);
+    document.querySelector(`#channels [data-id="${window.currentChannel}"] .unread`)?.remove();
     backendfetch(`/api/v1/channel/${window.currentChannel}/messages/ack`, { method: 'POST' });
   }
 }
@@ -896,27 +904,27 @@ window.onkeydown = (evt)=>{
 window.channels = [];
 let lateralShown = false;
 const lateralPanel = document.querySelector('.lateral');
-function displayChannel(ch) {
-  let lstmsgcnt;
-  if (ch.last_message) {
-    lstmsgcnt = ch.last_message.content;
-    if (ch.last_message.key) {
-      if (window.keys[ch.id]&&window.keys[ch.id][ch.last_message.key]) {
-        let msg = messages[ch.id].find(msg=>msg.id===ch.last_message.id);
-        if (msg) lstmsgcnt = msg.content;
-      } else {
-        lstmsgcnt = '...';
-      }
+function displayLastMessage(id, message) {
+  let msgcontent = message.content;
+  if (message.key) {
+    if (window.keys[id]&&window.keys[id][message.key]) {
+      msgcontent = messages[id].find(msg=>msg.id===message.id)?.content??'...';
+    } else {
+      msgcontent = '...';
     }
   }
+  let author = sanitizeHTML(message.author||message.user?.display||sanitizeMinimChars(message.user?.username||''));
+  return `${author.length?author+': ':''}${sanitizeHTML(msgcontent.replaceAll(/:([a-zA-Z0-9_<!%&\?\*\+\.\- ]+?):/g,(match,g1)=>window.emojiShort[g1.toLowerCase()]??match))||imageicon}`;
+}
+function displayChannel(ch) {
   let isPinned = PinnedChannelsStore.has(ch.id);
-  return `<span>
+  return `<span data-id="${ch.id}">
   ${isPinned?'<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 256 256" class="pin-indicator"><path d="M117.4 6.28699C118.758 0.114336 126.401 -2.11969 130.87 2.34949L253.649 125.126C258.118 129.595 255.883 137.239 249.71 138.597L206.755 148.044C204.89 148.454 203.182 149.39 201.832 150.74L181.588 170.983C180.637 171.934 179.889 173.067 179.386 174.313L154.115 236.957C151.434 243.603 142.838 245.354 137.771 240.287L95.5138 198.03L10.2823 254.884C7.65962 256.633 4.16588 256.288 1.93663 254.058C-0.292345 251.829 -0.63778 248.336 1.11143 245.714L57.964 160.48L15.7091 118.225C10.642 113.158 12.3932 104.562 19.0392 101.881L81.6827 76.6112C82.9295 76.1083 84.0621 75.3587 85.0128 74.4081L105.257 54.1649C106.607 52.8149 107.542 51.1066 107.952 49.2421L117.4 6.28699Z"/></svg>':''}
   <button onclick="window.loadChannel('${ch.id}')">
     <img src="${ch.pfp?pfpById(ch.pfp):userToDefaultPfp(ch)}" width="30" height="30" aria-hidden="true" draggable="false" loading="lazy" onerror="this.src='${userToDefaultPfp(ch)}'">
     <span class="div">
       <span class="name"${ch.name.length>7||(ch.type===1&&ch.username)?` title="${sanitizeHTML(ch.username??ch.name)}"`:''}>${sanitizeHTML(ch.name)}</span>
-      ${ch.last_message?`<span class="msg">${ch.last_message.author.length?ch.last_message.author+': ':''}${lstmsgcnt.replaceAll(/:([a-zA-Z0-9_<!%&\?\*\+\.\- ]+?):/g,(match,g1)=>window.emojiShort[g1.toLowerCase()]??match)}</span>`:''}
+      ${ch.last_message?`<span class="msg">${displayLastMessage(ch.id, ch.last_message)}</span>`:''}
     </span>
     ${(ch.unread_count??0)>0?`<span class="unread">${ch.unread_count}</span>`:''}
   </button>
@@ -1259,7 +1267,7 @@ window.leaveChannel = leaveChannel;
 function togglePinChannel(id) {
   PinnedChannelsStore[PinnedChannelsStore.has(id)?'delete':'set'](id, true);
   saveToDB();
-  showChannels(window.channels);
+  document.querySelector(`#channels [data-id="${id}"]`).outerHTML = displayChannel(window.channels.find(ch=>ch.id===id));
 }
 window.togglePinChannel = togglePinChannel;
 async function createChannel(type, data) {
@@ -1478,7 +1486,7 @@ function startStream() {
     window.channels[0].last_message = null;
     window.channels[0].member_count = Number(data.channel.member_count)??1;
     window.channels[0].unread_count = 0;
-    showChannels(window.channels);
+    document.getElementById('channels').insertAdjacentHTML('afterbegin', displayChannel(window.channels[0]));
     if (window.currentChannel==='') window.loadChannel(sanitizeMinimChars(data.channel.id));
   });
   window.stream.addEventListener('channel_edited', (event)=>{
@@ -1490,13 +1498,13 @@ function startStream() {
     window.channels[idx].name = data.channel.name??'';
     window.channels[idx].pfp = data.channel.pfp?sanitizeMinimChars(data.channel.pfp):null;
     window.channels[idx].base_permissions = chperm;
-    showChannels(window.channels);
+    document.querySelector(`#channels [data-id="${data.channel_id}"]`).outerHTML = displayChannel(window.channels[idx]);
   });
   window.stream.addEventListener('channel_deleted', (event)=>{
     let data = JSON.parse(event.data);
     window.channels = window.channels.filter(ch=>ch.id!==data.channel_id);
     MemberStore.delete(data.channel_id);
-    showChannels(window.channels);
+    document.querySelector(`#channels [data-id="${data.channel_id}"]`)?.remove();
   });
   // Members
   window.stream.addEventListener('member_join', (event)=>{
@@ -1536,7 +1544,7 @@ function startStream() {
     if (data.user.username===window.username) {
       window.channels = window.channels.filter(ch=>ch.id!==data.channel_id);
       MemberStore.delete(data.channel_id);
-      showChannels(window.channels);
+      document.querySelector(`#channels [data-id="${data.channel_id}"]`)?.remove();
       return;
     }
     if (window.keys[data.channel_id]) {
@@ -1563,6 +1571,7 @@ function startStream() {
     // Unread, ghost and other
     if (data.message.user.username===window.username) {
       window.channels[0].unread_count = 0;
+      document.querySelector(`#channels [data-id="${data.channel_id}"] .unread`)?.remove();
       window.messages[data.channel_id] = window.messages[data.channel_id]
         .filter(m=>m.id!=='nonce-'+data.message.nonce);
       if (window.currentChannel===data.channel_id) document.getElementById('m-nonce-'+data.message.nonce)?.remove();
@@ -1570,10 +1579,18 @@ function startStream() {
       window.channels[0].unread_count += 1;
       if (window.currentChannel===data.channel_id&&document.hasFocus()) {
         window.channels[0].unread_count = 0;
+        document.querySelector(`#channels [data-id="${data.channel_id}"] .unread`)?.remove();
         backendfetch(`/api/v1/channel/${data.channel_id}/messages/ack`, { method: 'POST' });
       } else {
         let notifstate = getNotifStateChannel(window.channels[0].id, window.channels[0].type);
         if (notifstate==='all'||(notifstate==='mentions'&&(new RegExp('@('+window.username+'|e)($|\\s|\\*|\\_|\\~|<|@)','im')).test(window.messages[data.channel_id][0].content))) notify('message', window.messages[data.channel_id][0], data.channel_id);
+        // Show counter
+        let unreadchannel = document.querySelector(`#channels [data-id="${data.channel_id}"] .unread`);
+        if (unreadchannel) {
+          unreadchannel.innerText = window.channels[0].unread_count;
+        } else {
+          document.querySelector(`#channels [data-id="${data.channel_id}"] button`).insertAdjacentHTML('beforeend', `<span class="unread">${window.channels[0].unread_count}</span>`);
+        }
       }
     }
     // Show
@@ -1594,12 +1611,18 @@ function startStream() {
     // Save last
     window.channels[0].last_message = {
       id: sanitizeMinimChars(data.message.id),
-      content: sanitizeHTML(data.message.content||'')||imageicon,
+      content: data.message.content,
       author: sanitizeHTML(data.message.user.display??sanitizeMinimChars(data.message.user.username||'')),
       key: data.message.key?sanitizeMinimChars(data.message.key):null,
       iv: data.message.iv?sanitizeMinimChars(data.message.iv):null
     };
-    showChannels(window.channels);
+    let lastmsgchannel = document.querySelector(`#channels [data-id="${data.channel_id}"] .msg`);
+    if (lastmsgchannel) {
+      lastmsgchannel.innerHTML = displayLastMessage(data.channel_id, window.channels[0].last_message);
+    } else {
+      document.querySelector(`#channels [data-id="${data.channel_id}"] span.div`).insertAdjacentHTML('beforeend', `<span class="msg">${displayLastMessage(data.channel_id, window.channels[0].last_message)}</span>`);
+    }
+
   });
   window.stream.addEventListener('message_edited', async(event)=>{
     let data = JSON.parse(event.data);
@@ -1634,7 +1657,7 @@ function startStream() {
     let idxc = window.channels.findIndex(ch=>ch.id===data.channel_id);
     if (window.channels[idxc].last_message?.id===data.message_id) {
       window.channels[idxc].last_message = null;
-      showChannels(window.channels);
+      document.querySelector(`#channels [data-id="${data.channel_id}"] .msg`)?.remove();
     }
     if (!window.messages[data.channel_id]) return;
     window.messages[data.channel_id] = window.messages[data.channel_id].filter(msg=>msg.id!==data.message_id);
