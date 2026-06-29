@@ -525,9 +525,10 @@ function processImageToPfp(file) {
 }
 
 function notify(type, data, context=null) {
-  if (localStorage.getItem('pnotif')==='false') return;
+  if (!window.settings.notifications) return;
   if (Notification.permission !== 'granted') {
-    localStorage.setItem('pnotif','false');
+    window.settings.notifications = false;
+    window.saveSettings();
     let s = document.getElementById('s-notif');
     if (s) s.checked = false;
     return;

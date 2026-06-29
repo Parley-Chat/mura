@@ -894,6 +894,8 @@ window.onkeydown = (evt)=>{
 
 // Channels
 window.channels = [];
+let lateralShown = false;
+const lateralPanel = document.querySelector('.lateral');
 function displayChannel(ch) {
   let lstmsgcnt;
   if (ch.last_message) {
@@ -977,7 +979,7 @@ async function getChannels() {
 function showMembers(id) {
   if (!MemberStore.has(id)) MemberStore.set(id, []);
   let ch = window.channels.find(ch=>ch.id===id);
-  document.querySelector('.lateral').innerHTML = `<button class="mobile" onclick="document.querySelector('main').style.display='';document.querySelector('side').style.display='none';document.querySelector('.lateral').style.display='none';" aria-label="Close member list"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><rect x="12" y="21" width="88" height="216"></rect><rect width="232" height="232" rx="20" stroke-width="24" fill="none" x="12" y="12"></rect></svg></button>`+
+  lateralPanel.innerHTML = `<button class="mobile" onclick="document.querySelector('main').style.display='';document.querySelector('side').style.display='none';document.querySelector('.lateral').style.display='none';" aria-label="Close member list"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><rect x="12" y="21" width="88" height="216"></rect><rect width="232" height="232" rx="20" stroke-width="24" fill="none" x="12" y="12"></rect></svg></button>`+
   MemberStore.get(id)
     .map(usr=>Object.merge(usr, UserStore.get(usr.username)))
     .toSorted((a,b)=>{
@@ -986,7 +988,7 @@ function showMembers(id) {
     })
     .map(mem=>`<button username="${sanitizeMinimChars(mem.username)}"><img src="${mem.pfp?pfpById(mem.pfp):userToDefaultPfp(mem)}" width="30" height="30" aria-hidden="true" draggable="false" loading="lazy" onerror="this.src='${userToDefaultPfp(mem)}'"><span title="${sanitizeMinimChars(mem.username)}">${sanitizeHTML(mem.display??mem.username)}</span></button>`)
     .join('');
-  document.querySelectorAll('.lateral button:not(.mobile)').forEach(btn=>{
+  lateralPanel.querySelectorAll('button:not(.mobile)').forEach(btn=>{
     let tip = tippy(btn, {
       allowHTML: true,
       content: (window.username===btn.getAttribute('username')?'':
@@ -1089,7 +1091,9 @@ function getMembers(id, page=1) {
   backendfetch(`/api/v1/channel/${id}/members?page=${page}`)
     .then(res=>{
       if (!Array.isArray(res)) return;
-      MemberStore.set(id, MemberStore.get(id).concat(res));
+      MemberStore.set(id, MemberStore.get(id)
+        .concat(res)
+        .filter((member,idx,arr)=>arr.findIndex(mem=>mem.username===member.username)===idx));
       res.forEach(mem=>{UserStore.set(mem.username, Object.merge(UserStore.get(mem.username), mem))});
       if (ch.member_count>MemberStore.get(id).length&&res.length>0) getMembers(id, page+1);
       showMembers(id);
@@ -1113,13 +1117,15 @@ function loadChannel(id) {
   document.getElementById('integrateButton').style.display = 'none';
   document.getElementById('bansButton').style.display = 'none';
   document.getElementById('inviteButton').style.display = 'none';
-  document.getElementById('notifButton').style.display = localStorage.getItem('pnotif')==='true'?'':'none';
-  document.querySelector('.lateral').style.display = 'none';
+  document.getElementById('notifButton').style.display = window.settings.notifications?'':'none';
+  lateralShown = false;
+  lateralPanel.style.display = 'none';
   if (ch.type===2||(ch.type===3&&(hasPerm(ch.permission,Permissions.MANAGE_CHANNEL)||hasPerm(ch.permission,Permissions.MANAGE_MEMBERS)))) {
+    lateralShown = true;
     if (smallScreen()) {
       document.querySelector('.lateraltoggle').style.display = '';
     } else {
-      document.querySelector('.lateral').style.display = '';
+      lateralPanel.style.display = '';
     }
     showMembers(id);
     getMembers(id);
@@ -1129,6 +1135,7 @@ function loadChannel(id) {
       document.getElementById('inviteButton').style.display = '';
     }
   }
+  layout();
   // Get public keys
   if (!PKChannels.includes(id)) {
     PKChannels.push(id);
@@ -1765,32 +1772,47 @@ window.showuserdata = (me)=>{
 
 // Split & Layout
 let splitinst;
+let threewaysplit = false;
 function layout() {
   if (smallScreen()) {
     if (splitinst) {
       splitinst.destroy();
       splitinst = null;
     }
-    document.querySelectorAll('side,main').forEach(elem=>elem.style.flex = '');
+    document.querySelectorAll('side,main,.lateral').forEach(elem=>elem.style.flex = '');
     if (document.querySelector('side').style.display==='none'&&document.querySelector('main').style.display==='none') return;
     document.querySelector('side').style.display = window.currentChannel?'none':'';
     document.querySelector('main').style.display = window.currentChannel?'':'none';
-    document.querySelector('.lateral').style.display = 'none';
+    lateralPanel.style.display = 'none';
+    document.querySelector('.lateraltoggle').style.display = lateralShown?'':'none';
   } else {
     document.querySelector('side').style.display = '';
     document.querySelector('main').style.display = '';
-    document.querySelectorAll('side,main').forEach(elem=>elem.style.flex = 'unset');
-    if (!splitinst) {
-      document.querySelector('.lateral').style.display = window.currentChannelType===2?'':'none';
-      if (window.currentChannel.length) loadChannel(window.currentChannel);
-      splitinst = Split(['side', 'main'], {
-        sizes: [20, 80]
+    document.querySelectorAll('side,main,.lateral').forEach(elem=>elem.style.flex = 'unset');
+    if (!splitinst||threewaysplit!==lateralShown) {
+      if (splitinst) splitinst.destroy();
+      threewaysplit = lateralShown;
+      lateralPanel.style.display = lateralShown?'':'none';
+      splitinst = Split(['side', 'main', ...(lateralShown?['.lateral']:[])], {
+        sizes: lateralShown?
+          [window.settings.panelSizing[0], 100-window.settings.panelSizing[0]-window.settings.panelSizing[1], window.settings.panelSizing[1]]:
+          [window.settings.panelSizing[0], 100-window.settings.panelSizing[0]],
+        minSize: 0,
+        onDragEnd: (evt)=>{
+          window.settings.panelSizing[0] = evt[0];
+          if (evt[2]) {
+            window.settings.panelSizing[1] = evt[2];
+          } else {
+            if (evt[0]>(100-settings.panelSizing[1])) window.settings.panelSizing[1] += 100-settings.panelSizing[1]-evt[0];
+          }
+          window.saveSettings();
+        }
       });
     }
   }
 }
 layout();
-window.onresize = ()=>{layout()};
+window.onresize = layout;
 
 window.username = '';
 async function loadMain() {
@@ -1811,8 +1833,8 @@ const vts = {
   dyslexic: 'OpenDyslexic, Arial, sans-serif',
   system: 'system-ui, Arial, sans-serif'
 };
-document.querySelector('body').style.setProperty('--accent', localStorage.getItem('ptheme')??'#221111');
-document.querySelector('body').style.setProperty('--font', vts[localStorage.getItem('pfont')??'lexend']??vts.lexend);
+document.querySelector('body').style.setProperty('--accent', window.settings.theme);
+document.querySelector('body').style.setProperty('--font', vts[window.settings.font]??vts.lexend);
 document.querySelector('body').style.setProperty('direction', localStorage.getItem('prtl')==='true'?'rtl':'');
 document.querySelector('body').style.setProperty('--sbp', localStorage.getItem('psbp')??'');
 document.querySelector('body').style.setProperty('--obp', localStorage.getItem('pobp')??'');
@@ -1860,7 +1882,7 @@ function postLogin() {
   let usertip = tippy(document.getElementById('user'), {
     allowHTML: true,
     content: `<button onclick="window.useredit()" tlang="user.edit">Edit</button>
-<button onclick="localStorage.removeItem('pls');location.reload()" tlang="user.changeserver">Change server</button>
+<button onclick="window.settings.lastServer='';window.saveSettings();location.reload()" tlang="user.changeserver">Change server</button>
 <button onclick="logout()" tlang="user.logout" style="color:var(--red)">Log out</button>`,
     interactive: true,
     trigger: 'click',
@@ -1887,7 +1909,7 @@ function postLogin() {
     content: `<b tlang="settings.layout">Layout</b>
 <span>
   <label for="s-theme" tlang="settings.theme">Theme:</label>
-  <input type="color" id="s-theme" oninput="document.querySelector('body').style.setProperty('--accent',this.value);localStorage.setItem('ptheme',this.value)" value="${localStorage.getItem('ptheme')??'#221111'}">
+  <input type="color" id="s-theme" oninput="document.querySelector('body').style.setProperty('--accent',this.value);window.settings.theme=this.value;window.saveSettings()" value="${window.settings.theme}">
 </span>
 <span>
   <label for="s-font" tlang="settings.font">Font:</label>
@@ -1918,19 +1940,19 @@ function postLogin() {
 <b tlang="settings.behavior">Behavior</b>
 <span>
   <label for="s-notif" tlang="settings.notif">Notifications:</label>
-  <input id="s-notif" type="checkbox" ${localStorage.getItem('pnotif')==='true'?' checked':''}>
+  <input id="s-notif" type="checkbox" ${window.settings.notifications?' checked':''}>
 </span>
 <span>
   <label for="s-ma" tlang="settings.medialways">Load media on mobile data:</label>
-  <input id="s-ma" type="checkbox" onchange="localStorage.setItem('pmedialways',this.checked)"${localStorage.getItem('pmedialways')==='true'?' checked':''}>
+  <input id="s-ma" type="checkbox" onchange="window.settings.mediaOnData=this.checked;window.saveSettings()"${window.settings.mediaOnData?' checked':''}>
 </span>
 <span>
   <label for="s-rc" tlang="settings.rc">Remember channel:</label>
-  <input id="s-rc" type="checkbox" onchange="localStorage.setItem('prc',this.checked)"${localStorage.getItem('prc')==='true'?' checked':''}>
+  <input id="s-rc" type="checkbox" onchange="window.settings.rememberChannel=this.checked;window.saveSettings()"${window.settings.rememberChannel?' checked':''}>
 </span>
 <span>
   <label for="s-rs" tlang="settings.rs">Remember server:</label>
-  <input id="s-rs" type="checkbox" onchange="localStorage.setItem('prs',this.checked)"${localStorage.getItem('prs')==='true'?' checked':''}>
+  <input id="s-rs" type="checkbox" onchange="window.settings.rememberServer=this.checked;window.saveSettings()"${window.settings.rememberServer?' checked':''}>
 </span>`,
     interactive: true,
     trigger: 'click',
@@ -1938,20 +1960,21 @@ function postLogin() {
     sticky: true,
     onMount: ()=>{
       // Font
-      document.getElementById('s-font').value = localStorage.getItem('pfont')??'lexend';
+      document.getElementById('s-font').value = window.settings.font;
       document.getElementById('s-font').onchange = (evt)=>{
         document.querySelector('body').style.setProperty('--font', vts[evt.target.value]??vts.lexend);
-        localStorage.setItem('pfont', evt.target.value);
+        window.settings.font = evt.target.value;
       };
       // Notifs
       document.getElementById('s-notif').onchange = (evt)=>{
-        localStorage.setItem('pnotif', evt.target.checked);
+        window.settings.notifications = evt.target.checked;
+        window.saveSettings();
         if (Notification.permission !== 'granted') {
           Notification.requestPermission().then((permission) => {
-            if (permission !== 'granted') {
-              document.getElementById('s-notif').checked = false;
-              localStorage.setItem('pnotif','false');
-            }
+            if (permission === 'granted') return;
+            document.getElementById('s-notif').checked = false;
+            window.settings.notifications = false;
+            saveSettings();
           });
         }
       };
@@ -1981,7 +2004,8 @@ function postLogin() {
           dat = await fetch(getCurrentServerUrl()+'/api/v1');
           dat = await dat.json();
         } catch(err) {
-          localStorage.removeItem('pls');
+          window.settings.lastServer = '';
+          window.saveSettings();
           location.reload();
           return;
         }
