@@ -129,11 +129,11 @@ dialog {
 }
 .modal-close {
   position: absolute;
-  top: 2px;
-  inset-inline-end: 2px;
-  width: 18px;
-  height: 18px;
-  padding: 0;
+  top: 6px;
+  inset-inline-end: 6px;
+  width: 16px;
+  height: 16px;
+  padding: 0px;
   border: none;
   background: none;
   z-index: 11;
@@ -835,18 +835,22 @@ emoji-picker {
   background-color: var(--bg-1);
   overflow: hidden auto;
 }
-#mentionmenu > div {
-  cursor: pointer;
+#mentionmenu button {
   display: flex;
   gap: 5px;
   align-items: center;
+  font-size: 100%;
+  padding: 0px;
+  margin: 0px;
+  border: none;
+  background-color: var(--bg-1);
 }
 #mentionmenu img {
   width: 42px;
   height: 42px;
   border-radius: 5rem;
 }
-#mentionmenu > div > div {
+#mentionmenu div {
   display: flex;
   flex-direction: column;
 }

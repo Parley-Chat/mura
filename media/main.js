@@ -223,7 +223,18 @@ async function MessageSend() {
 let lastMention = '';
 let messageCursorStart = 0;
 let messageCursorEnd = 0;
+let bestmention = '';
+let bestmentionclen = 0;
+let mentionmenuShown = false;
+window.addMention = (username, conlen)=>{
+  let k = messageInput.value.slice(0, messageInput.selectionStart).split('@').slice(0,-1).join('@').length+1;
+  messageInput.value = messageInput.value.slice(0,k)+username+' '+messageInput.value.slice(k+conlen);
+  messageInput.focus();
+  messageInput.setSelectionRange(k+username.length+1, k+username.length+1);
+  messageInput.onkeyup();
+};
 function handleMentionMenu() {
+  mentionmenuShown = false;
   mentionMenu.style.display = 'none';
   messageCursorStart = messageInput.selectionStart;
   messageCursorEnd = messageInput.selectionEnd;
@@ -233,11 +244,12 @@ function handleMentionMenu() {
     content = content.slice(Math.max(messageCursorStart-20,0), messageCursorStart);
     if (!content.includes('@')) return;
     content = content.split('@').slice(-1)[0];
-    if (!content || content.length<2 || !(/^[a-z0-9\-_]+?$/i).test(content)) return;
+    if (!content || content.length<1 || !(/^[a-z0-9\-_]+?$/i).test(content)) return;
+    mentionmenuShown = true;
+    mentionMenu.style.display = '';
     if (lastMention===content) return;
     lastMention = content;
-    mentionMenu.style.display = '';
-    mentionMenu.innerHTML = (MemberStore.get(window.currentChannel)??[])
+    let memlist = (MemberStore.get(window.currentChannel)??[])
       .map(usr=>{
         let letters = content.split('');
         usr.sim = usr.username.split('').map(l=>letters.includes(l)).reduce((acc,cur)=>acc+cur,0);
@@ -245,26 +257,38 @@ function handleMentionMenu() {
         return usr;
       })
       .filter(usr=>usr.sim>(usr.username.length/3))
-      .toSorted((a,b)=>b.sim-a.sim)
-      .map(usr=>`<div tabindex="0" role="button" onclick="let k=messageInput.value.slice(0,messageInput.selectionStart).split('@').slice(0,-1).join('@').length+1;messageInput.value=messageInput.value.slice(0,k)+'${sanitizeMinimChars(usr.username)} '+messageInput.value.slice(k+${content.length});messageInput.focus();messageInput.setSelectionRange(k+${sanitizeMinimChars(usr.username).length+1},k+${sanitizeMinimChars(usr.username).length+1});messageInput.onkeyup();">
+      .toSorted((a,b)=>b.sim-a.sim);
+    bestmention = sanitizeMinimChars(memlist[0]?.username||'');
+    bestmentionclen = content.length;
+    mentionMenu.innerHTML = memlist.map(usr=>`<button onclick="window.addMention('${sanitizeMinimChars(usr.username)}', ${bestmentionclen})">
   <img src="${usr.pfp?pfpById(usr.pfp):userToDefaultPfp(usr)}" width="42" height="42" aria-hidden="true" draggable="false" loading="lazy" onerror="this.src='${userToDefaultPfp(usr)}'">
   <div>
     <span>${sanitizeHTML(usr.display??sanitizeMinimChars(usr.username))}</span>
     <span class="small">@${sanitizeMinimChars(usr.username)}</span>
   </div>
-</div>`)
+</button>`)
       .join('');
     if (mentionMenu.innerHTML.length<3) mentionMenu.style.display = 'none';
   }
 }
+messageInput.onkeyup = handleMentionMenu;
+messageInput.onpointerup = handleMentionMenu;
+messageInput.onfocus = handleMentionMenu;
+messageInput.onblur = ()=>{
+  mentionmenuShown = false;
+  mentionMenu.style.display = 'none';
+};
 messageInput.onkeydown = (evt)=>{
+  if (evt.key==='Tab'&&mentionmenuShown) {
+    evt.preventDefault();
+    window.addMention(bestmention, bestmentionclen);
+    return;
+  }
   if (evt.key!=='Enter'||evt.shiftKey) return;
   evt.preventDefault();
-  mentionMenu.style.display = 'none';
+  messageInput.onblur();
   MessageSend();
 };
-messageInput.onkeyup = handleMentionMenu;
-messageInput.onmouseup = handleMentionMenu;
 messageSned.onclick = MessageSend;
 // Files
 const attachAdd = document.getElementById('addattachmentbutton');
@@ -552,7 +576,7 @@ window.editMessage = (msg, key, elem, cont)=>{
   textarea.oninput();
   elem.querySelector('button.save').onclick = ()=>{
     textarea.value = textarea.value.trim();
-    if (textarea.value===desanitizeAttr(cont)) {
+    if (textarea.value===desanitizeAttr(cont)||textarea.value.length<1) {
       elem.querySelector('button.cancel').onclick();
       return;
     }
